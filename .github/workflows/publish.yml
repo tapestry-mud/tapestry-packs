@@ -1,0 +1,32 @@
+name: Publish Changed Packs
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install tapestry CLI
+        run: npm install -g @tapestry-mud/cli
+
+      - name: Publish changed packs
+        env:
+          REGISTRY_CI_TOKEN: ${{ secrets.REGISTRY_CI_TOKEN }}
+          TAPESTRY_REGISTRY: https://registry.tapestryengine.com
+        run: node scripts/publish-changed.js
