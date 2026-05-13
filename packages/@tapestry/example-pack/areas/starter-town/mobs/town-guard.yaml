@@ -19,11 +19,11 @@ properties:
   level:
     combat: 10
   description: "A stern-faced guard in chain mail, patrolling the town."
-  patrol_route:
-    - "tapestry-example-pack:town-square"
-    - "tapestry-example-pack:west-road"
-    - "tapestry-example-pack:town-square"
-    - "tapestry-example-pack:training-grounds"
   patrol_interval: 60
+patrol_route:
+  - "tapestry-example-pack:town-square"
+  - "tapestry-example-pack:west-road"
+  - "tapestry-example-pack:town-square"
+  - "tapestry-example-pack:training-grounds"
 equipment:
   - "tapestry-example-pack:iron-sword"

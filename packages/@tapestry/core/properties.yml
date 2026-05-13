@@ -1,0 +1,5 @@
+properties:
+  value:
+    description: "Currency value of this item"
+    type: int
+    applies_to: [item]
