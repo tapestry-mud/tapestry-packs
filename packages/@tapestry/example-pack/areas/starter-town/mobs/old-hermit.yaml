@@ -16,7 +16,8 @@ stats:
   max_resource: 200
   max_movement: 30
 properties:
-  level: 20
+  level:
+    combat: 20
   description: "A weathered old man leaning on a gnarled staff. His eyes hold ancient knowledge."
   dialogue: "tapestry-example-pack:hermit-intro"
 equipment: []

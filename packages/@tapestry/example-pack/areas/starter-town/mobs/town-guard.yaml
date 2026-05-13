@@ -16,7 +16,8 @@ stats:
   max_resource: 0
   max_movement: 100
 properties:
-  level: 10
+  level:
+    combat: 10
   description: "A stern-faced guard in chain mail, patrolling the town."
   patrol_route:
     - "tapestry-example-pack:town-square"

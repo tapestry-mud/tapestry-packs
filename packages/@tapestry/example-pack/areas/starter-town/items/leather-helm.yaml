@@ -7,10 +7,11 @@ properties:
   slot: head
   weight: 2
   rarity: common
-  ac_slash: 2
-  ac_pierce: 1
-  ac_bash: 3
-  ac_exotic: 1
+  ac:
+    slash: 2
+    pierce: 1
+    bash: 3
+    exotic: 1
 modifiers:
   - stat: maxHp
     value: 15

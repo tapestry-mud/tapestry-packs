@@ -7,10 +7,11 @@ properties:
   slot: neck
   weight: 3
   rarity: common
-  ac_slash: 2
-  ac_pierce: 1
-  ac_bash: 0
-  ac_exotic: 0
+  ac:
+    slash: 2
+    pierce: 1
+    bash: 0
+    exotic: 0
 modifiers:
   - stat: constitution
     value: 2

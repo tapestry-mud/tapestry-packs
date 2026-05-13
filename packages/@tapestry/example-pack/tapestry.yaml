@@ -6,7 +6,7 @@ description: "A starter demo pack: warrior and mage classes, human and elf races
 author: "Tapestry"
 license: "AGPL-3.0"
 engine: ">=0.0.1"
-tag_validation: strict
+validation: strict
 active: true
 load_order: 10
 

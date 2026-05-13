@@ -16,7 +16,8 @@ stats:
   max_resource: 0
   max_movement: 80
 properties:
-  level: 3
+  level:
+    combat: 3
   gold: 30
   regen_hp: 1
   regen_movement: 5
@@ -25,10 +26,11 @@ properties:
   flee_threshold: 0.2
   corpse_decay: 300
   description: "A small, green-skinned creature with beady eyes and a rusty blade."
-  ac_slash: 2
-  ac_pierce: 1
-  ac_bash: 3
-  ac_exotic: 1
+  ac:
+    slash: 2
+    pierce: 1
+    bash: 3
+    exotic: 1
 equipment:
   - "tapestry-example-pack:rusty-dagger"
 loot:

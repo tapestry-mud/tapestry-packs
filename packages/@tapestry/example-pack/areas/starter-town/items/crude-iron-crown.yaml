@@ -8,10 +8,11 @@ properties:
   weight: 3
   rarity: epic
   value: 150
-  ac_slash: 4
-  ac_pierce: 3
-  ac_bash: 2
-  ac_exotic: 1
+  ac:
+    slash: 4
+    pierce: 3
+    bash: 2
+    exotic: 1
 modifiers:
   - stat: maxHp
     value: 25

@@ -16,15 +16,17 @@ stats:
   max_resource: 20
   max_movement: 60
 properties:
-  level: 7
+  level:
+    combat: 7
   regen_hp: 3
   regen_movement: 3
   corpse_decay: 600
   description: "A hulking goblin wearing a crude iron crown. Scars cover his arms."
-  ac_slash: 5
-  ac_pierce: 6
-  ac_bash: 3
-  ac_exotic: 2
+  ac:
+    slash: 5
+    pierce: 6
+    bash: 3
+    exotic: 2
   wimpy_threshold: 15
   xp_value: 200
   battle_interval: 3
