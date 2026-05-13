@@ -16,11 +16,13 @@ stats:
   max_resource: 0
   max_movement: 80
 properties:
-  level: 3
-  gold: 30
+  mob_level: 3
+  gold_min: 20
+  gold_max: 40
   regen_hp: 1
   regen_movement: 5
   wander_interval: 90
+  wander_chance: 0.3
   wander_boundary: "area"
   flee_threshold: 0.2
   corpse_decay: 300

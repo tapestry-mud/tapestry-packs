@@ -24,6 +24,6 @@ stats:
   max_resource: 0
   max_movement: 40
 properties:
-  level: 5
+  mob_level: 5
   description: "A friendly-looking person with a welcoming smile."
 equipment: []

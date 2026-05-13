@@ -16,9 +16,10 @@ stats:
   max_resource: 0
   max_movement: 100
 properties:
-  level: 10
+  mob_level: 10
   description: "A stern-faced guard in chain mail, patrolling the town."
   patrol_interval: 60
+  patrol_chance: 0.5
 patrol_route:
   - "tapestry-example-pack:town-square"
   - "tapestry-example-pack:west-road"

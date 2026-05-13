@@ -18,9 +18,10 @@ tapestry.commands.register({
         var cls = tapestry.world.getProperty(target.id, 'class') || '-';
         var race = tapestry.world.getProperty(target.id, 'race') || '-';
         var allProps = e.properties || {};
+        var mobLevel = allProps['mob_level'] || 0;
         var levelMap = allProps['level'] || {};
         var combatLevel = typeof levelMap === 'object' ? (levelMap['combat'] || 0) : 0;
-        var level = combatLevel > 0 ? combatLevel : '-';
+        var level = mobLevel > 0 ? mobLevel : (combatLevel > 0 ? combatLevel : '-');
 
         var s = e.stats || {};
         actor.send('[' + e.name + ']\r\n');

@@ -27,7 +27,7 @@ tapestry.commands.register({
         var corpseEntity = tapestry.world.getEntity(item.id);
         var level = 0;
         if (corpseEntity && corpseEntity.properties) {
-            level = corpseEntity.properties.level || 0;
+            level = corpseEntity.properties.mob_level || 0;
         }
 
         destroyWithContents(item.id);

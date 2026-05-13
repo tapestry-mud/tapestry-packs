@@ -83,7 +83,7 @@ tapestry.events.on("combat.kill", function(event) {
         return; // No XP for killing players
     }
 
-    var mobLevel = tapestry.world.getProperty(victimId, "level") || 1;
+    var mobLevel = tapestry.world.getProperty(victimId, "mob_level") || 1;
     var baseXp = tapestry.world.getProperty(victimId, "xp_value") || baseXpForMobLevel(mobLevel);
 
     // Get all combatants who were fighting this mob

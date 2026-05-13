@@ -81,7 +81,7 @@ tapestry.commands.register({
     handler: function(player, resolved) {
         var target = resolved.target;
         var playerLevel = tapestry.progression.getLevel(player.entityId, "combat") || 1;
-        var targetLevel = tapestry.world.getProperty(target.id, "level") || 1;
+        var targetLevel = tapestry.world.getProperty(target.id, "mob_level") || 1;
         var delta = playerLevel - targetLevel;
 
         var message;
