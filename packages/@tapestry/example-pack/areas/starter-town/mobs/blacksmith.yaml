@@ -16,8 +16,7 @@ stats:
   max_resource: 0
   max_movement: 40
 properties:
-  level:
-    combat: 15
+  level: 15
   description: "A broad-shouldered man hammering at an anvil. His arms are thick with muscle."
   dialogue: "tapestry-example-pack:blacksmith-intro"
 equipment: []

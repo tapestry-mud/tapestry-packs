@@ -16,8 +16,7 @@ stats:
   max_resource: 0
   max_movement: 100
 properties:
-  level:
-    combat: 10
+  level: 10
   description: "A stern-faced guard in chain mail, patrolling the town."
   patrol_interval: 60
 patrol_route:

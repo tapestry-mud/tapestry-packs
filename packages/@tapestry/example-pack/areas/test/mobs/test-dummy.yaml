@@ -15,8 +15,7 @@ stats:
   max_resource: 0
   max_movement: 0
 properties:
-  level:
-    combat: 1
+  level: 1
   corpse_decay: 60
   description: "A sturdy wooden dummy wrapped in leather. It exists only to be hit."
   ac:

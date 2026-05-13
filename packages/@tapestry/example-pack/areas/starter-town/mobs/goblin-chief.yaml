@@ -16,8 +16,7 @@ stats:
   max_resource: 20
   max_movement: 60
 properties:
-  level:
-    combat: 7
+  level: 7
   regen_hp: 3
   regen_movement: 3
   corpse_decay: 600

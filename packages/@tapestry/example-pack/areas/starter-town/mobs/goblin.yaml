@@ -16,8 +16,7 @@ stats:
   max_resource: 0
   max_movement: 80
 properties:
-  level:
-    combat: 3
+  level: 3
   gold: 30
   regen_hp: 1
   regen_movement: 5
