@@ -31,7 +31,7 @@ tapestry.commands.register({
         tapestry.world.send(target.id, '<tell>' + actor.name + ' tells you: "' + message + '"</tell>\r\n');
         tapestry.gmcp.send(target.id, 'Comm.Channel', { channel: 'tell', sender: actor.name, text: message });
 
-        tapestry.world.setProperty(target.id, 'lastTellFrom', actor.entityId);
-        tapestry.world.setProperty(actor.entityId, 'lastTellTo', target.id);
+        tapestry.world.setProperty(target.id, 'last_tell_from', actor.entityId);
+        tapestry.world.setProperty(actor.entityId, 'last_tell_to', target.id);
     }
 });

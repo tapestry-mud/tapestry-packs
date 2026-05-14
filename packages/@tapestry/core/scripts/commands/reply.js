@@ -10,7 +10,7 @@ tapestry.commands.register({
     handler: function(actor, resolved) {
         var message = resolved.message;
 
-        var lastFrom = tapestry.world.getProperty(actor.entityId, 'lastTellFrom');
+        var lastFrom = tapestry.world.getProperty(actor.entityId, 'last_tell_from');
         if (!lastFrom) {
             actor.send('You have no one to reply to.\r\n');
             return;
@@ -39,7 +39,7 @@ tapestry.commands.register({
         tapestry.world.send(found.id, '<tell>' + actor.name + ' tells you: "' + message + '"</tell>\r\n');
         tapestry.gmcp.send(found.id, 'Comm.Channel', { channel: 'tell', sender: actor.name, text: message });
 
-        tapestry.world.setProperty(found.id, 'lastTellFrom', actor.entityId);
-        tapestry.world.setProperty(actor.entityId, 'lastTellTo', found.id);
+        tapestry.world.setProperty(found.id, 'last_tell_from', actor.entityId);
+        tapestry.world.setProperty(actor.entityId, 'last_tell_to', found.id);
     }
 });
