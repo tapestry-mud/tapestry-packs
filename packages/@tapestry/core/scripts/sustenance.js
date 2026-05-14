@@ -47,6 +47,25 @@ tapestry.events.on('item.consumed', function(evt) {
         }
     }
 
+    if (effectId === 'tapestry-core:grant-ability' && effectData) {
+        var abilityId = effectData.ability_id;
+        var proficiency = effectData.proficiency || 10;
+        if (abilityId) {
+            var current = tapestry.abilities.getProficiency(entityId, abilityId);
+            if (current && current > 0) {
+                tapestry.abilities.setProficiency(entityId, abilityId, current + proficiency);
+                var displayName = tapestry.abilities.getDisplayName(abilityId) || abilityId;
+                tapestry.world.send(entityId,
+                    'Your knowledge of ' + displayName + ' deepens. (' + current + ' -> ' + (current + proficiency) + '%)\r\n');
+            } else {
+                tapestry.abilities.setProficiency(entityId, abilityId, proficiency);
+                var displayName = tapestry.abilities.getDisplayName(abilityId) || abilityId;
+                tapestry.world.send(entityId,
+                    'You have learned ' + displayName + '! (' + proficiency + '%)\r\n');
+            }
+        }
+    }
+
     if (effectId === 'tapestry-core:instant-restore' && effectData) {
         var healResource = effectData.heal_resource || 0;
         if (healResource > 0) {

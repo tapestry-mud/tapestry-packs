@@ -1,0 +1,20 @@
+id: "tapestry-example-pack:book-of-parry"
+name: "a weathered book of parry"
+type: "item"
+tags: [readable, consumable]
+keywords: [book, parry, tome, manual]
+properties:
+  text: "The pages detail defensive stances and blade deflection techniques. As you absorb the knowledge, you feel your reflexes sharpen."
+  consume_method: read
+  charges: 1
+  max_charges: 1
+  destroy_on_empty: true
+  effect_id: "core:grant-ability"
+  effect_data:
+    ability_id: "parry"
+    proficiency: 10
+  weight: 2
+  rarity: uncommon
+  description: "A dog-eared leather manual on the art of parrying. The cover reads 'Defensive Swordplay, Vol. I' in faded gold lettering."
+  value: 75
+modifiers: []

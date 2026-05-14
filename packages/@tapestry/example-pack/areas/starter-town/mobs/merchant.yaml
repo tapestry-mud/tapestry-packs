@@ -28,4 +28,5 @@ shop_sells:
   - "tapestry-example-pack:small-sack"
   - "tapestry-example-pack:glowing-lantern"
   - "tapestry-example-pack:traveler-cloak"
+  - "tapestry-example-pack:book-of-parry"
 equipment: []
