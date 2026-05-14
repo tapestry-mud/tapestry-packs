@@ -20,3 +20,4 @@ content:
   strings: "strings/**/*.yaml"
   help: "help/**/*.yaml"
   motd: "data/motd.txt"
+  motd_color: "data/motd_color.txt"
