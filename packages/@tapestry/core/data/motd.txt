@@ -1,0 +1,8 @@
+<highlight>===================================================</highlight>
+
+  <title>TAPESTRY</title>   A Living Text World
+
+  Type <highlight>help</highlight> for a list of commands.
+  Type <highlight>look</highlight> to see your surroundings.
+
+<highlight>===================================================</highlight>

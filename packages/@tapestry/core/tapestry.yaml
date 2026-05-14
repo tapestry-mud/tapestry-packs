@@ -19,3 +19,4 @@ content:
   scripts: "scripts/**/*.js"
   strings: "strings/**/*.yaml"
   help: "help/**/*.yaml"
+  motd: "data/motd.txt"
