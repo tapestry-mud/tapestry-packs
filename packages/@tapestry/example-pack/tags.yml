@@ -2,9 +2,6 @@ tags:
   cursed:
     description: "Item carries a curse -- must be removed before unequipping"
     applies_to: [item]
-  readable:
-    description: "Item can be read to display text content"
-    applies_to: [item]
   furniture:
     description: "Item provides rest bonus when used"
     applies_to: [item]

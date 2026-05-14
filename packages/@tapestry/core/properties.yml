@@ -3,3 +3,11 @@ properties:
     description: "Currency value of this item"
     type: int
     applies_to: [item]
+  xp_value:
+    description: "Experience points awarded when this mob is defeated"
+    type: int
+    applies_to: [npc]
+  text:
+    description: "Readable text content for items like letters and signs"
+    type: string
+    applies_to: [item]
