@@ -1,91 +1,142 @@
 tapestry.commands.register({
     name: 'quests',
-    description: 'List your active quests.',
-    category: 'progression',
-    roles: ['player'],
-    args: {},
-    handler: function(actor, resolved) {
-        var state = tapestry.quests.getState(actor.entityId);
-        if (!state || state.active.length === 0) {
-            actor.send('You have no active quests.\r\n');
-            return;
-        }
-
-        actor.send('[ Active Quests ]\r\n');
-        state.active.forEach(function(q, i) {
-            var stageNum = q.stageIndex + 1;
-            var stageCount = q.stageCount;
-            var objectives = q.objectives
-                .filter(function(o) { return !o.complete; })
-                .map(function(o) { return o.description + ' [' + o.current + '/' + o.required + ']'; })
-                .join(', ');
-            actor.send('  ' + (i + 1) + '. ' + q.name + '  (' + q.type + ')  Stage ' + stageNum + '/' + stageCount + ' - ' + (objectives || 'complete') + '\r\n');
-        });
-    }
-});
-
-tapestry.commands.register({
-    name: 'quest',
-    description: 'Show quest detail or abandon a quest.',
-    category: 'progression',
+    aliases: ['journal'],
+    description: 'View your active quests and progress.',
+    category: 'info',
     roles: ['player'],
     args: {
         subcommand: { type: 'keyword', required: false },
-        questName: { type: 'keyword', required: false }
+        target: { type: 'text', required: false }
     },
     handler: function(actor, resolved) {
-        var subcommand = resolved.subcommand;
-        var questName = resolved.questName;
+        var sub = resolved.subcommand ? resolved.subcommand.toLowerCase() : null;
+        var target = resolved.target || null;
 
-        if (!subcommand) {
-            actor.send('Usage: quest [name] | quest abandon [name]\r\n');
-            return;
+        if (sub === 'abandon' && target) {
+            handleAbandon(actor, target);
+        } else if (sub && target) {
+            handleDetail(actor, sub + ' ' + target);
+        } else if (sub) {
+            handleDetail(actor, sub);
+        } else {
+            handleList(actor);
         }
-
-        if (subcommand.toLowerCase() === 'abandon') {
-            if (!questName) {
-                actor.send('Abandon which quest?\r\n');
-                return;
-            }
-            var state = tapestry.quests.getState(actor.entityId);
-            if (!state) {
-                actor.send('You have no active quests.\r\n');
-                return;
-            }
-            var match = state.active.find(function(q) {
-                return q.name.toLowerCase().indexOf(questName.toLowerCase()) !== -1;
-            });
-            if (!match) {
-                actor.send('No active quest matches that name.\r\n');
-                return;
-            }
-            tapestry.quests.abandon(actor.entityId, match.questId);
-            actor.send('You abandon "' + match.name + '".\r\n');
-            return;
-        }
-
-        // subcommand is the search term; questName may extend it
-        var search = questName
-            ? subcommand.toLowerCase() + ' ' + questName.toLowerCase()
-            : subcommand.toLowerCase();
-        var questState = tapestry.quests.getState(actor.entityId);
-        if (!questState) {
-            actor.send('You have no active quests.\r\n');
-            return;
-        }
-        var detail = questState.active.find(function(q) {
-            return q.name.toLowerCase().indexOf(search) !== -1;
-        });
-        if (!detail) {
-            actor.send('No active quest matches "' + search + '".\r\n');
-            return;
-        }
-
-        actor.send('[ ' + detail.name + ' ]  (' + detail.type + ')\r\n');
-        actor.send('Stage ' + (detail.stageIndex + 1) + ' of ' + detail.stageCount + '\r\n');
-        detail.objectives.forEach(function(o) {
-            var status = o.complete ? '[done]' : '[' + o.current + '/' + o.required + ']';
-            actor.send('  ' + status + ' ' + (o.description || o.objectiveId) + '\r\n');
-        });
     }
 });
+
+function handleList(actor) {
+    var state = tapestry.quests.getState(actor.entityId);
+    var active = (state && state.active) ? state.active : [];
+
+    if (active.length === 0) {
+        actor.send('\r\nYou have no active quests. Explore the world to find them.\r\n');
+        return;
+    }
+
+    var sections = [];
+
+    active.forEach(function(q) {
+        var rows = [];
+        rows.push({ type: 'title', left: q.name + '  (' + (q.type || 'side') + ')' });
+
+        q.objectives.forEach(function(obj) {
+            if (obj.complete) {
+                rows.push({ type: 'text', content: '  [done] ' + obj.description });
+            } else {
+                rows.push({
+                    type: 'cell',
+                    cells: [
+                        { content: '  ' + obj.description, width: 'fill' },
+                        { content: '[' + obj.current + '/' + obj.required + ']', width: 12 }
+                    ]
+                });
+                if (obj.required > 1) {
+                    rows.push({
+                        type: 'cell',
+                        cells: [
+                            { content: '  ', width: 2 },
+                            { type: 'progress', value: obj.current, max: obj.required, width: 22 }
+                        ]
+                    });
+                }
+            }
+        });
+
+        sections.push({ rows: rows });
+    });
+
+    var output = tapestry.ui.panel({ sections: sections });
+    actor.send('\r\n' + output + '\r\n');
+}
+
+function handleDetail(actor, nameFragment) {
+    var state = tapestry.quests.getState(actor.entityId);
+    var active = (state && state.active) ? state.active : [];
+
+    var lower = nameFragment.toLowerCase();
+    var match = active.find(function(q) {
+        return q.name.toLowerCase().indexOf(lower) !== -1 ||
+               q.questId.toLowerCase().indexOf(lower) !== -1;
+    });
+
+    if (!match) {
+        actor.send('\r\nNo active quest matching "' + nameFragment + '".\r\n');
+        return;
+    }
+
+    var rows = [];
+    rows.push({ type: 'title', left: match.name + '  (' + (match.type || 'side') + ')' });
+
+    if (match.stageDescription) {
+        rows.push({ type: 'text', content: '  ' + match.stageDescription });
+        rows.push({ type: 'text', content: '' });
+    }
+
+    rows.push({ type: 'text', content: '  Stage ' + (match.stageIndex + 1) + ' of ' + match.stageCount });
+    rows.push({ type: 'text', content: '' });
+
+    match.objectives.forEach(function(obj) {
+        if (obj.complete) {
+            rows.push({ type: 'text', content: '  [done] ' + obj.description });
+        } else {
+            rows.push({
+                type: 'cell',
+                cells: [
+                    { content: '  ' + obj.description, width: 'fill' },
+                    { content: '[' + obj.current + '/' + obj.required + ']', width: 12 }
+                ]
+            });
+            if (obj.required > 1) {
+                rows.push({
+                    type: 'cell',
+                    cells: [
+                        { content: '  ', width: 2 },
+                        { type: 'progress', value: obj.current, max: obj.required, width: 28 }
+                    ]
+                });
+            }
+        }
+    });
+
+    var output = tapestry.ui.panel({ sections: [{ rows: rows }] });
+    actor.send('\r\n' + output + '\r\n');
+}
+
+function handleAbandon(actor, nameFragment) {
+    var state = tapestry.quests.getState(actor.entityId);
+    var active = (state && state.active) ? state.active : [];
+
+    var lower = nameFragment.toLowerCase();
+    var match = active.find(function(q) {
+        return q.name.toLowerCase().indexOf(lower) !== -1 ||
+               q.questId.toLowerCase().indexOf(lower) !== -1;
+    });
+
+    if (!match) {
+        actor.send('\r\nNo active quest matching "' + nameFragment + '".\r\n');
+        return;
+    }
+
+    tapestry.quests.abandon(actor.entityId, match.questId);
+    actor.send('\r\nYou abandon "' + match.name + '".\r\n');
+}

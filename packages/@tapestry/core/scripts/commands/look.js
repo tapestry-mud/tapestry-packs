@@ -117,11 +117,19 @@ function buildRoomLookPayload(actor) {
     for (var i = 0; i < all.length; i++) {
         var e = all[i];
         if (e.type === 'npc') {
-            entities.push({ name: e.name, type: 'npc', tags: e.tags || [] });
+            var templateId = tapestry.world.getProperty(e.id, 'template_id');
+            var questMarker = (templateId && tapestry.quests && tapestry.quests.hasQuestMarker)
+                ? tapestry.quests.hasQuestMarker(actor.entityId, templateId)
+                : false;
+            entities.push({ name: e.name, type: 'npc', tags: e.tags || [], questMarker: questMarker });
         } else if (e.type === 'player' && e.id !== actor.entityId) {
-            entities.push({ name: e.name, type: 'player', tags: e.tags || [] });
+            entities.push({ name: e.name, type: 'player', tags: e.tags || [], questMarker: false });
         } else if (e.type === 'item' || e.type.startsWith('item:') || e.type === 'container') {
-            items.push({ name: e.name, quantity: 1 });
+            var itemTemplateId = tapestry.world.getProperty(e.id, 'template_id');
+            var itemQuestMarker = (itemTemplateId && tapestry.quests && tapestry.quests.hasQuestMarker)
+                ? tapestry.quests.hasQuestMarker(actor.entityId, itemTemplateId)
+                : false;
+            items.push({ name: e.name, quantity: 1, questMarker: itemQuestMarker });
         }
     }
 
