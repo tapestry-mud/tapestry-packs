@@ -13,18 +13,18 @@ tapestry.commands.register({
         var target = resolved.target || null;
 
         if (sub === 'abandon' && target) {
-            handleAbandon(actor, target);
+            handleQuestAbandon(actor, target);
         } else if (sub && target) {
-            handleDetail(actor, sub + ' ' + target);
+            handleQuestDetail(actor, sub + ' ' + target);
         } else if (sub) {
-            handleDetail(actor, sub);
+            handleQuestDetail(actor, sub);
         } else {
-            handleList(actor);
+            handleQuestList(actor);
         }
     }
 });
 
-function handleList(actor) {
+function handleQuestList(actor) {
     var state = tapestry.quests.getState(actor.entityId);
     var active = (state && state.active) ? state.active : [];
 
@@ -69,7 +69,7 @@ function handleList(actor) {
     actor.send('\r\n' + output + '\r\n');
 }
 
-function handleDetail(actor, nameFragment) {
+function handleQuestDetail(actor, nameFragment) {
     var state = tapestry.quests.getState(actor.entityId);
     var active = (state && state.active) ? state.active : [];
 
@@ -122,7 +122,7 @@ function handleDetail(actor, nameFragment) {
     actor.send('\r\n' + output + '\r\n');
 }
 
-function handleAbandon(actor, nameFragment) {
+function handleQuestAbandon(actor, nameFragment) {
     var state = tapestry.quests.getState(actor.entityId);
     var active = (state && state.active) ? state.active : [];
 
