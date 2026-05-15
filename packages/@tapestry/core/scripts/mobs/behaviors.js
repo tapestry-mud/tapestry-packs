@@ -152,7 +152,7 @@ tapestry.events.on("mob.ai.tick", function(event) {
     }
 
     var props = tapestry.mobs.getProperties(mob.entityId);
-    if (!props || !props.battlecommands || props.battlecommands.length === 0) {
+    if (!props || !props.battle_commands || props.battle_commands.length === 0) {
         return;
     }
 
@@ -167,7 +167,7 @@ tapestry.events.on("mob.ai.tick", function(event) {
         return;
     }
 
-    var commands = props.battlecommands;
+    var commands = props.battle_commands;
     var cmd = commands[Math.floor(Math.random() * commands.length)];
     if (cmd && cmd.length > 0) {
         tapestry.mobs.command(mob.entityId, cmd);

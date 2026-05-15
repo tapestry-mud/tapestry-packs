@@ -15,6 +15,8 @@ stats:
   max_hp: 120
   max_resource: 20
   max_movement: 60
+battle_chance: 0.6
+battle_interval: 3
 properties:
   mob_level: 7
   regen_hp: 3
@@ -27,8 +29,6 @@ properties:
     bash: 3
     exotic: 2
   xp_value: 200
-  battle_interval: 3
-  battle_chance: 0.6
 abilities:
   - id: "kick"
     proficiency: 70
