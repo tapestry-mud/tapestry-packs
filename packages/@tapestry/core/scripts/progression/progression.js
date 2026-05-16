@@ -30,7 +30,7 @@ tapestry.progression.registerTrack({
         var classDef = classId ? tapestry.classes.get(classId) : null;
         var flavor = (classDef && classDef.level_up_flavor) || "Your skills improve.";
         var gains = "+1 " + first + ", +1 " + second + ", +5 hp, +3 mana, +2 mv";
-        tapestry.world.send(entityId,
+        tapestry.notifications.enqueue(entityId, "level_up", 40,
             "\r\n<highlight>*** " + flavor + " You are now level " + newLevel + "! ***</highlight>\r\n  " + gains + "\r\n");
     }
 });
@@ -56,7 +56,7 @@ tapestry.progression.registerTrack({
         var classDef = classId ? tapestry.classes.get(classId) : null;
         var flavor = (classDef && classDef.level_up_flavor) || "Your magical power grows.";
         var gains = "+1 " + first + ", +1 " + second + ", +5 mana, +2 hp, +1 mv";
-        tapestry.world.send(entityId,
+        tapestry.notifications.enqueue(entityId, "level_up", 40,
             "\r\n<highlight>*** " + flavor + " You are now level " + newLevel + "! ***</highlight>\r\n  " + gains + "\r\n");
     }
 });
