@@ -3,7 +3,7 @@ tapestry.events.on('player.login', function(event) {
     if (!entityId) { return; }
 
     var name = tapestry.world.getEntityName(entityId);
-    var roomId = tapestry.world.getEntityRoom(entityId);
+    var roomId = tapestry.world.getEntityRoomId(entityId);
     if (!name || !roomId) { return; }
 
     tapestry.world.sendToRoomExcept(
