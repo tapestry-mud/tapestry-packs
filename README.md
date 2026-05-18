@@ -9,7 +9,7 @@ Official Tapestry content packs.
 
 ## Publishing
 
-Bump `version:` in the pack's `tapestry.yaml` before merging to master. CI automatically publishes changed packs and tags them `stable`.
+Bump `version:` in the pack's `pack.yaml` before merging to master. CI automatically publishes changed packs and tags them `stable`.
 
 ## Community Packs
 

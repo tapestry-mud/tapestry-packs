@@ -41,10 +41,10 @@ run(`tapestry login --token ${ciToken}`);
 
 for (const packName of changedPacks) {
   const packDir = path.join(PACKS_DIR, packName);
-  const manifestPath = path.join(packDir, 'tapestry.yaml');
+  const manifestPath = path.join(packDir, 'pack.yaml');
 
   if (!fs.existsSync(manifestPath)) {
-    console.error(`ERROR: No tapestry.yaml found in packages/@tapestry/${packName}`);
+    console.error(`ERROR: No pack.yaml found in packages/@tapestry/${packName}`);
     process.exit(1);
   }
 
@@ -58,7 +58,7 @@ for (const packName of changedPacks) {
   } catch (e) {
     const msg = e.stderr ? e.stderr.toString().trim() : e.message;
     if (msg.includes('already published') || msg.includes('already exists')) {
-      console.error(`\nERROR: ${scopedName}@${version} already published - bump version in tapestry.yaml before merging`);
+      console.error(`\nERROR: ${scopedName}@${version} already published - bump version in pack.yaml before merging`);
     } else {
       console.error(`\nERROR: publish failed for ${scopedName}@${version}: ${msg}`);
     }
