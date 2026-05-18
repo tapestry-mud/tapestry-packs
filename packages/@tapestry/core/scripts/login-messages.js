@@ -1,10 +1,11 @@
 tapestry.events.on('player.login', function(event) {
+    var data = event.data || {};
     var entityId = event.sourceEntityId;
-    if (!entityId) { return; }
+    var name = data.playerName;
+    if (!entityId || !name) { return; }
 
-    var name = tapestry.world.getEntityName(entityId);
     var roomId = tapestry.world.getEntityRoomId(entityId);
-    if (!name || !roomId) { return; }
+    if (!roomId) { return; }
 
     tapestry.world.sendToRoomExcept(
         roomId,
