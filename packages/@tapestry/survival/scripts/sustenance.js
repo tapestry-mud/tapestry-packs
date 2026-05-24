@@ -111,3 +111,14 @@ tapestry.admin.set.register({
         admin.send(target.name + "'s sustenance set to " + value + ".\r\n");
     }
 });
+
+tapestry.events.on('entity.regen', function(evt) {
+    var entityId = evt.sourceEntityId;
+    if (!entityId) { return; }
+    var tier = getTier(getSustenanceValue(entityId));
+    var mult = tier === 'full' ? 1.0 : tier === 'hungry' ? 0.5 : 0.0;
+    evt.data.amount = Math.round(evt.data.amount * mult);
+    if (mult === 0.0) {
+        evt.cancel();
+    }
+});
