@@ -31,7 +31,12 @@ tapestry.commands.register({
         var goldAmount = tapestry.currency.getGold(actor.entityId);
         var alignmentValue = tapestry.alignment.get(actor.entityId);
         var alignmentLabel = tapestry.alignment.bucket(actor.entityId);
-        var hungerLabel = tapestry.consumables.getSustenanceTier(actor.entityId);
+        var susRaw = tapestry.world.getProperty(actor.entityId, 'sustenance');
+        var susValue = (susRaw === null || susRaw === undefined) ? null : susRaw;
+        var hungerLabel = susValue === null ? null
+            : susValue >= 67 ? 'full'
+            : susValue >= 34 ? 'hungry'
+            : 'famished';
 
         tapestry.gmcp.send(actor.entityId, 'Response.Char.Score', {
             status: 'ok',
@@ -154,9 +159,13 @@ tapestry.commands.register({
             rows: [{ type: 'text', content: '  Gold: ' + gold }]
         };
 
-        var susValue = tapestry.consumables.getSustenance(actor.entityId);
-        var susTier = tapestry.consumables.getSustenanceTier(actor.entityId);
-        var susPct = Math.floor(susValue);
+        var susRaw2 = tapestry.world.getProperty(actor.entityId, 'sustenance');
+        var susValue2 = (susRaw2 === null || susRaw2 === undefined) ? null : susRaw2;
+        var susTier = susValue2 === null ? null
+            : susValue2 >= 67 ? 'full'
+            : susValue2 >= 34 ? 'hungry'
+            : 'famished';
+        var susPct = Math.floor(susValue2 !== null ? susValue2 : 0);
         var susSection = {
             separatorAbove: 'minor',
             rows: [{ type: 'text', content: '  Hunger: ' + susTier + ' (' + susPct + '%)' }]
