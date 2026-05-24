@@ -1,0 +1,17 @@
+name: "@tapestry/cooking"
+version: "0.1.0"
+type: system
+display_name: "Tapestry Cooking (interop discovery scaffold)"
+description: "Deliberately incomplete. Scaffolds to the @tapestry/survival interop wall to drive the design of the pack-to-pack interop API. Do not ship as a real feature."
+author: "Tapestry"
+license: "AGPL-3.0"
+engine: ">=0.0.1"
+validation: strict
+dependencies:
+  "@tapestry/core": "^0.1.0"
+  "@tapestry/survival": "^0.1.0"
+active: true
+load_order: 6
+
+content:
+  scripts: "scripts/**/*.js"
