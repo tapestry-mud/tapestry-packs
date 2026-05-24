@@ -13,7 +13,7 @@ tapestry.commands.register({
         if (drinkable) {
             actor.send('You drink from ' + item.name + '.\r\n');
             actor.sendToRoom(actor.name + ' drinks from ' + item.name + '.\r\n');
-            var current = tapestry.consumables.getSustenance(actor.entityId);
+            var current = tapestry.world.getProperty(actor.entityId, 'sustenance') || 100;
             tapestry.world.setProperty(actor.entityId, 'sustenance', Math.min(100, current + 15));
             return;
         }
