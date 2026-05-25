@@ -23,6 +23,11 @@ tapestry.schedule.everyForEach(DRAIN_CADENCE, { type: 'player' }, function(entit
     var prevTier = getTier(current);
 
     var drain = DRAIN_AMOUNT;
+    var wellFedUntil = tapestry.world.getProperty(entityId, 'well_fed_until');
+    if (wellFedUntil !== null && wellFedUntil !== undefined &&
+        tapestry.world.getCurrentTick() < Number(wellFedUntil)) {
+        drain = 0; // well-fed: skip hunger drain until the buff expires
+    }
     tapestry.events.publish('sustenance.tick', {
         entityId: entityId,
         drainAmount: drain
@@ -146,3 +151,31 @@ function seedSustenance(entityId) {
 }
 tapestry.events.on('character.created', function(evt) { seedSustenance(evt.sourceEntityId); });
 tapestry.events.on('player.login', function(evt) { seedSustenance(evt.sourceEntityId); });
+
+// ---- Pack interop exports (Phase 1) ----
+// Survival exposes its hunger model to peer packs through the sanctioned, enforced
+// interop surface (tapestry.packs). Callers must declare a dependency edge on
+// @tapestry/survival. See cooking's cook command for the consumer.
+
+tapestry.packs.export('getHungerTier', function (entityId) {
+    return getTier(getSustenanceValue(entityId)); // 'full' | 'hungry' | 'famished'
+}, {
+    kind: 'query',
+    description: 'Hunger tier for an entity, derived from its sustenance value.',
+    params: [{ name: 'entityId', type: 'entity' }],
+    returns: 'string'
+});
+
+tapestry.packs.export('applyWellFedBuff', function (entityId, durationSeconds) {
+    var until = tapestry.world.getCurrentTick() + Number(durationSeconds);
+    tapestry.world.setProperty(entityId, 'well_fed_until', until);
+    tapestry.world.send(entityId, 'You feel well-fed and satisfied.\r\n');
+}, {
+    kind: 'command',
+    description: 'Suppress hunger drain for the given duration (a well-fed buff).',
+    params: [
+        { name: 'entityId', type: 'entity' },
+        { name: 'durationSeconds', type: 'number' }
+    ],
+    returns: 'undefined'
+});
