@@ -1,8 +1,9 @@
-// @tapestry/cooking — interop discovery scaffold.
+// @tapestry/cooking — pack interop consumer.
 //
-// This command exists to surface what @tapestry/survival cannot expose to
-// peer packs. Each interop wall comment marks a call site that would require
-// a pack-to-pack interop API. No workaround is implemented here.
+// The `cook` command consumes @tapestry/survival's exports through the sanctioned
+// interop surface (tapestry.packs), each call guarded by has() so cooking degrades
+// gracefully when survival isn't loaded (survival is an optionalDependency). This
+// began as the interop-wall discovery scaffold; the walls are now resolved.
 //
 // See findings document: docs/tapestry/reviews/2026-05-24-survival-pack-extraction-findings.md
 
@@ -23,25 +24,21 @@ tapestry.commands.register({
             return;
         }
 
-        // INTEROP WALL (query): Cooking wants to check if the entity is starving
-        // before applying a well-fed buff — to avoid wasting the buff on a full
-        // character. Desired call:
-        //   var tier = tapestry.packs.call('@tapestry/survival', 'getHungerTier', actor.entityId);
-        // Without interop, the only alternative is to read survival's raw property
-        // key 'sustenance' directly — hard-coding survival's internals, which is
-        // the exact anti-pattern gap-analysis-gomud.md §4 warns against.
-        // Property peeking is intentionally NOT done here.
+        // Query wall → resolved: ask survival whether the actor is too full to benefit.
+        var tier = tapestry.packs.has('@tapestry/survival', 'getHungerTier')
+            ? tapestry.packs.call('@tapestry/survival', 'getHungerTier', actor.entityId)
+            : null;
+        if (tier === 'full') {
+            actor.send("You're too full to benefit from a hearty meal right now.\r\n");
+        }
 
         // Perform the cook action (assumed successful for scaffold purposes)
         actor.send('You cook ' + item.name + ' over a nearby flame.\r\n');
         actor.sendToRoom(actor.name + ' cooks ' + item.name + '.\r\n');
 
-        // INTEROP WALL (invoke): Cooking wants to apply a well-fed buff via the
-        // survival pack — "cut drain rate for 1 hour" or "apply well-fed effect."
-        // Desired call:
-        //   tapestry.packs.call('@tapestry/survival', 'applyWellFedBuff', actor.entityId, 3600);
-        // The effects system handles timed stat modifiers (via RemainingPulses), but
-        // reducing survival's drain rate requires survival to register the reduction —
-        // cooking cannot command it. No workaround shipped here.
+        // Invoke wall → resolved: apply a well-fed buff via survival (bonus, not required).
+        if (tapestry.packs.has('@tapestry/survival', 'applyWellFedBuff')) {
+            tapestry.packs.call('@tapestry/survival', 'applyWellFedBuff', actor.entityId, 3600);
+        }
     }
 });

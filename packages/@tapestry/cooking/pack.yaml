@@ -9,9 +9,11 @@ engine: ">=0.0.1"
 validation: strict
 dependencies:
   "@tapestry/core": "^0.1.0"
+optionalDependencies:
   "@tapestry/survival": "^0.1.0"
 active: true
 load_order: 6
 
 content:
   scripts: "scripts/**/*.js"
+  items: "items/**/*.yaml"
