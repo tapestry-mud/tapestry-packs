@@ -37,7 +37,9 @@ tapestry.commands.register({
         actor.sendToRoom(actor.name + ' cooks ' + item.name + '.\r\n');
 
         // Invoke wall → resolved: apply a well-fed buff via survival (bonus, not required).
-        if (tapestry.packs.has('@tapestry/survival', 'applyWellFedBuff')) {
+        // Skipped when the actor is already full — don't waste the buff on a full character
+        // (the whole point of the getHungerTier query above).
+        if (tier !== 'full' && tapestry.packs.has('@tapestry/survival', 'applyWellFedBuff')) {
             tapestry.packs.call('@tapestry/survival', 'applyWellFedBuff', actor.entityId, 3600);
         }
     }
