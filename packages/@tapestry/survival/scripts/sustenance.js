@@ -132,3 +132,17 @@ tapestry.events.on('entity.regen', function(evt) {
         evt.cancel();
     }
 });
+
+// Seed sustenance on new characters (moved here from the engine's
+// WorldEventModule so the kernel holds no hunger logic). Idempotent: only
+// sets when unset, so it never clobbers a loaded/famished value. Also runs on
+// login to backfill characters created before survival owned this.
+function seedSustenance(entityId) {
+    if (!entityId) { return; }
+    var raw = tapestry.world.getProperty(entityId, 'sustenance');
+    if (raw === null || raw === undefined) {
+        tapestry.world.setProperty(entityId, 'sustenance', 100);
+    }
+}
+tapestry.events.on('character.created', function(evt) { seedSustenance(evt.sourceEntityId); });
+tapestry.events.on('player.login', function(evt) { seedSustenance(evt.sourceEntityId); });
