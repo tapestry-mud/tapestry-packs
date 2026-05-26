@@ -1,0 +1,13 @@
+properties:
+  cookable:
+    description: "Marks an item as cookable (read by the cook command)"
+    type: bool
+    applies_to: [item]
+  cooks_into:
+    description: "Template id of the cooked result item"
+    type: string
+    applies_to: [item]
+  cooked:
+    description: "Marks an item as cooked food (triggers well-fed buff on eat)"
+    type: bool
+    applies_to: [item]
