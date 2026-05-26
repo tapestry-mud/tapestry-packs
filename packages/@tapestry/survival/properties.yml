@@ -1,0 +1,7 @@
+properties:
+  sustenance:
+    description: "Player hunger meter (0 = famished, 100 = full)"
+    type: int
+    applies_to: [player]
+    min: 0
+    max: 100
