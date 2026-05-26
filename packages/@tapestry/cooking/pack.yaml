@@ -1,6 +1,6 @@
 name: "@tapestry/cooking"
 version: "0.1.0"
-type: system
+type: module
 display_name: "Tapestry Cooking"
 description: "Cook→eat crafting loop: raw ingredients are cooked into food using a pan and heat source (or a self-contained appliance like a microwave). Cooked food grants a well-fed buff via survival interop. An interop testbed — will fold into @tapestry/survival."
 author: "Tapestry"

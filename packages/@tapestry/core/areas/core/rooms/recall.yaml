@@ -4,6 +4,10 @@ name: "The Nexus"
 description: >
   A quiet stone chamber, cool and still. A <item>stone fountain</item> stands at the
   center, its water clear and endlessly flowing. This is where all roads lead back.
+
+  The world beyond feels sparse -- a blank slate waiting for content. If you are
+  building a new MUD, use the `link` command to connect your rooms to a content
+  pack and bring it to life. Type `help link` for details.
 exits:
   down: "tapestry-core:donation-pit"
 tags: [safe, no_wander]
