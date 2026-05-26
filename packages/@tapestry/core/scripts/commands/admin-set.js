@@ -1,4 +1,12 @@
-function adminSetResolveTarget(kind, name) {
+// Admin `set` command.
+//
+// Declared attributes (PropertyRegistry / TagRegistry) flow through the engine's
+// registry-driven dispatch -- "declared <=> settable". A small retained table below
+// handles the 11 out-of-scope subsystem ops (EntityStats / alignment / training /
+// currency / npc hp) that are NOT stored properties; these keep their current
+// command paths until StatRegistry (north-star section 9) lands.
+
+function domainResolveTarget(kind, name) {
     var lower = name.toLowerCase();
     if (kind === 'player') {
         var players = tapestry.world.getOnlinePlayers();
@@ -30,9 +38,18 @@ function adminSetResolveTarget(kind, name) {
     return null;
 }
 
-var adminSetHandlers = {
+function statHandler(statKey, label) {
+    return function(actor, target, rest) {
+        var n = parseInt(rest, 10);
+        if (isNaN(n)) { actor.send('Value must be a number.\r\n'); return; }
+        tapestry.stats.setBase(target.id, statKey, n);
+        actor.send(target.name + "'s " + label + " set to " + n + ".\r\n");
+    };
+}
+
+// Retained subsystem ops (out of registry scope). Keyed kind:attr.
+var domainSetOps = {
     'player:alignment': {
-        usage: 'set player alignment [target] [value]',
         handler: function(actor, target, rest) {
             var n = parseInt(rest, 10);
             if (isNaN(n)) { actor.send('Value must be a number.\r\n'); return; }
@@ -42,62 +59,13 @@ var adminSetHandlers = {
             actor.send(target.name + "'s alignment set to " + actual + " (" + bucket + ").\r\n");
         }
     },
-    'player:str': {
-        usage: 'set player str [target] [value]',
-        handler: function(actor, target, rest) {
-            var n = parseInt(rest, 10);
-            if (isNaN(n)) { actor.send('Value must be a number.\r\n'); return; }
-            tapestry.stats.setBase(target.id, 'strength', n);
-            actor.send(target.name + "'s Strength set to " + n + ".\r\n");
-        }
-    },
-    'player:int': {
-        usage: 'set player int [target] [value]',
-        handler: function(actor, target, rest) {
-            var n = parseInt(rest, 10);
-            if (isNaN(n)) { actor.send('Value must be a number.\r\n'); return; }
-            tapestry.stats.setBase(target.id, 'intelligence', n);
-            actor.send(target.name + "'s Intelligence set to " + n + ".\r\n");
-        }
-    },
-    'player:wis': {
-        usage: 'set player wis [target] [value]',
-        handler: function(actor, target, rest) {
-            var n = parseInt(rest, 10);
-            if (isNaN(n)) { actor.send('Value must be a number.\r\n'); return; }
-            tapestry.stats.setBase(target.id, 'wisdom', n);
-            actor.send(target.name + "'s Wisdom set to " + n + ".\r\n");
-        }
-    },
-    'player:dex': {
-        usage: 'set player dex [target] [value]',
-        handler: function(actor, target, rest) {
-            var n = parseInt(rest, 10);
-            if (isNaN(n)) { actor.send('Value must be a number.\r\n'); return; }
-            tapestry.stats.setBase(target.id, 'dexterity', n);
-            actor.send(target.name + "'s Dexterity set to " + n + ".\r\n");
-        }
-    },
-    'player:con': {
-        usage: 'set player con [target] [value]',
-        handler: function(actor, target, rest) {
-            var n = parseInt(rest, 10);
-            if (isNaN(n)) { actor.send('Value must be a number.\r\n'); return; }
-            tapestry.stats.setBase(target.id, 'constitution', n);
-            actor.send(target.name + "'s Constitution set to " + n + ".\r\n");
-        }
-    },
-    'player:luck': {
-        usage: 'set player luck [target] [value]',
-        handler: function(actor, target, rest) {
-            var n = parseInt(rest, 10);
-            if (isNaN(n)) { actor.send('Value must be a number.\r\n'); return; }
-            tapestry.stats.setBase(target.id, 'luck', n);
-            actor.send(target.name + "'s Luck set to " + n + ".\r\n");
-        }
-    },
+    'player:str': { handler: statHandler('strength', 'Strength') },
+    'player:int': { handler: statHandler('intelligence', 'Intelligence') },
+    'player:wis': { handler: statHandler('wisdom', 'Wisdom') },
+    'player:dex': { handler: statHandler('dexterity', 'Dexterity') },
+    'player:con': { handler: statHandler('constitution', 'Constitution') },
+    'player:luck': { handler: statHandler('luck', 'Luck') },
     'player:prof': {
-        usage: 'set player prof [target] [ability] [value]',
         handler: function(actor, target, rest) {
             var parts = rest.split(' ');
             if (parts.length < 2) { actor.send('Usage: set player prof [target] [ability] [value]\r\n'); return; }
@@ -109,7 +77,6 @@ var adminSetHandlers = {
         }
     },
     'player:cap': {
-        usage: 'set player cap [target] [ability] [novice|apprentice|journeyman|master]',
         handler: function(actor, target, rest) {
             var parts = rest.split(' ');
             if (parts.length < 2) { actor.send('Usage: set player cap [target] [ability] [novice|apprentice|journeyman|master]\r\n'); return; }
@@ -124,7 +91,6 @@ var adminSetHandlers = {
         }
     },
     'player:gold': {
-        usage: 'set player gold [target] [amount]',
         handler: function(actor, target, rest) {
             var n = parseInt(rest, 10);
             if (isNaN(n) || n < 0) { actor.send('Gold cannot be negative.\r\n'); return; }
@@ -133,100 +99,61 @@ var adminSetHandlers = {
             actor.send(target.name + "'s gold set to " + total + ".\r\n");
         }
     },
-    'player:notell': {
-        usage: 'set player notell [target] on|off',
-        handler: function(actor, target, rest) {
-            var flag = rest.toLowerCase();
-            if (flag !== 'on' && flag !== 'off') { actor.send('Expected: on or off\r\n'); return; }
-            var enabled = flag === 'on';
-            tapestry.world.setProperty(target.id, 'notell', enabled);
-            if (enabled) {
-                tapestry.world.send(target.id, 'You have been silenced from tells.\r\n');
-                actor.send('Notell set on ' + target.name + '.\r\n');
-            } else {
-                tapestry.world.send(target.id, 'Your tells have been restored.\r\n');
-                actor.send('Notell cleared on ' + target.name + '.\r\n');
-            }
-        }
-    },
-    'player:nochannels': {
-        usage: 'set player nochannels [target] on|off',
-        handler: function(actor, target, rest) {
-            var flag = rest.toLowerCase();
-            if (flag !== 'on' && flag !== 'off') { actor.send('Expected: on or off\r\n'); return; }
-            var enabled = flag === 'on';
-            tapestry.world.setProperty(target.id, 'nochannels', enabled);
-            if (enabled) {
-                tapestry.world.send(target.id, 'You have been silenced from all channels.\r\n');
-                actor.send('Nochannels set on ' + target.name + '.\r\n');
-            } else {
-                tapestry.world.send(target.id, 'Your channel access has been restored.\r\n');
-                actor.send('Nochannels cleared on ' + target.name + '.\r\n');
-            }
-        }
-    },
     'npc:hp': {
-        usage: 'set npc hp [mob] [value]',
         handler: function(actor, target, rest) {
             var n = parseInt(rest, 10);
             if (isNaN(n) || n < 0) { actor.send('Value must be a non-negative number.\r\n'); return; }
             tapestry.admin.setEntityHp(target.id, n);
             actor.send(target.name + "'s hp set to " + n + " (hp and max hp).\r\n");
         }
-    },
-    'item:dice': {
-        usage: 'set item dice [item] [dice-string]',
-        handler: function(actor, target, rest) {
-            if (!/^\d+d\d+([+-]\d+)?$/.test(rest)) {
-                actor.send("Invalid dice string: '" + rest + "'. Expected NdM or NdM+K.\r\n");
-                return;
-            }
-            tapestry.world.setProperty(target.id, 'damage_dice', rest);
-            actor.send(target.name + "'s damage dice set to " + rest + ".\r\n");
-        }
     }
 };
 
 tapestry.commands.register({
     name: 'set',
-    description: 'Admin: modify player/npc/item fields.',
+    description: 'Admin: modify player/npc/item attributes.',
     category: 'admin',
     admin: true,
     args: {
         entity: { type: 'keyword', required: true },
-        property: { type: 'keyword', required: true },
-        value: { type: 'text', required: true }
+        property: { type: 'keyword', required: false },
+        value: { type: 'text', required: false }
     },
     handler: function(actor, resolved) {
-        var entityKind = resolved.entity.toLowerCase();
-        var property = resolved.property.toLowerCase();
-        var value = resolved.value;
-        var key = entityKind + ':' + property;
-        var entry = adminSetHandlers[key];
+        var entityKind = (resolved.entity || '').toLowerCase();
+        var attr = (resolved.property || '').toLowerCase();
+        var valueStr = resolved.value || '';
 
-        if (!entry) {
-            actor.send('Unknown set target: ' + key + '\r\n');
+        // Retained subsystem ops: resolve target locally and run the legacy handler.
+        var domain = domainSetOps[entityKind + ':' + attr];
+        if (domain) {
+            var spaceIdx = valueStr.indexOf(' ');
+            var targetName = spaceIdx === -1 ? valueStr : valueStr.slice(0, spaceIdx);
+            var rest = spaceIdx === -1 ? '' : valueStr.slice(spaceIdx + 1);
+            if (!targetName) {
+                actor.send('Usage: set ' + entityKind + ' ' + attr + ' [target] [value]\r\n');
+                return;
+            }
+            var target = domainResolveTarget(entityKind, targetName);
+            if (!target) {
+                actor.send("No " + entityKind + " named '" + targetName + "' found.\r\n");
+                return;
+            }
+            domain.handler(actor, target, rest);
             return;
         }
 
-        // value is "targetName rest..." -- split on first space
-        var spaceIdx = value.indexOf(' ');
-        var targetName;
-        var rest;
-        if (spaceIdx === -1) {
-            targetName = value;
-            rest = '';
-        } else {
-            targetName = value.slice(0, spaceIdx);
-            rest = value.slice(spaceIdx + 1);
+        // Everything else (panels, value-omitted echo, declared attributes) -> engine.
+        // Reconstruct dispatch args: [kind, attr, target, ...value], dropping empties.
+        var dispatchArgs = [];
+        if (resolved.entity) { dispatchArgs.push(resolved.entity); }
+        if (resolved.property) { dispatchArgs.push(resolved.property); }
+        if (valueStr) {
+            var parts = valueStr.split(' ');
+            for (var i = 0; i < parts.length; i++) {
+                if (parts[i].length > 0) { dispatchArgs.push(parts[i]); }
+            }
         }
-
-        var target = adminSetResolveTarget(entityKind, targetName);
-        if (!target) {
-            actor.send("No " + entityKind + " named '" + targetName + "' found.\r\n");
-            return;
-        }
-
-        entry.handler(actor, target, rest);
+        tapestry.admin.set.dispatch(actor.entityId, dispatchArgs);
     }
 });
