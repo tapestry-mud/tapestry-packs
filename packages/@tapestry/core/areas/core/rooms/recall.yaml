@@ -11,3 +11,4 @@ properties:
   terrain: indoors
 fixtures:
   - "tapestry-core:fountain"
+  - "tapestry-cooking:campfire"
