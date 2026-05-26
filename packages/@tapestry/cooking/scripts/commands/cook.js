@@ -1,12 +1,3 @@
-// @tapestry/cooking — pack interop consumer.
-//
-// The `cook` command consumes @tapestry/survival's exports through the sanctioned
-// interop surface (tapestry.packs), each call guarded by has() so cooking degrades
-// gracefully when survival isn't loaded (survival is an optionalDependency). This
-// began as the interop-wall discovery scaffold; the walls are now resolved.
-//
-// See findings document: docs/tapestry/reviews/2026-05-24-survival-pack-extraction-findings.md
-
 tapestry.commands.register({
     name: 'cook',
     description: 'Cook a meal using ingredients in your inventory.',
@@ -24,23 +15,24 @@ tapestry.commands.register({
             return;
         }
 
-        // Query wall → resolved: ask survival whether the actor is too full to benefit.
-        var tier = tapestry.packs.has('@tapestry/survival', 'getHungerTier')
-            ? tapestry.packs.call('@tapestry/survival', 'getHungerTier', actor.entityId)
-            : null;
-        if (tier === 'full') {
-            actor.send("You're too full to benefit from a hearty meal right now.\r\n");
+        var cooksInto = tapestry.world.getProperty(item.id, 'cooks_into');
+        if (!cooksInto) {
+            actor.send("You don't know how to cook that.\r\n");
+            return;
         }
 
-        // Perform the cook action (assumed successful for scaffold purposes)
-        actor.send('You cook ' + item.name + ' over a nearby flame.\r\n');
-        actor.sendToRoom(actor.name + ' cooks ' + item.name + '.\r\n');
-
-        // Invoke wall → resolved: apply a well-fed buff via survival (bonus, not required).
-        // Skipped when the actor is already full — don't waste the buff on a full character
-        // (the whole point of the getHungerTier query above).
-        if (tier !== 'full' && tapestry.packs.has('@tapestry/survival', 'applyWellFedBuff')) {
-            tapestry.packs.call('@tapestry/survival', 'applyWellFedBuff', actor.entityId, 3600);
+        var result = tapestry.consumables.consume(actor.entityId, item.id);
+        if (!result || !result.success) {
+            actor.send("You can't cook that right now.\r\n");
+            return;
         }
+
+        var spawn = tapestry.items.spawnToInventory(cooksInto, actor.entityId);
+        if (!spawn) {
+            actor.send("Something went wrong — the cooked result couldn't be created.\r\n");
+            return;
+        }
+        actor.send('You cook ' + item.name + ' into ' + spawn.name + '.\r\n');
+        actor.sendToRoom(actor.name + ' cooks something over a nearby flame.\r\n');
     }
 });
