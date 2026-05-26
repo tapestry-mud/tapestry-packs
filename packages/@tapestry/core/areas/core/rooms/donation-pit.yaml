@@ -10,3 +10,6 @@ exits:
 tags: [safe, no_wander]
 properties:
   terrain: indoors
+fixtures:
+  - "tapestry-cooking:microwave"
+  - "tapestry-cooking:pan"
