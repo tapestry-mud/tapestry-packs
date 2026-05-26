@@ -1,0 +1,18 @@
+id: "tapestry-cooking:raw-meat"
+name: "a slab of raw meat"
+type: "item"
+tags: [consumable]
+keywords: [meat, slab, raw]
+properties:
+  cookable: true
+  cooks_into: "tapestry-cooking:cooked-steak"
+  consume_method: cook
+  sustenance_value: 0
+  charges: 1
+  max_charges: 1
+  destroy_on_empty: true
+  weight: 2
+  rarity: common
+  description: "A bloody slab of raw meat. It must be cooked before eating."
+  value: 3
+modifiers: []
