@@ -29,4 +29,7 @@ shop_sells:
   - "tapestry-example-pack:glowing-lantern"
   - "tapestry-example-pack:traveler-cloak"
   - "tapestry-example-pack:book-of-parry"
+  - "tapestry-cooking:raw-meat"
+  - "tapestry-cooking:pan"
+  - "tapestry-cooking:cooked-steak"
 equipment: []

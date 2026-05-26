@@ -12,4 +12,3 @@ properties:
   terrain: indoors
 fixtures:
   - "tapestry-cooking:microwave"
-  - "tapestry-cooking:pan"

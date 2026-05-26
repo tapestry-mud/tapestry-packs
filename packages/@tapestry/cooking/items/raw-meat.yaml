@@ -14,5 +14,5 @@ properties:
   weight: 2
   rarity: common
   description: "A bloody slab of raw meat. It must be cooked before eating."
-  value: 3
+  value: 1
 modifiers: []

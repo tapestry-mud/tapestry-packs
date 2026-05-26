@@ -13,5 +13,5 @@ properties:
   weight: 2
   rarity: common
   description: "A perfectly cooked steak, sizzling and fragrant. Far more nourishing than raw meat."
-  value: 5
+  value: 1
 modifiers: []
