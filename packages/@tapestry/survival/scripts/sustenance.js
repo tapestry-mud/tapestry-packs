@@ -23,10 +23,8 @@ tapestry.schedule.everyForEach(DRAIN_CADENCE, { type: 'player' }, function(entit
     var prevTier = getTier(current);
 
     var drain = DRAIN_AMOUNT;
-    var wellFedUntil = tapestry.world.getProperty(entityId, 'well_fed_until');
-    if (wellFedUntil !== null && wellFedUntil !== undefined &&
-        tapestry.world.getCurrentTick() < Number(wellFedUntil)) {
-        drain = 0; // well-fed: skip hunger drain until the buff expires
+    if (tapestry.effects.hasEffect(entityId, 'well-fed')) {
+        drain = 0; // well-fed: skip hunger drain while the effect is active
     }
     tapestry.events.publish('sustenance.tick', {
         entityId: entityId,
@@ -168,16 +166,19 @@ tapestry.packs.export('getHungerTier', function (entityId) {
     returns: 'string'
 });
 
-tapestry.packs.export('applyWellFedBuff', function (entityId, durationSeconds) {
-    var until = tapestry.world.getCurrentTick() + Number(durationSeconds);
-    tapestry.world.setProperty(entityId, 'well_fed_until', until);
+tapestry.packs.export('applyWellFedBuff', function (entityId, durationTicks) {
+    tapestry.effects.apply(entityId, {
+        id: 'well-fed',
+        duration: Number(durationTicks),
+        flags: ['well_fed']
+    });
     tapestry.world.send(entityId, 'You feel well-fed and satisfied.\r\n');
 }, {
     kind: 'command',
-    description: 'Suppress hunger drain for the given duration (a well-fed buff).',
+    description: 'Suppress hunger drain for the given duration in ticks (a well-fed buff).',
     params: [
         { name: 'entityId', type: 'entity' },
-        { name: 'durationSeconds', type: 'number' }
+        { name: 'durationTicks', type: 'number' }
     ],
     returns: 'undefined'
 });
