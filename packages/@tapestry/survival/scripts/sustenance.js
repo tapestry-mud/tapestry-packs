@@ -85,14 +85,16 @@ tapestry.events.on('item.consumed', function(evt) {
     var effectData = evt.data.effectData;
     var entityId = evt.data.entityId;
 
-    // Nutrition: apply the item's sustenance value. Moved here from the engine's
-    // ConsumableService so the kernel owns no hunger logic. Capped at 100.
-    // Number() is required: values read off evt.data arrive CLR-wrapped, so a bare
-    // `current + sustenanceValue` would string-concatenate instead of add.
-    var sustenanceValue = Number(evt.data.sustenanceValue) || 0;
-    if (sustenanceValue > 0) {
-        var current = Number(getSustenanceValue(entityId)) || 0;
-        tapestry.world.setProperty(entityId, 'sustenance', Math.min(100, current + sustenanceValue));
+    // Nutrition applies only to eating (a 'cook' consume must not feed).
+    // instant-heal / instant-restore below stay method-agnostic.
+    if (evt.data.consumeMethod === 'eat') {
+        // Number() is required: values read off evt.data arrive CLR-wrapped, so a bare
+        // `current + sustenanceValue` would string-concatenate instead of add.
+        var sustenanceValue = Number(evt.data.sustenanceValue) || 0;
+        if (sustenanceValue > 0) {
+            var current = Number(getSustenanceValue(entityId)) || 0;
+            tapestry.world.setProperty(entityId, 'sustenance', Math.min(100, current + sustenanceValue));
+        }
     }
 
     if (effectId === 'core:instant-heal' && effectData) {
