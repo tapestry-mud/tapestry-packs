@@ -11,3 +11,15 @@ properties:
     description: "Marks an item as cooked food (triggers well-fed buff on eat)"
     type: bool
     applies_to: [item]
+  can_cook:
+    description: "Marks an item as a cooking tool (pan, skewer, microwave, etc.)"
+    type: bool
+    applies_to: [item]
+  heat_source:
+    description: "Marks an item as a heat source. If present on the can_cook tool itself, no separate room scan is needed."
+    type: bool
+    applies_to: [item]
+  cook_text:
+    description: "Flavor text for the cooking action. {item} is substituted with the ingredient name."
+    type: string
+    applies_to: [item]
