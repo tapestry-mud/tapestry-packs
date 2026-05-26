@@ -15,6 +15,12 @@ tapestry.commands.register({
             return;
         }
 
+        var propTypes = {};
+        var propRegistry = tapestry.world.getPropertyRegistry ? tapestry.world.getPropertyRegistry() : [];
+        for (var pr = 0; pr < propRegistry.length; pr++) {
+            propTypes[propRegistry[pr].name] = propRegistry[pr].valueType;
+        }
+
         var cls = tapestry.world.getProperty(target.id, 'class') || '-';
         var race = tapestry.world.getProperty(target.id, 'race') || '-';
         var allProps = e.properties || {};
@@ -71,7 +77,12 @@ tapestry.commands.register({
         }
 
         var tags = tapestry.world.getEntityTags ? tapestry.world.getEntityTags(target.id) : [];
-        actor.send('Flags:   ' + (tags && tags.length ? tags.join(', ') : '(none)') + '\r\n');
+        var flagParts = [];
+        for (var ti = 0; ti < tags.length; ti++) {
+            var known = tapestry.world.isTagKnown ? tapestry.world.isTagKnown(tags[ti], null) : true;
+            flagParts.push(known ? tags[ti] : tags[ti] + ' (unregistered)');
+        }
+        actor.send('Flags:   ' + (flagParts.length ? flagParts.join(', ') : '(none)') + '\r\n');
 
         var eq = e.equipment || {};
         var eqLines = [];
@@ -94,13 +105,14 @@ tapestry.commands.register({
         for (var key in props) {
             if (Object.prototype.hasOwnProperty.call(props, key)) {
                 var val = props[key];
+                var typeTag = propTypes.hasOwnProperty(key) ? '(' + propTypes[key] + ')' : '(unregistered)';
                 if (typeof val === 'object' && val !== null && !Array.isArray(val)) {
-                    propLines.push(key + ': {map}');
+                    propLines.push(key + ' ' + typeTag + ': {map}');
                     Object.keys(val).forEach(function(k) {
                         propLines.push('  ' + key + '.' + k + ': ' + val[k]);
                     });
                 } else {
-                    propLines.push(key + ': ' + val);
+                    propLines.push(key + ' ' + typeTag + ': ' + val);
                 }
             }
         }
