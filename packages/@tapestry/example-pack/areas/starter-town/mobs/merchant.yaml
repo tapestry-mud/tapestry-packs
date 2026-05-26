@@ -31,5 +31,4 @@ shop_sells:
   - "tapestry-example-pack:book-of-parry"
   - "tapestry-cooking:raw-meat"
   - "tapestry-cooking:pan"
-  - "tapestry-cooking:cooked-steak"
 equipment: []
