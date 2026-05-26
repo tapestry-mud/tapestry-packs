@@ -11,7 +11,11 @@ tapestry.commands.register({
 
         var consumeMethod = tapestry.world.getProperty(item.id, 'consume_method');
         if (consumeMethod !== 'eat') {
-            actor.send("You can't eat that.\r\n");
+            if (tapestry.world.getProperty(item.id, 'cookable')) {
+                actor.send("Eating that raw would make you sick. Try cooking it first.\r\n");
+            } else {
+                actor.send("You can't eat that.\r\n");
+            }
             return;
         }
 
