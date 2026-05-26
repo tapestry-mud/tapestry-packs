@@ -1,0 +1,17 @@
+id: "tapestry-cooking:cooked-steak"
+name: "a juicy cooked steak"
+type: "item"
+tags: [consumable]
+keywords: [steak, meat]
+properties:
+  cooked: true
+  consume_method: eat
+  sustenance_value: 40
+  charges: 1
+  max_charges: 1
+  destroy_on_empty: true
+  weight: 2
+  rarity: common
+  description: "A perfectly cooked steak, sizzling and fragrant. Far more nourishing than raw meat."
+  value: 5
+modifiers: []
