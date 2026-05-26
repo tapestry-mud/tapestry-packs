@@ -11,3 +11,11 @@ properties:
     description: "Readable text content for items like letters and signs"
     type: string
     applies_to: [item]
+  notell:
+    description: "Player is silenced from sending/receiving tells"
+    type: bool
+    applies_to: [player]
+  nochannels:
+    description: "Player is silenced from all chat channels"
+    type: bool
+    applies_to: [player]
