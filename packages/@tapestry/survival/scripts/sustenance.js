@@ -114,19 +114,6 @@ tapestry.events.on('item.consumed', function(evt) {
     }
 });
 
-tapestry.admin.set.register({
-    kind: 'player',
-    type: 'sustenance',
-    help: 'set player sustenance [target] [value] - set sustenance (0-100)',
-    handler: function(admin, target, args) {
-        if (args.length < 1) { admin.send('Usage: set player sustenance [target] [value]\r\n'); return; }
-        var value = parseInt(args[0], 10);
-        if (isNaN(value) || value < 0 || value > 100) { admin.send('Value must be 0-100.\r\n'); return; }
-        tapestry.world.setProperty(target.id, 'sustenance', value);
-        admin.send(target.name + "'s sustenance set to " + value + ".\r\n");
-    }
-});
-
 tapestry.events.on('entity.regen', function(evt) {
     var entityId = evt.sourceEntityId;
     if (!entityId) { return; }
