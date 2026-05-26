@@ -4,7 +4,7 @@ type: "item"
 keywords: [pan, iron, cast]
 properties:
   can_cook: true
-  cook_text: "You place {item} on the pan and cook it over the fire."
+  cook_text: "You place {item} on the pan and cook it."
   weight: 3
   rarity: common
   description: "A heavy cast iron pan, seasoned with use. Perfect for cooking over an open flame."
