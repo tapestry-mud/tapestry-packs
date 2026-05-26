@@ -1,0 +1,14 @@
+id: "tapestry-cooking:microwave"
+name: "a humming microwave"
+type: "item"
+tags: [fixture, no_get]
+keywords: [microwave, oven]
+properties:
+  can_cook: true
+  heat_source: true
+  cook_text: "You put {item} in the microwave... DING!"
+  weight: 0
+  rarity: common
+  description: "A small microwave humming with potential. What strange sorcery is this?"
+  value: 0
+modifiers: []
