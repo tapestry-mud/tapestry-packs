@@ -1,0 +1,12 @@
+id: "tapestry-cooking:campfire"
+name: "a crackling campfire"
+type: "item"
+tags: [fixture, no_get]
+keywords: [campfire, fire, flame]
+properties:
+  heat_source: true
+  weight: 0
+  rarity: common
+  description: "A ring of stones containing a healthy fire. Good for cooking."
+  value: 0
+modifiers: []
