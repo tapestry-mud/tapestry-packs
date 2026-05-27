@@ -1,11 +1,11 @@
 name: "@tapestry/survival"
-version: "0.1.0"
+version: "0.1.1"
 type: module
 display_name: "Tapestry Survival"
 description: "Sustenance system: hunger drain, eat/drink commands, and hunger-based regen scaling. Depends on the kernel schedule primitive."
 author: "Tapestry"
 license: "AGPL-3.0"
-engine: ">=0.0.1"
+engine: ">=0.1.5"
 validation: strict
 dependencies:
   "@tapestry/core": "^0.1.0"
