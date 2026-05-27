@@ -1,0 +1,28 @@
+properties:
+  material:
+    description: >
+      The raw material an item is made from or composed of (wood, copper, iron, ...).
+      Used by craft command for input matching; matched pack-side over inventory.
+    type: string
+    applies_to: [item]
+
+  bench_level:
+    description: >
+      The tier of a crafting bench. Level 0 = no bench (hands-only);
+      level 1 = basic bench; higher levels unlock more complex recipes.
+    type: int
+    applies_to: [item]
+
+  teaches_recipe:
+    description: >
+      The recipe id this item teaches when learned via the 'learn' command.
+      e.g. tapestry-tinkers:level-1-bench
+    type: string
+    applies_to: [item]
+
+  known_recipes:
+    description: >
+      The player's recipe book -- a list of recipe ids learned via the 'learn' command.
+      Persists across logout/login.
+    type: list_string
+    applies_to: [player]

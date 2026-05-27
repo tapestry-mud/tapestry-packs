@@ -1,0 +1,23 @@
+name: "@tapestry/tinkers"
+version: "0.1.0"
+type: module
+display_name: "Tapestry Tinkers"
+description: >
+  Tinkers-style crafting exemplar. Materials scatter into the world via engine-declarative
+  spawn_on; recipes are pack-owned JS data; a levelable portable bench gates crafting tiers.
+  Proves Phase 2 cross-pack composition: a Tinkers campfire recipe outputs a cooking heat source.
+author: "Tapestry"
+license: "AGPL-3.0"
+engine: ">=0.1.5"
+validation: strict
+dependencies:
+  "@tapestry/core": "0.1.3"
+  "@tapestry/cooking": "0.1.1"
+active: true
+load_order: 15
+
+content:
+  area_definitions: "areas/**/area.yaml"
+  rooms: "areas/**/rooms/*.yaml"
+  items: "items/**/*.yaml"
+  scripts: "scripts/**/*.js"
