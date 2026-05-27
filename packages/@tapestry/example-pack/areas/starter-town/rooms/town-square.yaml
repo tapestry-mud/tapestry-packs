@@ -26,3 +26,5 @@ fixtures:
   - "tapestry-example-pack:fountain"
   - "tapestry-example-pack:town-sign"
   - "tapestry-example-pack:brass-ring"
+  - "tapestry-example-pack:travel-ration"
+  - "tapestry-cooking:raw-meat"

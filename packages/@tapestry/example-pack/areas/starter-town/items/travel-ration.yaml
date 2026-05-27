@@ -1,0 +1,16 @@
+id: "tapestry-example-pack:travel-ration"
+name: "a travel ration"
+type: "item"
+tags: [consumable]
+keywords: [ration, food, bread, meal]
+properties:
+  consume_method: eat
+  sustenance_value: 40
+  charges: 1
+  max_charges: 1
+  destroy_on_empty: true
+  weight: 1
+  rarity: common
+  description: "A dense block of trail bread and cured meat -- enough to take the edge off real hunger."
+  value: 5
+modifiers: []
