@@ -86,5 +86,11 @@ tapestry.commands.register({
             actor.send('You cook ' + item.name + ' into ' + spawn.name + '.\r\n');
         }
         actor.sendToRoom(actor.name + ' cooks something.\r\n');
+
+        // Single-use cooking tools (e.g. a portable campfire) are spent after one meal.
+        // Reusable tools (stoves, ovens) have no destroy_on_empty and are left untouched.
+        if (tapestry.world.getProperty(toolItem.id, 'destroy_on_empty')) {
+            tapestry.consumables.consume(actor.entityId, toolItem.id);
+        }
     }
 });

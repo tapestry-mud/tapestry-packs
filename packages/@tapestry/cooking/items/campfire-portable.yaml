@@ -6,6 +6,9 @@ properties:
   can_cook: true
   heat_source: true
   cook_text: "You kindle {item} over the tinder bundle."
+  charges: 1
+  max_charges: 1
+  destroy_on_empty: true
   weight: 1
   rarity: uncommon
   description: >
