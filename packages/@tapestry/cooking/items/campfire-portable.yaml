@@ -1,0 +1,15 @@
+id: "tapestry-cooking:campfire-portable"
+name: "a bundle of tinder"
+type: "item"
+keywords: [campfire, fire, tinder, bundle, portable]
+properties:
+  can_cook: true
+  heat_source: true
+  cook_text: "You kindle {item} over the tinder bundle."
+  weight: 1
+  rarity: uncommon
+  description: >
+    A bundle of dry sticks, bark, and char-cloth. Strike a spark and you have a
+    cooking fire — briefly. Enough for one meal.
+  value: 5
+modifiers: []
