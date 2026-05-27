@@ -19,8 +19,8 @@ tapestry.commands.register({
             rows.push({
                 type: 'cell',
                 cells: [
-                    { content: '  ' + packs[i].name, width: 26 },
-                    { content: ver + '  (' + packRef + ')', width: 'fill' }
+                    { content: '  ' + packs[i].name, width: 'fill' },
+                    { content: ver + '  (' + packRef + ') ', width: 22, align: 'right' }
                 ]
             });
         }
@@ -33,8 +33,8 @@ tapestry.commands.register({
                     {
                         type: 'cell',
                         cells: [
-                            { content: '  Engine', width: 26 },
-                            { content: engineVer + '  (' + shortSha + ')', width: 'fill' }
+                            { content: '  Engine', width: 'fill' },
+                            { content: engineVer + '  (' + shortSha + ') ', width: 22, align: 'right' }
                         ]
                     }
                 ]
