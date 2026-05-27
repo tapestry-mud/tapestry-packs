@@ -1,7 +1,7 @@
 id: "link"
 title: "Link"
-category: "builder"
-role: "builder"
+category: "admin"
+role: "admin"
 keywords: [connect, join, exit, room, builder, create exit]
 brief: "Link two rooms by creating an exit connection."
 syntax:

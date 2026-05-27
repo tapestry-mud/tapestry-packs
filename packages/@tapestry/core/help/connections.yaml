@@ -1,7 +1,7 @@
 id: "connections"
 title: "Connections"
-category: "builder"
-role: "builder"
+category: "admin"
+role: "admin"
 keywords: [exits, links, rooms, map, builder, connected]
 brief: "List connections for this room or all rooms."
 syntax:
