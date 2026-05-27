@@ -1,0 +1,14 @@
+id: "tapestry-tinkers:wood-chunk"
+name: "a chunk of rough wood"
+type: "item"
+keywords: [wood, chunk, rough, timber]
+properties:
+  material: wood
+  weight: 2
+  rarity: common
+  description: "A rough-hewn chunk of wood. Useful for crafting."
+  value: 1
+spawn_on:
+  - tag: forest_room
+    count: 3
+modifiers: []

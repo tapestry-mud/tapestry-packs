@@ -1,0 +1,9 @@
+id: "tapestry-tinkers:test-forest"
+area: tinkers-test
+name: "A Quiet Forest Clearing"
+description: >
+  Tall oaks surround a small clearing carpeted in fallen leaves and broken branches.
+  Chunks of raw wood litter the ground, easy pickings for anyone with a crafting eye.
+tags: [forest_room]
+properties:
+  terrain: outdoors

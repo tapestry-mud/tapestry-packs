@@ -1,0 +1,7 @@
+area:
+  id: tinkers-test
+  name: "Tinkers Test Area"
+  level_range: [1, 10]
+  reset_interval: 60
+  occupied_modifier: 1.0
+  flags: []
