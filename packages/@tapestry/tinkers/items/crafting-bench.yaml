@@ -1,0 +1,13 @@
+id: "tapestry-tinkers:crafting-bench"
+name: "a portable crafting bench"
+type: "item"
+keywords: [bench, crafting, portable, workbench]
+properties:
+  bench_level: 1
+  weight: 8
+  rarity: uncommon
+  description: >
+    A folding wooden workbench with a notched surface and pegs for clamping.
+    Portable enough to carry, sturdy enough to work on.
+  value: 20
+modifiers: []
