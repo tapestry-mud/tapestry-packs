@@ -1,6 +1,0 @@
-tags:
-  forest_room:
-    description: >
-      A room containing forest vegetation and resources. Materials like wood scatter
-      here via spawn_on selectors targeting this tag.
-    applies_to: [room]
