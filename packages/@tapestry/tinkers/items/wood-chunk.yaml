@@ -10,5 +10,7 @@ properties:
   value: 1
 spawn_on:
   - tag: forest_room
+    scope: global      # at most `count` wood across ALL forest rooms, not per-room
     count: 3
+    chance: 0.5        # being a forest doesn't guarantee wood is lying about
 modifiers: []
