@@ -5,7 +5,7 @@ description: >
   The forest grows dense here. Shafts of light pierce the canopy in
   narrow beams, illuminating patches of moss and fern. The path is barely
   visible, more a suggestion than a trail. <danger>You feel watched.</danger>
-tags: [forest_room]
+biome: forest
 exits:
   north: "tapestry-example-pack:wilderness-path"
 properties:

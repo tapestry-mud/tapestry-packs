@@ -19,7 +19,7 @@ properties:
     "Copy these plans into your recipe book by typing 'copy schematic'."
   value: 3
 spawn_on:
-  - tag: forest_room
+  - tag: forest
     chance: 0.2
     count: 1
 modifiers: []

@@ -5,7 +5,7 @@ display_name: "Tapestry Biomes"
 description: >
   Shared world vocabulary for biomes and terrain types. A thin layer of room tags
   that content packs target -- for distribution (e.g. tinkers scatters wood into
-  forest_room), behavior, or flavor. Lean by design; add tags when content uses them.
+  forest), behavior, or flavor. Lean by design; add tags when content uses them.
 author: "Tapestry"
 license: "AGPL-3.0"
 engine: ">=0.1.5"
