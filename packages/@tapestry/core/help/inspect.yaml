@@ -2,15 +2,22 @@ id: "inspect"
 title: "Inspect"
 category: "admin"
 role: "admin"
-keywords: [view, details, stats, debug, admin, examine deep]
-brief: "Show detailed stats, equipment, and properties for a target."
+keywords: [view, details, stats, debug, admin, examine deep, room]
+brief: "Show detailed stats and properties for an entity or room."
 syntax:
-  - "inspect [target]"
+  - "inspect [entity]"
+  - "inspect room"
+  - "inspect room [room-id]"
 body: |
-  Inspect gives a full detailed readout of a player, NPC, or item:
-  all stats, flags, equipment, active effects, template ID, and
-  other internal properties not visible through normal commands.
+  Inspect gives a full detailed readout for an entity or a room.
 
-  Use inspect when debugging unexpected behavior, verifying item
-  properties, or checking player state during support requests.
+  For entities (players, NPCs, items): shows all stats, flags,
+  equipment, proficiency, active effects, and internal properties.
+
+  For rooms: shows id, name, area, biome, terrain, flags,
+  properties, exits, and current occupants.
+
+  Use 'inspect room' to inspect your current room.
+  Use 'inspect room <id>' to inspect any room by its full id.
+
 see_also: [set, admin]
