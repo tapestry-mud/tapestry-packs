@@ -3,3 +3,19 @@ tags:
     kind: biome
     description: "Forested terrain — woodland vegetation and gatherable wood."
     applies_to: [room]
+  cave:
+    kind: biome
+    description: "Subterranean rock — caverns and tunnels, mineral and stone deposits."
+    applies_to: [room]
+  desert:
+    kind: biome
+    description: "Arid sand and stone — sparse vegetation, scorching heat, scarce water."
+    applies_to: [room]
+  wetland:
+    kind: biome
+    description: "Waterlogged ground — marsh, bog, and fen, reeds and standing water."
+    applies_to: [room]
+  mountain:
+    kind: biome
+    description: "High rocky elevation — thin air, bare stone, and alpine terrain."
+    applies_to: [room]
