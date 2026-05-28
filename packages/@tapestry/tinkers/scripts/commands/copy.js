@@ -1,17 +1,17 @@
 tapestry.commands.register({
-    name: 'learn',
-    description: 'Study a recipe schematic to add it to your recipe book.',
+    name: 'copy',
+    description: 'Copy a schematic or set of plans into your recipe book.',
     category: 'inventory',
     roles: ['player'],
     args: {
-        item: { type: 'inventory', required: true }
+        item: { type: 'findable', required: true }
     },
     handler: function(actor, resolved) {
         var item = resolved.item;
         var recipeId = tapestry.world.getProperty(item.id, 'teaches_recipe');
 
         if (!recipeId) {
-            actor.send("There's nothing to learn from that.\r\n");
+            actor.send("There's nothing on that worth copying down.\r\n");
             return;
         }
 
@@ -19,7 +19,7 @@ tapestry.commands.register({
         var known = Array.isArray(knownRaw) ? knownRaw.slice() : [];
 
         if (known.indexOf(recipeId) >= 0) {
-            actor.send("You already know that recipe.\r\n");
+            actor.send("You've already copied that into your recipe book.\r\n");
             return;
         }
 
@@ -30,10 +30,8 @@ tapestry.commands.register({
             ? recipeId.split(':')[1].replace(/-/g, ' ')
             : recipeId;
 
-        actor.send("You study the schematic and learn how to craft: " + displayName + ".\r\n");
-
-        // Destroy the schematic via inventory.destroy (detaches from contents + untracks).
-        // Do NOT use removeEntity (room-only) or consumables.consume (needs charges).
-        tapestry.inventory.destroy(actor.entityId, item.id);
+        // Non-destructive: the schematic is a reference you transcribe from, not consumed.
+        actor.send("You carefully copy the plans into your recipe book: " + displayName + ".\r\n");
+        actor.sendToRoom(actor.name + " studies " + item.name + ", scribbling notes.\r\n");
     }
 });

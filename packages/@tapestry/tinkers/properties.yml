@@ -15,14 +15,14 @@ properties:
 
   teaches_recipe:
     description: >
-      The recipe id this item teaches when learned via the 'learn' command.
-      e.g. tapestry-tinkers:level-1-bench
+      The recipe id this item teaches. A readable schematic is transcribed into
+      the recipe book via the 'copy' command. e.g. tapestry-tinkers:level-1-bench
     type: string
     applies_to: [item]
 
   known_recipes:
     description: >
-      The player's recipe book -- a list of recipe ids learned via the 'learn' command.
-      Persists across logout/login.
+      The player's recipe book -- a list of recipe ids copied from schematics
+      via the 'copy' command. Persists across logout/login.
     type: list_string
     applies_to: [player]

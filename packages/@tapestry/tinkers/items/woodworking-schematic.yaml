@@ -1,6 +1,7 @@
 id: "tapestry-tinkers:woodworking-schematic"
 name: "a tattered woodworking schematic"
 type: "item"
+tags: [readable]
 keywords: [schematic, woodworking, tattered, plans]
 properties:
   teaches_recipe: "tapestry-tinkers:level-1-bench"
@@ -9,6 +10,13 @@ properties:
   description: >
     Charcoal diagrams on bark-paper showing how to lash together a basic crafting bench.
     The writing is smudged but legible.
+  text: >
+    The bark-paper is dense with charcoal diagrams: notched joints, peg
+    placement, the fold of a portable bench laid out step by step. Scrawled
+    along the bottom margin, a note reads --
+
+
+    "Copy these plans into your recipe book by typing 'copy schematic'."
   value: 3
 spawn_on:
   - tag: forest_room
