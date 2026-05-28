@@ -1,5 +1,5 @@
 name: "@tapestry/biomes"
-version: "0.1.0"
+version: "0.1.1"
 type: module
 display_name: "Tapestry Biomes"
 description: >
@@ -8,10 +8,10 @@ description: >
   forest), behavior, or flavor. Lean by design; add tags when content uses them.
 author: "Tapestry"
 license: "AGPL-3.0"
-engine: ">=0.1.5"
+engine: ">=0.1.7"
 validation: strict
 dependencies:
-  "@tapestry/core": "0.1.3"
+  "@tapestry/core": "0.1.4"
 active: true
 load_order: 5
 
