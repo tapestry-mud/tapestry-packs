@@ -1,0 +1,25 @@
+id: "tapestry-tinkers:campfire-schematic"
+name: "a singed campfire schematic"
+type: "item"
+tags: [readable]
+keywords: [schematic, campfire, singed, plans, firecraft]
+properties:
+  teaches_recipe: "tapestry-tinkers:campfire-portable"
+  weight: 0
+  rarity: common
+  description: >
+    Scorch-edged bark-paper diagramming a bundle of tinder and kindling -- a
+    portable cooking fire. Clearly drawn by someone who learned the hard way.
+  text: >
+    The bark-paper shows a tight bundle of dry sticks, bark curls, and
+    char-cloth, with notes on how to strike it into a brief cooking fire.
+    Requires a crafting bench to assemble. A line at the bottom reads --
+
+
+    "Copy these plans into your recipe book by typing 'copy schematic'."
+  value: 3
+spawn_on:
+  - tag: forest_room
+    chance: 0.2
+    count: 1
+modifiers: []

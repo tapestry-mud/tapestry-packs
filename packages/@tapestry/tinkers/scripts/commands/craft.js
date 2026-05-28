@@ -4,15 +4,17 @@ tapestry.commands.register({
     category: 'inventory',
     roles: ['player'],
     args: {
-        recipe: { type: 'text', required: true }
+        // The 'recipe' arg type (registered in 00-recipes.js) resolves the typed
+        // name to a recipe id via the engine arg resolver -- consistent matching
+        // and "no recipe called X" errors live there, not here.
+        recipe: { type: 'recipe', required: true }
     },
     handler: function(actor, resolved) {
-        var recipeName = resolved.recipe;
-        var recipe = _tinkersRecipes.findRecipe(recipeName);
+        var recipe = _tinkersRecipes.findRecipe(resolved.recipe);
 
-        // 1. Recipe exists?
+        // The arg resolver guarantees a match before the handler runs; this is a guard.
         if (!recipe) {
-            actor.send("You don't know a recipe called '" + recipeName + "'.\r\n");
+            actor.send("You can't make that.\r\n");
             return;
         }
 
@@ -23,7 +25,7 @@ tapestry.commands.register({
             var knownRaw = tapestry.world.getProperty(actor.entityId, 'known_recipes') || [];
             var knownList = Array.isArray(knownRaw) ? knownRaw : [];
             if (knownList.indexOf(recipe.id) < 0) {
-                actor.send("You don't know how to make that.\r\n");
+                actor.send("You haven't learned that recipe yet. Find its schematic, 'read' it, then 'copy' it.\r\n");
                 return;
             }
         }
@@ -52,7 +54,7 @@ tapestry.commands.register({
                 }
             }
             if (!benchItem) {
-                actor.send("You need a level " + recipe.benchLevelRequired + " crafting bench.\r\n");
+                actor.send("You need a level " + recipe.benchLevelRequired + " crafting bench to build that.\r\n");
                 return;
             }
         }
@@ -84,8 +86,9 @@ tapestry.commands.register({
 
             if (found.length < needed) {
                 var missing = needed - found.length;
-                var what = input.material ? input.material + ' (material)' : input.id;
-                actor.send("You're missing: " + missing + ' ' + what + ".\r\n");
+                var what = input.material ? input.material : input.id;
+                actor.send("You don't have enough to build that -- still need " + missing + "x " + what +
+                    ". (See 'recipes " + _tinkersRecipes.displayName(recipe) + "'.)\r\n");
                 return; // validation failed — nothing consumed yet
             }
 
