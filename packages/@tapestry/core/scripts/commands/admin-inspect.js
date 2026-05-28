@@ -183,7 +183,7 @@ function renderRoomInspect(actor, roomId) {
         }
     }
 
-    var exits = tapestry.world.getRoomExits(roomId);
+    var exits = tapestry.world.getRoomExitsById ? tapestry.world.getRoomExitsById(roomId) : [];
 
     var occupants = tapestry.world.getRoomOccupants ? tapestry.world.getRoomOccupants(roomId) : [];
     var occupantNames = [];
