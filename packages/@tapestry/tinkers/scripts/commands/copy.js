@@ -30,8 +30,13 @@ tapestry.commands.register({
             ? recipeId.split(':')[1].replace(/-/g, ' ')
             : recipeId;
 
-        // Non-destructive: the schematic is a reference you transcribe from, not consumed.
-        actor.send("You carefully copy the plans into your recipe book: " + displayName + ".\r\n");
-        actor.sendToRoom(actor.name + " studies " + item.name + ", scribbling notes.\r\n");
+        actor.send("You copy the plans into your recipe book: " + displayName +
+            ". The worn schematic crumbles as you transcribe the last of it.\r\n");
+        actor.sendToRoom(actor.name + " studies " + item.name + ", then sets the spent schematic aside.\r\n");
+
+        // Consume the schematic: one schematic teaches one player. inventory.destroy
+        // detaches from the holder's contents + untracks. (Not removeEntity/consume --
+        // those leave non-consumable items dangling; see Task 7.5.)
+        tapestry.inventory.destroy(actor.entityId, item.id);
     }
 });
