@@ -77,6 +77,3 @@ tags:
   readable:
     description: "Item can be read to display text content"
     applies_to: [item]
-  forest_room:
-    description: "A room with forest vegetation and gatherable woodland resources. A shared world tag: content packs scatter materials (e.g. wood) into these rooms via spawn_on distribution."
-    applies_to: [room]

@@ -1,0 +1,4 @@
+tags:
+  forest_room:
+    description: "A room with forest vegetation and gatherable woodland resources. Content packs target this tag for biome-aware behavior (e.g. tinkers scatters wood here via spawn_on)."
+    applies_to: [room]
