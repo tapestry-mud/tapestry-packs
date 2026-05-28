@@ -12,7 +12,7 @@ body: |
   Inspect gives a full detailed readout for an entity or a room.
 
   For entities (players, NPCs, items): shows all stats, flags,
-  equipment, proficiency, active effects, and internal properties.
+  equipment, proficiency, and internal properties.
 
   For rooms: shows id, name, area, biome, terrain, flags,
   properties, exits, and current occupants.

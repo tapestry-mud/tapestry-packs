@@ -176,6 +176,7 @@ function renderRoomInspect(actor, roomId) {
     var propLines = [];
     for (var key in roomProps) {
         if (Object.prototype.hasOwnProperty.call(roomProps, key)) {
+            if (key === 'terrain') { continue; }
             var val = roomProps[key];
             var typeTag = propTypes.hasOwnProperty(key) ? '(' + propTypes[key] + ')' : '(unregistered)';
             propLines.push(key + ' ' + typeTag + ': ' + val);
