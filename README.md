@@ -73,13 +73,27 @@ tapestry dist-tag set @yourscope/my-pack stable 1.0.0
 
 Your pack appears in the pack browser at [tapestryengine.com/packages.html](https://tapestryengine.com/packages.html). Anyone running `tapestry install @yourscope/my-pack` gets it.
 
+### Publishing your own pack (contributors)
+
+1. `tapestry register` (one-time) and pick a scope = your handle.
+2. Locally: `tapestry login` then `tapestry publish`.
+3. For CI: `tapestry trust add <yourscope> <your-org/your-repo>`, add `permissions: id-token: write`
+   to your workflow, and `tapestry publish` will authenticate via OIDC automatically.
+
 ---
 
 ## CI Auto-Publishing
 
-On push to `master`, `.github/workflows/publish.yml` detects which packs have a version bump, publishes each changed pack, and tags it `stable`. No manual steps required.
+On push to `master`, `.github/workflows/publish.yml` detects which packs have a version bump,
+publishes each changed pack, and tags it `stable`. No manual steps, **no stored secret**.
 
-To use the same setup for a community monorepo: copy `.github/workflows/publish.yml` and set a `REGISTRY_CI_TOKEN` secret in your repo.
+Authentication is GitHub Actions OIDC ("trusted publishing"): the workflow grants
+`permissions: id-token: write`, and `tapestry publish` exchanges a short-lived id-token for a
+registry access token. There is no `REGISTRY_CI_TOKEN`.
+
+To use the same setup in your own monorepo:
+1. Copy `.github/workflows/publish.yml` (keep `permissions: id-token: write`).
+2. Authorize your repo for your scope once: `tapestry trust add yourscope your-org/your-repo`.
 
 ---
 
