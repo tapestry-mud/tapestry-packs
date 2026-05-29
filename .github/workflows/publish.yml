@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write
 
     steps:
       - name: Checkout
@@ -31,6 +32,5 @@ jobs:
 
       - name: Publish changed packs
         env:
-          REGISTRY_CI_TOKEN: ${{ secrets.REGISTRY_CI_TOKEN }}
           TAPESTRY_REGISTRY: https://registry.tapestryengine.com
         run: node scripts/publish-changed.js

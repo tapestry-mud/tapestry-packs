@@ -65,12 +65,6 @@ function readPacks() {
 }
 
 async function main() {
-  const ciToken = process.env.REGISTRY_CI_TOKEN;
-  if (!ciToken && !DRY_RUN) {
-    console.error('ERROR: REGISTRY_CI_TOKEN environment variable not set');
-    process.exit(1);
-  }
-
   const packs = readPacks();
   const toPublish = [];
   for (const pack of packs) {
@@ -97,8 +91,6 @@ async function main() {
     return;
   }
 
-  run(`tapestry login --token ${ciToken}`);
-
   for (const pack of toPublish) {
     console.log(`\nProcessing ${pack.scopedName}@${pack.version}...`);
     try {
@@ -108,7 +100,6 @@ async function main() {
       console.error(`\nERROR: publish failed for ${pack.scopedName}@${pack.version}: ${msg}`);
       process.exit(1);
     }
-    run(`tapestry dist-tag set ${pack.scopedName} stable ${pack.version}`);
     console.log(`Published and tagged ${pack.scopedName}@${pack.version} as stable`);
   }
 
