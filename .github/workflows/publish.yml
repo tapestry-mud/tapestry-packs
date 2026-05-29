@@ -26,6 +26,9 @@ jobs:
       - name: Install tapestry CLI
         run: npm install -g @tapestry-mud/cli
 
+      - name: Validate pack manifests
+        run: npm test
+
       - name: Publish changed packs
         env:
           REGISTRY_CI_TOKEN: ${{ secrets.REGISTRY_CI_TOKEN }}

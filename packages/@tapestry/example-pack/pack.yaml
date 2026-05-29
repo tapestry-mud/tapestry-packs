@@ -8,9 +8,9 @@ license: "AGPL-3.0"
 engine: ">=0.1.7"
 validation: strict
 dependencies:
-  "@tapestry/core": "^0.1.2"
-  "@tapestry/biomes": "^0.1.1"
-  "@tapestry/cooking": "^0.1.1"
+  "@tapestry/core": "0.1.4"
+  "@tapestry/biomes": "0.1.1"
+  "@tapestry/cooking": "0.1.2"
 active: true
 load_order: 10
 

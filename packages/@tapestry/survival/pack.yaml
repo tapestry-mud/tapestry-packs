@@ -8,7 +8,7 @@ license: "AGPL-3.0"
 engine: ">=0.1.5"
 validation: strict
 dependencies:
-  "@tapestry/core": "^0.1.0"
+  "@tapestry/core": "0.1.4"
 active: true
 load_order: 5
 

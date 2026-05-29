@@ -11,6 +11,10 @@ This monorepo is the reference for how Tapestry packs are structured and publish
 | Pack | Description |
 |------|-------------|
 | `@tapestry/core` | Engine commands, combat, abilities, and core systems. Every Tapestry game depends on this. |
+| `@tapestry/survival` | Sustenance system: hunger drain, eat/drink commands, and hunger-based regen scaling. |
+| `@tapestry/biomes` | Shared world vocabulary for biomes and terrain — a thin layer of room tags content packs target. |
+| `@tapestry/cooking` | Cook→eat crafting loop: raw ingredients cooked into food via survival interop. |
+| `@tapestry/tinkers` | Tinkers-style crafting exemplar: materials scatter into the world, recipes are pack-owned JS, a levelable bench gates tiers. |
 | `@tapestry/example-pack` | Starter races, classes, and a tutorial area. Good starting point for a new world. |
 
 ---
@@ -23,11 +27,11 @@ The engine ships plumbing: an entity system, combat loop, event bus, command reg
 
 This means the ecosystem can grow independently of the engine. Someone publishes a crafting system pack. A world builder adds it as a dependency and starts marking items as craftable in YAML. No engine changes needed.
 
-A pack is a directory with a `tapestry.yaml` manifest and content files:
+A pack is a directory with a `pack.yaml` manifest and content files:
 
 ```
 @yourscope/my-pack/
-  tapestry.yaml           # name, version, engine constraint, dependencies
+  pack.yaml               # name, version, engine constraint, dependencies
   areas/
     my-area/
       area.yaml           # area-level properties (level range, reset interval, flags)
@@ -59,7 +63,7 @@ The scaffold includes annotated examples of every content type. See the [CLI doc
 
 ## Publishing
 
-Bump `version` in your pack's `tapestry.yaml`, then:
+Bump `version` in your pack's `pack.yaml`, then:
 
 ```bash
 tapestry login
