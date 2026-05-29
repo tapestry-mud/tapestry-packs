@@ -52,19 +52,18 @@ standing measures:
 - **Exact-pinned dependencies.** Every dependency is pinned to an exact version
   — no `^` or `~` ranges — so a malicious upstream release can't be pulled in
   silently by a version range.
-- **Install cooldown for new packages.** Package installs enforce a minimum
-  release age, so freshly published versions are not installed immediately. This
-  blunts worm-style compromises that rely on rapid propagation in the hours
-  after a malicious release.
 - **CI actions pinned to commit SHAs.** GitHub Actions are referenced by full
   commit SHA rather than mutable tags, so a retagged or hijacked action can't
   alter our builds.
-- **Least-privilege CI.** Workflows declare scoped `permissions:` blocks and use
-  short-lived, narrowly scoped credentials — the built-in `GITHUB_TOKEN`,
-  OpenID Connect (OIDC) tokens, and scoped GitHub App tokens — instead of
-  long-lived personal access tokens or stored secrets.
-- **Protected default branch.** Changes to `master` require a pull request, at
-  least one review, and passing status checks before merge.
+- **Least-privilege CI.** Workflows declare scoped `permissions:` blocks. The
+  built-in `GITHUB_TOKEN` is used where it suffices, and engine-channel updates
+  authenticate via OpenID Connect (OIDC) rather than a stored secret. Pack
+  publishing currently authenticates with a registry-scoped token supplied as a
+  CI secret (not a GitHub personal access token); migrating it off a standing
+  secret is planned.
+- **Protected default branch.** A repository ruleset protects `master`: direct
+  pushes are blocked in favor of pull requests, and force-pushes and branch
+  deletion are disallowed. Organization admins may bypass for maintenance.
 
 ## For Contributors and Pack Authors
 
