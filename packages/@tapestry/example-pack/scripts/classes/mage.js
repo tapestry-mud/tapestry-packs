@@ -7,7 +7,7 @@ tapestry.classes.register({
     track: "magic",
     starting_alignment: 0,
     level_up_flavor: "Your understanding of magic deepens.",
-    allowed_categories: ["human"],
+    allowed_categories: ["human", "elf"],
     allowed_genders: ["male", "female", "other"],
     trains_per_level: 5,
     growth_bonuses: {
