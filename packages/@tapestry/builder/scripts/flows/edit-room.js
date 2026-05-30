@@ -67,7 +67,12 @@ tapestry.flows.register({
             // side-action wired by the engine flow runtime (read only on text steps).
             id: "value",
             type: "text",
-            recommend_field: "description",
+            // Recommend the field the player actually picked (engine evaluates this per
+            // invocation). The static stub only suggests name/description; other fields
+            // (terrain, biome, ...) return no suggestions until a real provider docks in.
+            recommend_field: function (entity) {
+                return entity.getProperty("__edit_field");
+            },
             prompt: function (entity) {
                 var field = entity.getProperty("__edit_field") || "field";
                 return "New value for '" + field + "' (or type 'recommend' for suggestions):";
