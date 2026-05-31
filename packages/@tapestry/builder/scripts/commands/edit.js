@@ -23,7 +23,7 @@ function registerEditor(noun, handler) {
 // room: trigger the schema-driven room editor flow (defined in flows/edit-room.js).
 //   edit room
 registerEditor('room', function (actor, args) {
-    actor.send("Editing this room. Type 'cancel' to exit; type 'recommend' at a field for suggestions.\r\n");
+    actor.send("Editing this room. Type 'cancel' to exit; type '~' at a field for suggestions.\r\n");
     tapestry.flows.trigger(actor.entityId, "builder_edit_room");
 });
 

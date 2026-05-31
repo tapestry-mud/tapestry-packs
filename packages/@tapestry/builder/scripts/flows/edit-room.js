@@ -154,7 +154,7 @@ tapestry.flows.register({
         },
         {
             // Step 2b: free fields -> text. Skipped for choice fields. Shows current value +
-            // any min/max range; recommend_field enables the per-field "~"/recommend side-action.
+            // any min/max range; recommend_field enables the per-field '~' side-action.
             id: "value_text",
             type: "text",
             skip_if: function (entity) {
@@ -162,7 +162,11 @@ tapestry.flows.register({
                 return !!(m && m.kind === "choice");
             },
             recommend_field: function (entity) {
-                return entity.getProperty("__edit_field");
+                // Only name/description have field-specific prompt logic in the engine
+                // RoomPromptBuilder; return null elsewhere so "~" isn't offered for arbitrary
+                // free-text fields (the engine then says "not available for this field").
+                var key = entity.getProperty("__edit_field");
+                return (key === "name" || key === "description") ? key : null;
             },
             prompt: function (entity) {
                 var m = findField(entity, entity.getProperty("__edit_field"));
