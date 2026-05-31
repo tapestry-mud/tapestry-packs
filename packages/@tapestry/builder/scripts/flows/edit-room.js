@@ -177,7 +177,9 @@ tapestry.flows.register({
                 if (m && (m.min != null || m.max != null)) {
                     range = " [range " + (m.min != null ? m.min : "") + "–" + (m.max != null ? m.max : "") + "]";
                 }
-                return "New value for '" + label + "'" + cur + range + " (or '~' for suggestions):";
+                var suggestHint = (tapestry.authoring.recommendEnabled && tapestry.authoring.recommendEnabled())
+                    ? " (or '~' for suggestions)" : "";
+                return "New value for '" + label + "'" + cur + range + suggestHint + ":";
             },
             on_input: function (entity, value) {
                 applyField(entity, entity.getProperty("__edit_field"), value);
