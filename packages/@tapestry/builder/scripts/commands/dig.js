@@ -48,6 +48,19 @@ tapestry.commands.register({
             n++;
         } while (taken[newId]);
 
+        // Seam: dig is intra-area only — it wires INLINE exits between authored rooms (which
+        // export with the pack). You cannot dig off a PRE-EXISTING (pack) room: an exit on a
+        // pack room can't persist in the rooms side-car (it's skipped on reload because the
+        // room already loaded from the pack), so the way back would vanish on restart. Attach
+        // a new area to the existing world once, explicitly, with 'link'. Pack rooms carry the
+        // engine-set source_pack property; authored rooms do not.
+        var fromProps = tapestry.world.getRoomProperties(fromId) || {};
+        if (fromProps.source_pack) {
+            actor.send("You can't dig off '" + fromId + "' — it belongs to a pack. Dig only " +
+                "within an area you're authoring; use 'link' to attach your area to the world.\r\n");
+            return;
+        }
+
         if (!tapestry.authoring.createRoom(area, newId, 'New Room', 'An undescribed room.')) {
             actor.send("Could not dig that room.\r\n");
             return;
