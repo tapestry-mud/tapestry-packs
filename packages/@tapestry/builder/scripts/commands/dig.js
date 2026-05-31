@@ -13,15 +13,20 @@ tapestry.commands.register({
         direction: { type: 'keyword', required: true }
     },
     handler: function (actor, resolved) {
-        var dir = String(resolved.direction).toLowerCase();
+        // Accept abbreviations (n/s/e/w/u/d) as well as full names.
+        var dirAliases = {
+            n: 'north', s: 'south', e: 'east', w: 'west', u: 'up', d: 'down',
+            north: 'north', south: 'south', east: 'east', west: 'west', up: 'up', down: 'down'
+        };
+        var dir = dirAliases[String(resolved.direction).toLowerCase()];
+        if (!dir) {
+            actor.send("Unknown direction: " + resolved.direction + "\r\n");
+            return;
+        }
         var opposite = {
             north: 'south', south: 'north', east: 'west',
             west: 'east', up: 'down', down: 'up'
         }[dir];
-        if (!opposite) {
-            actor.send("Unknown direction: " + dir + "\r\n");
-            return;
-        }
 
         var fromId = actor.roomId;
         if (!fromId || fromId.indexOf(':') < 1) {
