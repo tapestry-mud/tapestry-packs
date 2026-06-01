@@ -36,7 +36,7 @@ tapestry.commands.register({
             return;
         }
 
-        tapestry.world.teleportEntity(targetEntity.entityId, roomId);
+        tapestry.world.teleportEntity(targetEntity.id, roomId);
         actor.send('Teleported ' + targetEntity.name + ' to ' + roomName + '.\r\n');
     }
 });
