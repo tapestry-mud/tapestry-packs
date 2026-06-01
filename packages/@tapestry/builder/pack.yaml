@@ -1,10 +1,11 @@
 name: "@tapestry/builder"
-version: "0.1.0"
+version: "0.2.0"
 type: module
 display_name: "Tapestry Builder"
 description: >
-  In-MUD area authoring (OLC). create area / dig / create room / edit room.
-  Calls the always-on engine world-authoring API; depends on core for link/unlink.
+  In-MUD area authoring (OLC). create area / dig / dig-connect / create room /
+  edit room / rooms / map. Calls the always-on engine world-authoring API;
+  depends on core for link/unlink.
 author: "Tapestry"
 license: "AGPL-3.0"
 engine: ">=0.1.11"
