@@ -103,7 +103,7 @@ tapestry.commands.register({
             // Guard 5: the chosen direction must be free here — never clobber an exit.
             var existingTarget = tapestry.world.getExitTarget(fromId, dir);
             if (existingTarget) {
-                actor.send("You already have a " + dir + " exit (to " + existingTarget + ").\r\n");
+                actor.send("Your " + dir + " exit is already taken (it goes to " + existingTarget + ").\r\n");
                 return;
             }
 
@@ -111,8 +111,8 @@ tapestry.commands.register({
             var reverseTaken = tapestry.world.getExitTarget(targetId, opposite);
             tapestry.authoring.setRoomExit(fromId, dir, targetId);
             if (reverseTaken) {
-                actor.send(targetName + " already has a " + opposite +
-                    " exit — linked one-way (" + dir + " from here).\r\n");
+                actor.send(targetName + "'s " + opposite + " exit is already taken — linked one-way (" +
+                    dir + " from here).\r\n");
                 return;
             }
             tapestry.authoring.setRoomExit(targetId, opposite, fromId);
