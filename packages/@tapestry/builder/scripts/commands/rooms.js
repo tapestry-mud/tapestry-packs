@@ -32,6 +32,7 @@ tapestry.commands.register({
             scope: 'area',
             label: 'id',
             showCurrent: true,
+            // Terrain glyph legend — duplicated in map.js; keep both in sync.
             legend: {
                 forest: 'f', stone: 's', water: 'w', sand: '.',
                 road: '=', grass: '"', mountain: 'A'

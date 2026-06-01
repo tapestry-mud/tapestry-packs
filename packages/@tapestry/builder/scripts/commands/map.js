@@ -27,6 +27,7 @@ tapestry.commands.register({
             radius: 3,
             label: 'dot',
             showCurrent: true,
+            // Terrain glyph legend — duplicated in rooms.js; keep both in sync.
             legend: {
                 forest: 'f', stone: 's', water: 'w', sand: '.',
                 road: '=', grass: '"', mountain: 'A'
