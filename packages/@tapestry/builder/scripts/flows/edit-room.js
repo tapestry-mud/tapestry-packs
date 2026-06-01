@@ -14,7 +14,7 @@
 
 function loomTruncate(s, n) {
     s = String(s == null ? '' : s);
-    return s.length > n ? s.substring(0, n - 1) + '…' : s;
+    return s.length > n ? s.substring(0, n - 3) + '...' : s;
 }
 
 function loomCurrentLabel(v) {
@@ -175,7 +175,7 @@ tapestry.flows.register({
                     ? " (current: " + loomTruncate(m.current, 40) + ")" : "";
                 var range = "";
                 if (m && (m.min != null || m.max != null)) {
-                    range = " [range " + (m.min != null ? m.min : "") + "–" + (m.max != null ? m.max : "") + "]";
+                    range = " [range " + (m.min != null ? m.min : "") + "-" + (m.max != null ? m.max : "") + "]";
                 }
                 var suggestHint = (tapestry.authoring.recommendEnabled && tapestry.authoring.recommendEnabled())
                     ? " (or '~' for suggestions)" : "";

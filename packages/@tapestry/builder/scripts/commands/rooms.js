@@ -19,7 +19,7 @@ tapestry.commands.register({
         }
         var props = tapestry.world.getRoomProperties(fromId) || {};
         if (props.source_pack) {
-            actor.send("This room belongs to a pack — 'rooms' works inside areas you author.\r\n");
+            actor.send("This room belongs to a pack - 'rooms' works inside areas you author.\r\n");
             return;
         }
         var area = tapestry.world.getRoomArea(fromId);

@@ -53,7 +53,7 @@ tapestry.commands.register({
         // engine-set source_pack property; authored rooms do not.
         var fromProps = tapestry.world.getRoomProperties(fromId) || {};
         if (fromProps.source_pack) {
-            actor.send("You can't dig off '" + fromId + "' — it belongs to a pack. Dig only " +
+            actor.send("You can't dig off '" + fromId + "' - it belongs to a pack. Dig only " +
                 "within an area you're authoring; use 'link' to attach your area to the world.\r\n");
             return;
         }
@@ -86,7 +86,7 @@ tapestry.commands.register({
             // room can't persist in the side-car and would vanish on reload.
             var targetProps = tapestry.world.getRoomProperties(targetId) || {};
             if (targetProps.source_pack) {
-                actor.send("'" + targetId + "' belongs to a pack — you can only connect rooms " +
+                actor.send("'" + targetId + "' belongs to a pack - you can only connect rooms " +
                     "you've authored. Use 'link' to attach your area to the world.\r\n");
                 return;
             }
@@ -111,7 +111,7 @@ tapestry.commands.register({
             var reverseTaken = tapestry.world.getExitTarget(targetId, opposite);
             tapestry.authoring.setRoomExit(fromId, dir, targetId);
             if (reverseTaken) {
-                actor.send(targetName + "'s " + opposite + " exit is already taken — linked one-way (" +
+                actor.send(targetName + "'s " + opposite + " exit is already taken - linked one-way (" +
                     dir + " from here).\r\n");
                 return;
             }
