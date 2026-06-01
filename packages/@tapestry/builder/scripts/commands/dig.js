@@ -75,7 +75,8 @@ tapestry.commands.register({
             }
 
             // Guard 2: the target must exist.
-            if (!tapestry.world.getRoomName(targetId)) {
+            var targetName = tapestry.world.getRoomName(targetId);
+            if (!targetName) {
                 actor.send("There is no room '" + targetId + "'. Use 'rooms' to list this " +
                     "area's rooms.\r\n");
                 return;
@@ -93,14 +94,16 @@ tapestry.commands.register({
             // Guard 4: same area.
             var targetArea = tapestry.world.getRoomArea(targetId);
             if (targetArea !== area) {
-                actor.send("'" + targetId + "' is in area '" + targetArea + "', not '" + area +
-                    "'. dig only connects rooms within the same area.\r\n");
+                actor.send("'" + targetId + "' is not in this area" +
+                    (targetArea ? " (it's in '" + targetArea + "')" : "") +
+                    ". dig only connects rooms within the same area.\r\n");
                 return;
             }
 
             // Guard 5: the chosen direction must be free here — never clobber an exit.
-            if (tapestry.world.getExitTarget(fromId, dir)) {
-                actor.send("You already have a " + dir + " exit.\r\n");
+            var existingTarget = tapestry.world.getExitTarget(fromId, dir);
+            if (existingTarget) {
+                actor.send("You already have a " + dir + " exit (to " + existingTarget + ").\r\n");
                 return;
             }
 
@@ -108,12 +111,12 @@ tapestry.commands.register({
             var reverseTaken = tapestry.world.getExitTarget(targetId, opposite);
             tapestry.authoring.setRoomExit(fromId, dir, targetId);
             if (reverseTaken) {
-                actor.send(tapestry.world.getRoomName(targetId) + " already has a " + opposite +
+                actor.send(targetName + " already has a " + opposite +
                     " exit — linked one-way (" + dir + " from here).\r\n");
                 return;
             }
             tapestry.authoring.setRoomExit(targetId, opposite, fromId);
-            actor.send("You connect " + dir + " to " + tapestry.world.getRoomName(targetId) +
+            actor.send("You connect " + dir + " to " + targetName +
                 " (" + targetId + "). Two-way exit wired.\r\n");
             return;
         }
