@@ -1,17 +1,40 @@
 // packages/@tapestry/builder/scripts/commands/rooms.js
 //
-// rooms — the builder's authoring discovery tool. Renders the current area's rooms
-// as an id-annotated ASCII map + legend (short id, name, exits) so you know what to
-// type in `dig <dir> <id>`. All projection/rendering is engine-side
-// (tapestry.world.renderAreaMap); this command stays thin.
+// rooms [<area>] -- the builder's authoring discovery tool.
+//   rooms           -- renders the current area's id-annotated ASCII map (original behavior).
+//   rooms <area>    -- lists every room in <area> (bare or namespaced id) with id, name,
+//                      and per-room provenance tag; handy for navigation/teleport targeting.
+// All map projection/rendering is engine-side (tapestry.world.renderAreaMap); this stays thin.
 tapestry.commands.register({
     name: 'rooms',
     aliases: [],
-    description: 'List this area\'s rooms with an id-annotated map (builder).',
+    description: 'List this area\'s rooms with an id-annotated map, or list rooms in <area> (builder).',
     category: 'builder',
     roles: ['admin', 'builder'],
-    args: {},
+    args: {
+        area: { type: 'keyword', required: false }
+    },
     handler: function (actor, resolved) {
+        var areaArg = resolved.area || '';
+        if (areaArg) {
+            var ref = String(areaArg);
+            var colon = ref.indexOf(':');
+            var areaId = colon >= 0 ? ref.substring(colon + 1) : ref;
+
+            var rooms = tapestry.authoring.getAreaRooms(areaId) || [];
+            if (!rooms.length) {
+                actor.send("No rooms in area '" + areaId + "'.\r\n");
+                return;
+            }
+            var lines = ["Rooms in " + areaId + ":"];
+            for (var i = 0; i < rooms.length; i++) {
+                var r = rooms[i];
+                lines.push("  " + r.id + "  " + r.name + "  " + r.provenance);
+            }
+            lines.push("Use 'teleport <id>' to jump to one.");
+            actor.send(lines.join("\r\n") + "\r\n");
+            return;
+        }
         var fromId = actor.roomId;
         if (!fromId || fromId.indexOf(':') < 1) {
             actor.send("You must be standing in an authored room to list rooms.\r\n");
