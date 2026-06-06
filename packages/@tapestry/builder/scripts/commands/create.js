@@ -30,28 +30,41 @@ function registerCreator(noun, handler) {
 // area: create a new authoring area and plant the builder in its anchor room.
 //   create area <namespace:area-id>
 registerCreator('area', function (actor, args) {
-    var areaRef = String(args[0] || ''); // "legends-forgotten:lf-hollow"
+    var areaRef = String(args[0] || '');
     var colon = areaRef.indexOf(':');
     if (colon < 1) {
         actor.send("Usage: create area <namespace:area-id>\r\n");
         return;
     }
     var namespace = areaRef.substring(0, colon);
-    var areaId = areaRef.substring(colon + 1);
-    if (!areaId) {
-        actor.send("Usage: create area <namespace:area-id>\r\n");
+    var areaId = areaRef.substring(colon + 1);   // BARE area id (no namespace)
+
+    var existing = tapestry.authoring.getArea(areaId);
+    if (existing && existing.exists) {
+        if (existing.sourcePack) {
+            actor.send("Area '" + areaId + "' already exists (pack: " + existing.sourcePack + ").\r\n");
+        } else {
+            actor.send("Area '" + areaId + "' already exists (authored).\r\n");
+        }
         return;
     }
-    var anchorId = namespace + ':' + areaId + '-anchor';
 
+    var created = tapestry.authoring.createArea(areaId, null);
+    if (!created) {
+        actor.send("Could not create area '" + areaId + "'.\r\n");
+        return;
+    }
+
+    // Anchor room id keeps the namespace; room.Area is the BARE area id (today's behavior).
+    var anchorId = namespace + ':' + areaId + '-anchor';
     var ok = tapestry.authoring.createRoom(areaId, anchorId, 'New Area Anchor',
         'A freshly dug anchor room. Use "edit room" to describe it.');
     if (!ok) {
-        actor.send("Could not create area (bad namespace, or anchor already exists).\r\n");
+        actor.send("Created area '" + areaId + "' but could not dig its anchor room.\r\n");
         return;
     }
     tapestry.world.teleportEntity(actor.entityId, anchorId);
-    actor.send("Created area '" + areaId + "'. You are in its anchor room.\r\n");
+    actor.send("Created area '" + areaId + "'. You are in its anchor room. Use 'edit area' to describe it.\r\n");
 });
 
 // room: create a blank room in the active area with no auto-exit and no move.
