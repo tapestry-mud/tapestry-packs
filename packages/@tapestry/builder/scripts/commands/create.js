@@ -32,7 +32,7 @@ function registerCreator(noun, handler) {
 registerCreator('area', function (actor, args) {
     var areaRef = String(args[0] || '');
     var colon = areaRef.indexOf(':');
-    if (colon < 1) {
+    if (colon < 1 || colon >= areaRef.length - 1) {
         actor.send("Usage: create area <namespace:area-id>\r\n");
         return;
     }
