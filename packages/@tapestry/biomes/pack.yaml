@@ -1,5 +1,5 @@
 name: "@tapestry/biomes"
-version: "0.1.1"
+version: "0.1.2"
 type: module
 display_name: "Tapestry Biomes"
 description: >
@@ -11,7 +11,7 @@ license: "AGPL-3.0"
 engine: ">=0.1.7"
 validation: strict
 dependencies:
-  "@tapestry/core": "0.1.4"
+  "@tapestry/core": "^0.1.4"
 active: true
 load_order: 5
 
