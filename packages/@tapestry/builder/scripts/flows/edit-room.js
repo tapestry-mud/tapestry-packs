@@ -83,7 +83,20 @@ function findField(entity, key) {
 function applyField(entity, field, value) {
     var roomId = entity.roomId;
     if (field === 'name') {
-        tapestry.authoring.setRoomName(roomId, value);
+        // setRoomName may RE-KEY the room id (rename refactor). After this call the
+        // entity.roomId snapshot on this proxy is stale — only use res.id from here on.
+        var res = tapestry.authoring.setRoomName(roomId, value);
+        if (res && res.renamed && entity.send) {
+            var newId = String(res.id);
+            var shortId = newId.indexOf(':') >= 0 ? newId.split(':')[1] : newId;
+            entity.send('Name set to "' + value + '" (room id is now: ' + shortId + ').\r\n');
+        }
+        if (res && res.warnings && entity.send) {
+            for (var w = 0; w < res.warnings.length; w++) {
+                // ASCII only: telnet clients mojibake any non-7-bit char.
+                entity.send('Warning: ' + res.warnings[w] + '\r\n');
+            }
+        }
         return;
     }
     if (field === 'description') {
