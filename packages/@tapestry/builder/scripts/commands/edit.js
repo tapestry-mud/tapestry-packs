@@ -27,6 +27,39 @@ registerEditor('room', function (actor, args) {
     tapestry.flows.trigger(actor.entityId, "builder_edit_room");
 });
 
+// area: trigger the schema-driven area editor flow (defined in flows/edit-area.js).
+//   edit area [<id>]   -- bare id ("road-to-tar-valon") or namespaced ("wot:road-to-tar-valon")
+//   edit area          -- falls back to the area containing the current room
+registerEditor('area', function (actor, args) {
+    // Accept a bare id ("road-to-tar-valon") OR a namespaced ref ("wot:road-to-tar-valon");
+    // strip the namespace to the bare id. With no arg, fall back to the current room's area.
+    var areaId;
+    if (args[0]) {
+        var ref = String(args[0]);
+        var colon = ref.indexOf(':');
+        areaId = colon >= 0 ? ref.substring(colon + 1) : ref;
+    } else {
+        areaId = tapestry.world.getRoomArea(actor.roomId);
+    }
+
+    if (!areaId) {
+        actor.send("You are not in an area, and no <area-id> was given.\r\n");
+        return;
+    }
+    var info = tapestry.authoring.getArea(areaId);
+    if (!info || !info.exists) {
+        actor.send("No area definition for '" + areaId + "'. Use 'create area <namespace:" + areaId + ">' first.\r\n");
+        return;
+    }
+
+    // Stash the resolved target BEFORE triggering so the flow + engine recommend-context
+    // read THIS id, not the current room. flows.trigger carries no payload.
+    tapestry.world.setProperty(actor.entityId, "__edit_area", areaId);
+
+    actor.send("Editing area '" + areaId + "'. Type 'cancel' to exit; type '~' at a text field for suggestions.\r\n");
+    tapestry.flows.trigger(actor.entityId, "builder_edit_area");
+});
+
 // --- the dispatch command --------------------------------------------------
 tapestry.commands.register({
     name: 'edit',
