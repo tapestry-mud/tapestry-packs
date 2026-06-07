@@ -191,8 +191,11 @@ function renderRoomInspect(actor, roomId) {
         occupantNames.push(occupants[o].name + ' [' + occupants[o].type + ']');
     }
 
+    var desc = tapestry.world.getRoomDescription ? tapestry.world.getRoomDescription(roomId) : null;
+
     actor.send('[Room: ' + roomId + ']\r\n');
     actor.send('Name:    ' + name + '\r\n');
+    actor.send('Desc:    ' + (desc || '(none)') + '\r\n');
     actor.send('Area:    ' + area + '\r\n');
     actor.send('Biome:   ' + (biome || '(none)') + '\r\n');
     actor.send('Terrain: ' + (terrain || '(none)') + '\r\n');
@@ -206,14 +209,38 @@ function renderRoomInspect(actor, roomId) {
     actor.send('Occupants: ' + (occupantNames.length ? occupantNames.join(', ') : '(none)') + '\r\n');
 }
 
+function renderAreaInspect(actor, areaId) {
+    var a = tapestry.authoring.getArea ? tapestry.authoring.getArea(areaId) : null;
+    if (!a || !a.exists) {
+        actor.send("No area found with id '" + areaId + "'.\r\n");
+        return;
+    }
+    var lr = (a.levelRange && a.levelRange.length === 2)
+        ? (a.levelRange[0] + '-' + a.levelRange[1]) : '(unset)';
+    // Mirror the 3-state provenance classifier.
+    var prov = a.sourcePack
+        ? (a.sideCar ? '[pack +edits] (' + a.sourcePack + ')' : '[pack] (' + a.sourcePack + ')')
+        : '[authored]';
+
+    actor.send('[Area: ' + a.id + ']\r\n');
+    actor.send('Name:        ' + (a.name || '(unset)') + '\r\n');
+    actor.send('Short:       ' + (a.short || '(unset)') + '\r\n');
+    actor.send('Description:  ' + (a.description || '(unset)') + '\r\n');
+    actor.send('Theme:       ' + (a.theme || '(unset)') + '\r\n');
+    actor.send('Lore:        ' + (a.lore || '(unset)') + '\r\n');
+    actor.send('Level range: ' + lr + '\r\n');
+    actor.send('Reset (s):   ' + (a.resetInterval != null ? a.resetInterval : '(unset)') + '\r\n');
+    actor.send('Provenance:  ' + prov + '\r\n');
+}
+
 tapestry.commands.register({
     name: 'inspect',
-    description: 'Show detailed stats, equipment, and properties for a target, or inspect a room.',
+    description: 'Show detailed stats/properties for a target, or inspect a room or area.',
     category: 'admin',
     admin: true,
     handler: function(actor, rawArgs) {
         if (!rawArgs || rawArgs.length === 0) {
-            actor.send('Usage: inspect [entity] | inspect room [id]\r\n');
+            actor.send('Usage: inspect [entity] | inspect room [id] | inspect area [id]\r\n');
             return;
         }
 
@@ -225,6 +252,18 @@ tapestry.commands.register({
                 return;
             }
             renderRoomInspect(actor, roomId);
+        } else if (first === 'area') {
+            var areaId = rawArgs.length > 1 ? rawArgs[1] : tapestry.world.getRoomArea(actor.roomId);
+            if (!areaId) {
+                actor.send('Not in an area, and no area id given.\r\n');
+                return;
+            }
+            // Accept a bare or namespaced id; strip any namespace to the bare area id.
+            var colon = String(areaId).indexOf(':');
+            if (colon >= 0) {
+                areaId = String(areaId).substring(colon + 1);
+            }
+            renderAreaInspect(actor, areaId);
         } else {
             renderEntityInspect(actor, rawArgs[0]);
         }
