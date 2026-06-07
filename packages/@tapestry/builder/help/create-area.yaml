@@ -1,0 +1,32 @@
+id: "create area"
+title: "Create Area"
+category: "builder"
+role: "builder"
+keywords: [create, area, new area, zone, dig, anchor, namespace]
+brief: "Create a new area and its anchor room."
+syntax:
+  - "create area <namespace:area-id>"
+body: |
+  Create a brand-new area. You supply a namespaced reference; the part
+  before the colon is the namespace your rooms are created under, and
+  the part after the colon becomes the bare area id.
+
+  For example:
+
+    create area wot:road-to-tar-valon
+
+  creates the area 'road-to-tar-valon', digs an anchor room for it
+  (id 'wot:road-to-tar-valon-anchor'), and teleports you into that
+  anchor so you can start describing it.
+
+  The area is written to disk immediately as an authored area, so it
+  survives restarts and shows up in the 'areas' list tagged [authored].
+
+  The namespace must be one your world already loads (the same prefix
+  your pack's rooms use), or the anchor cannot be dug. If an area with
+  that id already exists -- whether from a pack or authored in-game --
+  the command refuses and tells you which.
+
+  Next steps: use 'edit area' to give the area its name, short blurb,
+  description, theme, and lore, and 'edit room' to describe the anchor.
+see_also: [edit area, edit room, areas, builder]

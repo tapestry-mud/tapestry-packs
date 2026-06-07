@@ -1,0 +1,38 @@
+id: "areas"
+title: "Areas, Rooms and Provenance"
+category: "builder"
+role: "builder"
+keywords: [areas, rooms, list, provenance, pack, authored, edits, inspect, teleport]
+brief: "List areas and rooms and see where their content came from."
+syntax:
+  - "areas"
+  - "rooms <area-id>"
+  - "inspect area [area-id]"
+  - "inspect room"
+body: |
+  These commands let you see what already exists and where it came
+  from, so you can navigate and find your authored content.
+
+  areas
+    Lists the world's areas by level range. As a builder you also see
+    each area's id, a provenance tag, its room count, and how many of
+    its rooms you have edited.
+
+  rooms <area-id>
+    Lists the rooms in an area with their ids (for teleport) and a
+    per-room provenance tag.
+
+  inspect area [area-id] / inspect room
+    Show every field of an area or the current room in full, untruncated
+    -- handy for reading a long description or theme.
+
+  PROVENANCE TAGS tell you where content lives:
+
+    [pack]        Loaded from a content pack. The canonical version.
+    [authored]    Created in-game. Lives as a side-car on disk.
+    [pack +edits] A pack area or room you have edited in-game. Your
+                  side-car overlays (shadows) the committed pack version.
+
+  Use 'teleport <id>' with an id from 'rooms <area-id>' to jump to a
+  room you want to edit.
+see_also: [create area, edit area, edit room, builder]

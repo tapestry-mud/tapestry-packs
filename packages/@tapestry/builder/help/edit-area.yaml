@@ -1,0 +1,36 @@
+id: "edit area"
+title: "Edit Area"
+category: "builder"
+role: "builder"
+keywords: [edit, area, describe area, theme, lore, short, level range, reset]
+brief: "Edit an area's fields through a guided editor."
+syntax:
+  - "edit area"
+  - "edit area <area-id>"
+body: |
+  Open a guided editor for an area. With no argument it edits the area
+  you are standing in; with an id it edits that area from anywhere
+  (a bare id or a namespaced one -- the namespace is stripped).
+
+  Pick a field by number. The editable fields are:
+
+    Name           Display name shown in the areas list.
+    Short          One-line blurb for the areas list.
+    Description    Player-facing area description.
+    Theme          A creative brief for the AI. NEVER shown to players;
+                   it flavors '~' suggestions for rooms in this area.
+    Lore           Freeform background notes for builders.
+    Level range    The min,max levels (e.g. 5,12).
+    Reset interval Seconds between area resets.
+
+  For a text field the editor shows the full current value, then
+  prompts for a new one. Type '~' for an AI suggestion (see help on
+  suggestions); '~' is offered on Short, Description, Theme, and Lore.
+
+  Type 'cancel' at any prompt to leave without saving. To just review a
+  field's full text, pick it, read the current value, then cancel.
+
+  Editing a pack-owned area writes an overlay side-car; the area then
+  shows as [pack +edits] in the areas list. Areas are created with
+  'create area'; 'edit area' never creates one.
+see_also: [create area, edit room, suggestions, areas]

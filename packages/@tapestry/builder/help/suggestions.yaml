@@ -1,0 +1,34 @@
+id: "suggestions"
+title: "AI Suggestions (~)"
+category: "builder"
+role: "builder"
+keywords: [suggestion, suggestions, tilde, recommend, ai, llm, generate, reroll]
+brief: "Use '~' to get AI suggestions while editing a field."
+syntax:
+  - "~"
+  - "~ <hint>"
+body: |
+  While editing a text field in 'edit room' or 'edit area', type '~'
+  to have the AI suggest a value. It reads the entity's current state
+  -- the other fields you have set, nearby rooms, an area's theme --
+  and writes a fitting suggestion.
+
+  Steer it with a hint after the tilde:
+
+    ~ a windswept ridge overlooking a ruined keep
+
+  The suggestions appear as a numbered list. Type the number to accept
+  one, or just type your own value instead. Type '~' again to re-roll
+  for fresh suggestions. Type 'cancel' to abort.
+
+  Nothing is saved until you pick a number or type a value, so you can
+  re-roll as many times as you like first.
+
+  Each '~' is an independent request -- the AI does not remember
+  previous rolls. To refine, fold your steer into the hint rather than
+  expecting a follow-up. An area's Theme field is the durable way to
+  shape every suggestion for rooms in that area.
+
+  Suggestions require an AI provider to be configured and enabled for
+  the server; otherwise the editor just asks for a plain value.
+see_also: [edit room, edit area, builder]

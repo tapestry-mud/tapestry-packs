@@ -1,0 +1,27 @@
+id: "edit room"
+title: "Edit Room"
+category: "builder"
+role: "builder"
+keywords: [edit, room, describe, name, description, biome, terrain, olc]
+brief: "Edit the room you are in through a guided editor."
+syntax:
+  - "edit room"
+body: |
+  Open a guided editor for the room you are standing in. Pick a field
+  by number. The list always includes Room name and Room description,
+  plus any room properties your world defines (terrain, healing rate,
+  and so on) and a Biome selector when biomes are available.
+
+  Text fields (name, description, free properties) show the full
+  current value and prompt for a new one. Known-value fields (biome,
+  true/false, or fixed choices) show a selector instead.
+
+  Type '~' at a text field for an AI suggestion (see help on
+  suggestions). Suggestions are offered on the name and description.
+
+  Renaming a room re-keys its id to a slug of the new name, like an
+  IDE rename -- existing links to the room are updated. The editor
+  tells you the new id when this happens.
+
+  Type 'cancel' at any prompt to leave without saving.
+see_also: [edit area, suggestions, areas, builder]
