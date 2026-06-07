@@ -170,15 +170,18 @@ tapestry.flows.register({
             prompt: function (entity) {
                 var m = findAreaField(entity, entity.getProperty("__edit_field"));
                 var label = m ? m.label : "field";
-                var cur = (m && m.current != null && m.current !== '')
-                    ? " (current: " + loomTruncate(m.current, 40) + ")" : "";
+                // Show the FULL current value on its own line (the field picker truncates to
+                // one line; an area field has no in-world view, so this is the only place to
+                // read the whole thing). Cancel here to just review without changing it.
+                var curLine = (m && m.current != null && m.current !== '')
+                    ? "Current " + label + ":\r\n  " + m.current + "\r\n" : "";
                 var range = "";
                 if (m && (m.min != null || m.max != null)) {
                     range = " [range " + (m.min != null ? m.min : "") + "-" + (m.max != null ? m.max : "") + "]";
                 }
                 var suggestHint = (tapestry.authoring.recommendEnabled && tapestry.authoring.recommendEnabled())
                     ? " (or '~' for suggestions)" : "";
-                return "New value for '" + label + "'" + cur + range + suggestHint + ":";
+                return curLine + "New value for '" + label + "'" + range + suggestHint + ":";
             },
             on_input: function (entity, value) {
                 applyAreaField(entity, entity.getProperty("__edit_field"), value);
