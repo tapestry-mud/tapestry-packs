@@ -139,7 +139,7 @@ tapestry.flows.register({
             prompt: function (entity) {
                 var m = findAreaField(entity, entity.getProperty("__edit_field"));
                 var cur = (m && m.current != null && m.current !== '') ? " (current: " + m.current + ")" : "";
-                return "Choose " + (m ? m.label : "value") + cur + ":";
+                return "Choose " + (m ? m.label : "value") + cur + " (or 'cancel' to abort):";
             },
             options: function (entity) {
                 var m = findAreaField(entity, entity.getProperty("__edit_field"));
@@ -179,9 +179,11 @@ tapestry.flows.register({
                 if (m && (m.min != null || m.max != null)) {
                     range = " [range " + (m.min != null ? m.min : "") + "-" + (m.max != null ? m.max : "") + "]";
                 }
-                var suggestHint = (tapestry.authoring.recommendEnabled && tapestry.authoring.recommendEnabled())
-                    ? " (or '~' for suggestions)" : "";
-                return curLine + "New value for '" + label + "'" + range + suggestHint + ":";
+                var hints = ["'cancel' to abort"];
+                if (tapestry.authoring.recommendEnabled && tapestry.authoring.recommendEnabled()) {
+                    hints.unshift("'~' for suggestions");
+                }
+                return curLine + "New value for '" + label + "'" + range + " (or " + hints.join(", ") + ")" + ":";
             },
             on_input: function (entity, value) {
                 applyAreaField(entity, entity.getProperty("__edit_field"), value);
