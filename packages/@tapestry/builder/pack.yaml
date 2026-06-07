@@ -1,5 +1,5 @@
 name: "@tapestry/builder"
-version: "0.2.0"
+version: "0.2.1"
 type: module
 display_name: "Tapestry Builder"
 description: >
@@ -8,7 +8,7 @@ description: >
   depends on core for link/unlink.
 author: "Tapestry"
 license: "AGPL-3.0"
-engine: ">=0.1.11"
+engine: ">=0.1.13"
 validation: strict
 dependencies:
   "@tapestry/core": "^0.1.5"
