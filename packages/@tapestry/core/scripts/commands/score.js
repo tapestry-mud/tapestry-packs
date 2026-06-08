@@ -178,7 +178,7 @@ tapestry.commands.register({
         sections.push(susSection);
         sections.push(goldSection);
 
-        var output = tapestry.ui.panel({ sections: sections });
+        var output = tapestry.ui.panel({ forEntity: actor.entityId, sections: sections });
         actor.send('\r\n' + output + '\r\n');
     }
 });
