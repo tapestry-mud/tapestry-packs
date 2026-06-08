@@ -5,9 +5,9 @@
 //   width off        -> disable wrapping (send long lines unbroken)
 //   width auto        -> follow the server default
 //
-// The engine reads the `screen_width` property when wrapping output. For telnet, a
-// narrower terminal (reported via NAWS) caps it further. The web client renders in a
-// fixed-grid terminal too, so this helps there as well.
+// The engine reads the `screen_width` property when wrapping output. Without a pref the
+// server default width is used. The web client renders in a fixed-grid terminal too, so
+// this helps there as well.
 
 tapestry.commands.register({
     name: 'width',
