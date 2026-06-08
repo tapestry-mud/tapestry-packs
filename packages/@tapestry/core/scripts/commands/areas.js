@@ -12,13 +12,12 @@ tapestry.commands.register({
     args: {},
     priority: 0,
     handler: function (actor, resolved) {
-        var list = tapestry.authoring.getAreas() || [];
+        var isBuilder = actor.hasRole('builder') || actor.hasRole('admin');
+        var list = tapestry.authoring.getAreas(isBuilder) || [];
         if (!list.length) {
             actor.send("There are no areas yet.\r\n");
             return;
         }
-
-        var isBuilder = actor.hasRole('builder') || actor.hasRole('admin');
 
         var lines = [];
         for (var i = 0; i < list.length; i++) {
@@ -27,7 +26,8 @@ tapestry.commands.register({
                 ? (a.levelRange[0] + '-' + a.levelRange[1])
                 : '?';
             if (isBuilder) {
-                lines.push('[' + lr + '] ' + a.name + ' (' + a.id + ') ' + a.provenance +
+                var wipTag = a.wip ? ' [WIP]' : '';
+                lines.push('[' + lr + '] ' + a.name + ' (' + a.id + ') ' + a.provenance + wipTag +
                     ' rooms:' + a.roomCount + ' edits:' + a.overrideCount);
                 if (a.short) {
                     lines.push('    ' + a.short);

@@ -251,6 +251,11 @@
         fields.push({ key: 'lore', label: 'Lore', kind: 'text', current: info.lore });
         fields.push({ key: 'level_range', label: 'Level range (min,max)', kind: 'text', current: info.levelRange });
         fields.push({ key: 'reset_interval', label: 'Reset interval (s)', kind: 'text', current: info.resetInterval });
+        fields.push({
+            key: 'wip', label: 'Work-in-progress (hide from players)',
+            kind: 'choice', options: ['true', 'false'],
+            current: info.wip ? 'true' : 'false'
+        });
 
         // Future registry properties scoped to 'area' (mirrors the room introspection).
         var props = tapestry.world.getPropertyRegistry ? tapestry.world.getPropertyRegistry() : [];
