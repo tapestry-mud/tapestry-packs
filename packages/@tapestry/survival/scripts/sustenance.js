@@ -1,8 +1,17 @@
+(function() {
+'use strict';
 var DRAIN_AMOUNT = 1;
 var DRAIN_CADENCE = 300;
 var REMINDER_INTERVAL = 3000;
 var TIER_FULL_MIN = 67;
 var TIER_HUNGRY_MIN = 34;
+
+// The tier model, published for peer packs (cooking reads thresholds rather than
+// hardcoding them). Namespace exports are read-only by convention.
+tapestry.packs.export('tiers', { FULL_MIN: TIER_FULL_MIN, HUNGRY_MIN: TIER_HUNGRY_MIN }, {
+    kind: 'namespace',
+    description: 'Sustenance tier thresholds: >=FULL_MIN is full, >=HUNGRY_MIN is hungry, else famished.'
+});
 
 function getSustenanceValue(entityId) {
     var val = tapestry.world.getProperty(entityId, 'sustenance');
@@ -169,3 +178,4 @@ tapestry.packs.export('applyWellFedBuff', function (entityId, durationTicks) {
     ],
     returns: 'undefined'
 });
+})();
