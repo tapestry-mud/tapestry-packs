@@ -127,24 +127,7 @@ tapestry.commands.register({
     }
 });
 
-tapestry.commands.register({
-    name: 'skills',
-    description: 'Show your learned skills.',
-    category: 'progression',
-    roles: ['player'],
-    args: {},
-    handler: function(actor, resolved) {
-        renderTree(actor, 'skill');
-    }
-});
-
-tapestry.commands.register({
-    name: 'spells',
-    description: 'Show your learned spells.',
-    category: 'progression',
-    roles: ['player'],
-    args: {},
-    handler: function(actor, resolved) {
-        renderTree(actor, 'spell');
-    }
-});
+// Note: dedicated `skills` and `spells` commands live in scripts/abilities/list.js
+// (the proficiency-panel view). They are intentionally NOT registered here -- two
+// registrations of the same command name is a boot error under the registration
+// policy. To filter the tree by skills/spells, use `tree skill` / `tree spell`.
