@@ -1,3 +1,10 @@
+// Text helper for aligning the compact (narrow-terminal) score layout.
+function scorePad(str, n) {
+    str = '' + str;
+    while (str.length < n) { str += ' '; }
+    return str.length > n ? str.substring(0, n) : str;
+}
+
 tapestry.commands.register({
     name: 'score',
     description: 'Display your character stats and status.',
@@ -66,7 +73,13 @@ tapestry.commands.register({
 
         tapestry.respond.suppress(actor.entityId);
 
-        // --- existing rendering continues below, using the existing local vars ---
+        // --- Rendering ---
+        // The 3-column cell layout needs ~62 cols before its fill cells (the "(100%)"
+        // and Wis/Luc) have room. Below that, fall back to a single-column compact layout
+        // that fits the player's width instead of being floored to 56 and wrapped.
+        var width = tapestry.ui.width(actor.entityId); // 0 = wrapping off / unbounded
+        var compact = width > 0 && width < 62;
+
         var hpName = tapestry.stats.getDisplayName('hp');
         var resName = tapestry.stats.getDisplayName('resource');
         var movName = tapestry.stats.getDisplayName('movement');
@@ -91,11 +104,12 @@ tapestry.commands.register({
                     pct = 100;
                 }
                 var tName = tracks[t].name.charAt(0).toUpperCase() + tracks[t].name.slice(1);
+                var xpMax = info.xp + info.xpToNext;
                 profRows.push({
                     type: 'text',
-                    content: '  ' + tName + ': Level ' + info.level +
-                             '  XP: ' + info.xp + ' / ' + (info.xp + info.xpToNext) +
-                             ' (' + pct + '%)'
+                    content: compact
+                        ? '  ' + tName + ' L' + info.level + ': ' + info.xp + '/' + xpMax + ' (' + pct + '%)'
+                        : '  ' + tName + ': Level ' + info.level + '  XP: ' + info.xp + ' / ' + xpMax + ' (' + pct + '%)'
                 });
             }
             if (profRows.length > 0) {
@@ -107,51 +121,75 @@ tapestry.commands.register({
         var resPct = s.maxResource > 0 ? Math.floor(s.resource / s.maxResource * 100) : 0;
         var movPct = s.maxMovement > 0 ? Math.floor(s.movement / s.maxMovement * 100) : 0;
 
-        var vitalsSection = {
-            separatorAbove: 'minor',
-            rows: [
-                { type: 'cell', cells: [
-                    { content: '  ' + hpName,  width: 16 },
-                    { type: 'progress', value: s.hp,       max: s.maxHp,       width: 22 },
-                    { content: s.hp       + ' / ' + s.maxHp,       width: 14, align: 'right' },
-                    { content: '', width: 2 },
-                    { content: '(' + hpPct  + '%)', width: 'fill', align: 'left' }
-                ]},
-                { type: 'cell', cells: [
-                    { content: '  ' + resName, width: 16 },
-                    { type: 'progress', value: s.resource,  max: s.maxResource, width: 22 },
-                    { content: s.resource + ' / ' + s.maxResource, width: 14, align: 'right' },
-                    { content: '', width: 2 },
-                    { content: '(' + resPct + '%)', width: 'fill', align: 'left' }
-                ]},
-                { type: 'cell', cells: [
-                    { content: '  ' + movName, width: 16 },
-                    { type: 'progress', value: s.movement,  max: s.maxMovement, width: 22 },
-                    { content: s.movement + ' / ' + s.maxMovement, width: 14, align: 'right' },
-                    { content: '', width: 2 },
-                    { content: '(' + movPct + '%)', width: 'fill', align: 'left' }
-                ]}
-            ]
-        };
+        var vitalsSection;
+        if (compact) {
+            vitalsSection = {
+                separatorAbove: 'minor',
+                rows: [
+                    { type: 'text', content: '  ' + scorePad(hpName + ':', 10) + s.hp + '/' + s.maxHp + ' (' + hpPct + '%)' },
+                    { type: 'text', content: '  ' + scorePad(resName + ':', 10) + s.resource + '/' + s.maxResource + ' (' + resPct + '%)' },
+                    { type: 'text', content: '  ' + scorePad(movName + ':', 10) + s.movement + '/' + s.maxMovement + ' (' + movPct + '%)' }
+                ]
+            };
+        } else {
+            vitalsSection = {
+                separatorAbove: 'minor',
+                rows: [
+                    { type: 'cell', cells: [
+                        { content: '  ' + hpName,  width: 16 },
+                        { type: 'progress', value: s.hp,       max: s.maxHp,       width: 22 },
+                        { content: s.hp       + ' / ' + s.maxHp,       width: 14, align: 'right' },
+                        { content: '', width: 2 },
+                        { content: '(' + hpPct  + '%)', width: 'fill', align: 'left' }
+                    ]},
+                    { type: 'cell', cells: [
+                        { content: '  ' + resName, width: 16 },
+                        { type: 'progress', value: s.resource,  max: s.maxResource, width: 22 },
+                        { content: s.resource + ' / ' + s.maxResource, width: 14, align: 'right' },
+                        { content: '', width: 2 },
+                        { content: '(' + resPct + '%)', width: 'fill', align: 'left' }
+                    ]},
+                    { type: 'cell', cells: [
+                        { content: '  ' + movName, width: 16 },
+                        { type: 'progress', value: s.movement,  max: s.maxMovement, width: 22 },
+                        { content: s.movement + ' / ' + s.maxMovement, width: 14, align: 'right' },
+                        { content: '', width: 2 },
+                        { content: '(' + movPct + '%)', width: 'fill', align: 'left' }
+                    ]}
+                ]
+            };
+        }
 
         var alignment = tapestry.alignment.get(actor.entityId);
         var bucket = tapestry.alignment.bucket(actor.entityId);
-        var attribSection = {
-            separatorAbove: 'minor',
-            rows: [
-                { type: 'cell', cells: [
-                    { content: '  Str: ' + s.strength,      width: 26 },
-                    { content: 'Int: ' + s.intelligence,     width: 26 },
-                    { content: 'Wis: ' + s.wisdom,           width: 'fill' }
-                ]},
-                { type: 'cell', cells: [
-                    { content: '  Dex: ' + s.dexterity,     width: 26 },
-                    { content: 'Con: ' + s.constitution,     width: 26 },
-                    { content: 'Luc: ' + s.luck,             width: 'fill' }
-                ]},
-                { type: 'text', content: '  Alignment: ' + alignment + ' [' + bucket + ']' }
-            ]
-        };
+        var attribSection;
+        if (compact) {
+            attribSection = {
+                separatorAbove: 'minor',
+                rows: [
+                    { type: 'text', content: '  Str: ' + s.strength + '  Int: ' + s.intelligence + '  Wis: ' + s.wisdom },
+                    { type: 'text', content: '  Dex: ' + s.dexterity + '  Con: ' + s.constitution + '  Luc: ' + s.luck },
+                    { type: 'text', content: '  Alignment: ' + alignment + ' [' + bucket + ']' }
+                ]
+            };
+        } else {
+            attribSection = {
+                separatorAbove: 'minor',
+                rows: [
+                    { type: 'cell', cells: [
+                        { content: '  Str: ' + s.strength,      width: 26 },
+                        { content: 'Int: ' + s.intelligence,     width: 26 },
+                        { content: 'Wis: ' + s.wisdom,           width: 'fill' }
+                    ]},
+                    { type: 'cell', cells: [
+                        { content: '  Dex: ' + s.dexterity,     width: 26 },
+                        { content: 'Con: ' + s.constitution,     width: 26 },
+                        { content: 'Luc: ' + s.luck,             width: 'fill' }
+                    ]},
+                    { type: 'text', content: '  Alignment: ' + alignment + ' [' + bucket + ']' }
+                ]
+            };
+        }
 
         var gold = tapestry.currency.getGold(actor.entityId);
         var goldSection = {
