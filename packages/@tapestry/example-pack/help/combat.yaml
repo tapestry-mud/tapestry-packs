@@ -2,6 +2,9 @@ id: "combat"
 title: "Combat"
 category: "combat"
 role: "player"
+# Overrides @tapestry/core's 'combat' help topic. example-pack already declares the
+# @tapestry/core dependency edge in pack.yaml, satisfying the policy's edge gate.
+override: true
 brief: "How fighting works in the world."
 body: |
   Combat in Tapestry is round-based. Attack a target to engage,

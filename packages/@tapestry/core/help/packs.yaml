@@ -14,7 +14,8 @@ body: |
   contribute races, classes, areas, mobs, and items. The packs command
   shows you everything currently active on the server.
 
-  Content packs are loaded in order, with higher load_order packs able
-  to override lower ones. This allows servers to customize or extend
-  base content.
+  load_order is only a display hint for how packs are listed here. It
+  does NOT decide overrides: a pack overrides another pack's command,
+  help, or content by declaring { override: true } and a dependency edge
+  on the pack it overrides.
 see_also: [world]
