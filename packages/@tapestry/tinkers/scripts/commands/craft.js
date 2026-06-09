@@ -1,16 +1,17 @@
+var tinkers = tapestry.packs.require('@tapestry/tinkers');
 tapestry.commands.register({
     name: 'craft',
     description: 'Craft an item using a known recipe and materials in your inventory.',
     category: 'inventory',
     roles: ['player'],
     args: {
-        // The 'recipe' arg type (registered in 00-recipes.js) resolves the typed
+        // The 'recipe' arg type (registered in recipes-table.js) resolves the typed
         // name to a recipe id via the engine arg resolver -- consistent matching
         // and "no recipe called X" errors live there, not here.
         recipe: { type: 'recipe', required: true }
     },
     handler: function(actor, resolved) {
-        var recipe = _tinkersRecipes.findRecipe(resolved.recipe);
+        var recipe = tinkers.findRecipe(resolved.recipe);
 
         // The arg resolver guarantees a match before the handler runs; this is a guard.
         if (!recipe) {
@@ -88,7 +89,7 @@ tapestry.commands.register({
                 var missing = needed - found.length;
                 var what = input.material ? input.material : input.id;
                 actor.send("You don't have enough to build that -- still need " + missing + "x " + what +
-                    ". (See 'recipes " + _tinkersRecipes.displayName(recipe) + "'.)\r\n");
+                    ". (See 'recipes " + tinkers.displayName(recipe) + "'.)\r\n");
                 return; // validation failed — nothing consumed yet
             }
 
