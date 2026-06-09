@@ -1,0 +1,21 @@
+name: "@tapestry/viewer"
+version: "0.1.0"
+type: module
+display_name: "Tapestry Viewer"
+description: >
+  Watch-mode privacy policy (Slice C). Overrides the 1:1 DM commands (tell, reply) so private
+  messages still reach the player but are NOT mirrored to anonymous /watch spectators. Install this
+  on a televised / viewer-MUD where the audience must not see DMs; omit it for a classic snoop-MUD
+  where admins SHOULD see tells (oversight). Same engine seam (per-write broadcast suppression),
+  opposite policy -- decided by which pack is installed.
+author: "Tapestry"
+license: "AGPL-3.0"
+engine: ">=0.1.22"
+validation: strict
+dependencies:
+  "@tapestry/core": "^0.1.10"
+active: true
+load_order: 10
+
+content:
+  scripts: "scripts/**/*.js"
