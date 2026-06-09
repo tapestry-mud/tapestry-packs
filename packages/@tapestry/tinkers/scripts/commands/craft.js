@@ -1,16 +1,17 @@
+var tinkers = tapestry.packs.require('@tapestry/tinkers');
 tapestry.commands.register({
     name: 'craft',
     description: 'Craft an item using a known recipe and materials in your inventory.',
     category: 'inventory',
     roles: ['player'],
     args: {
-        // The 'recipe' arg type (registered in 00-recipes.js) resolves the typed
+        // The 'recipe' arg type (registered in recipes-table.js) resolves the typed
         // name to a recipe id via the engine arg resolver -- consistent matching
         // and "no recipe called X" errors live there, not here.
         recipe: { type: 'recipe', required: true }
     },
     handler: function(actor, resolved) {
-        var recipe = _tinkersRecipes.findRecipe(resolved.recipe);
+        var recipe = tinkers.findRecipe(resolved.recipe);
 
         // The arg resolver guarantees a match before the handler runs; this is a guard.
         if (!recipe) {
@@ -19,8 +20,8 @@ tapestry.commands.register({
         }
 
         // 2. Recipe knowledge check:
-        //    benchLevelRequired:0 → craftable without knowing it (bootstrap)
-        //    benchLevelRequired:1+ → must be in player's recipe book
+        //    benchLevelRequired:0 -> craftable without knowing it (bootstrap)
+        //    benchLevelRequired:1+ -> must be in player's recipe book
         if (recipe.benchLevelRequired > 0) {
             var knownRaw = tapestry.world.getProperty(actor.entityId, 'known_recipes') || [];
             var knownList = Array.isArray(knownRaw) ? knownRaw : [];
@@ -59,7 +60,7 @@ tapestry.commands.register({
             }
         }
 
-        // 4. Resolve inputs — validate ALL before consuming any
+        // 4. Resolve inputs -- validate ALL before consuming any
         var invItemsFull = tapestry.inventory.getContents(actor.entityId) || [];
         var toRemove = []; // flat list of entity ids to destroy
 
@@ -88,8 +89,8 @@ tapestry.commands.register({
                 var missing = needed - found.length;
                 var what = input.material ? input.material : input.id;
                 actor.send("You don't have enough to build that -- still need " + missing + "x " + what +
-                    ". (See 'recipes " + _tinkersRecipes.displayName(recipe) + "'.)\r\n");
-                return; // validation failed — nothing consumed yet
+                    ". (See 'recipes " + tinkers.displayName(recipe) + "'.)\r\n");
+                return; // validation failed -- nothing consumed yet
             }
 
             for (var fi = 0; fi < needed; fi++) {
@@ -97,7 +98,7 @@ tapestry.commands.register({
             }
         }
 
-        // 5. Consume inputs — inventory.destroy detaches from contents + untracks
+        // 5. Consume inputs -- inventory.destroy detaches from contents + untracks
         for (var ri = 0; ri < toRemove.length; ri++) {
             tapestry.inventory.destroy(actor.entityId, toRemove[ri]);
         }
@@ -105,7 +106,7 @@ tapestry.commands.register({
         // 6. Spawn output
         var output = tapestry.items.spawnToInventory(recipe.output, actor.entityId);
         if (!output) {
-            actor.send("Something went wrong — the crafted item couldn't be created.\r\n");
+            actor.send("Something went wrong -- the crafted item couldn't be created.\r\n");
             return;
         }
 

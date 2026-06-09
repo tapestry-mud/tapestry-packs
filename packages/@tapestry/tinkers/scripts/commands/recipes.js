@@ -1,3 +1,4 @@
+var tinkers = tapestry.packs.require('@tapestry/tinkers');
 tapestry.commands.register({
     name: 'recipes',
     description: "List the recipes in your book, or show one recipe's details: recipes [name]",
@@ -15,13 +16,13 @@ tapestry.commands.register({
         // --- Detail view: 'recipes <name>' ---
         // resolved.recipe is a recipe id when the arg resolved, else null.
         if (resolved.recipe) {
-            var recipe = _tinkersRecipes.findRecipe(resolved.recipe);
+            var recipe = tinkers.findRecipe(resolved.recipe);
             if (!recipe) {
                 actor.send("That recipe isn't in your book. Type 'recipes' to see it.\r\n");
                 return;
             }
 
-            var name = _tinkersRecipes.displayName(recipe);
+            var name = tinkers.displayName(recipe);
             actor.send(name + ":\r\n");
             if (recipe.benchLevelRequired > 0) {
                 actor.send("  Bench:      requires a level " + recipe.benchLevelRequired + " crafting bench\r\n");
@@ -49,12 +50,12 @@ tapestry.commands.register({
 
         actor.send("Your recipe book:\r\n");
         for (var k = 0; k < known.length; k++) {
-            var r = _tinkersRecipes.findRecipe(known[k]);
+            var r = tinkers.findRecipe(known[k]);
             if (!r) {
                 actor.send("  " + known[k] + "\r\n");
                 continue;
             }
-            var dn = _tinkersRecipes.displayName(r);
+            var dn = tinkers.displayName(r);
             var bench = r.benchLevelRequired > 0
                 ? "needs a level " + r.benchLevelRequired + " bench"
                 : "craft by hand";

@@ -1,4 +1,5 @@
-var _tinkersRecipes = (function() {
+(function() {
+    'use strict';
     // Pack-internal recipe table. Keyed by recipe id.
     var _recipes = {};
 
@@ -73,11 +74,6 @@ var _tinkersRecipes = (function() {
         return matches.length === 1 ? matches[0] : null;
     }
 
-    /** Return all registered recipes as an array. */
-    function getAllRecipes() {
-        return Object.keys(_recipes).map(function(k) { return _recipes[k]; });
-    }
-
     // Export addRecipe for cross-pack contribution (Phase 1 interop).
     tapestry.packs.export('addRecipe', addRecipe, {
         kind: 'command',
@@ -120,10 +116,19 @@ var _tinkersRecipes = (function() {
         output: 'tapestry-cooking:campfire-portable'
     });
 
-    return {
-        addRecipe: addRecipe,
-        findRecipe: findRecipe,
-        getAllRecipes: getAllRecipes,
-        displayName: displayName
-    };
+    // Sibling files (commands/craft.js, commands/recipes.js) consume these via
+    // tapestry.packs.require('@tapestry/tinkers') -- late-bound, so file load order
+    // does not matter (the importers sort BEFORE this file and that is fine).
+    tapestry.packs.export('findRecipe', findRecipe, {
+        kind: 'query',
+        description: 'Resolve a recipe by id, short id, or friendly name (tolerant matching).',
+        params: [{ name: 'nameOrId', type: 'string' }],
+        returns: 'object'
+    });
+    tapestry.packs.export('displayName', displayName, {
+        kind: 'query',
+        description: 'Human-facing display name for a recipe object.',
+        params: [{ name: 'recipe', type: 'object' }],
+        returns: 'string'
+    });
 })();
