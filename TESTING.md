@@ -17,8 +17,11 @@ tapestry.events.on('sustenance.changed', handler);
 tapestry.packs.export('getHungerTier', fn);
 ```
 
-There is no `require` / `module.exports`, so there is no handler to import into a
-test harness. Two consequences follow:
+Cross-pack (and cross-file) sharing goes through `tapestry.packs.export` /
+`tapestry.packs.require` -- an engine-mediated, dependency-edge-gated registry, not a
+Node module system. There is still no `module.exports` and no Node resolution: a
+`require()`d member only exists inside a composed, running engine, so there is still
+no handler to import into a Node test harness. Two consequences follow:
 
 1. **Behavior only exists once packs are composed.** Cross-pack calls — e.g.
    `tapestry.packs.call('@tapestry/survival', 'getHungerTier', id)` — only resolve

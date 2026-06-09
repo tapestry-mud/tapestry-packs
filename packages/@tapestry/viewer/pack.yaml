@@ -19,3 +19,4 @@ load_order: 10
 
 content:
   scripts: "scripts/**/*.js"
+  help: "help/*.yaml"
