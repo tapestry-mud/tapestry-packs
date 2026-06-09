@@ -88,16 +88,19 @@ var _tinkersRecipes = (function() {
 
     // Register a 'recipe' arg type so craft/recipes resolve a typed name through the
     // engine's standard arg resolver (consistent matching + error handling). The
-    // resolver receives a single token; it resolves to a recipe and yields the recipe id.
-    tapestry.args.registerType('recipe', function(actor, token, def) {
-        var recipe = findRecipe(token);
-        if (!recipe) {
-            return {
-                success: false,
-                error: "You don't have a recipe called '" + token + "'. Type 'recipes' to see your book.\r\n"
-            };
+    // resolve fn receives a single token; it resolves to a recipe and yields the recipe id.
+    tapestry.args.registerType({
+        name: 'recipe',
+        resolve: function(actor, token, def) {
+            var recipe = findRecipe(token);
+            if (!recipe) {
+                return {
+                    success: false,
+                    error: "You don't have a recipe called '" + token + "'. Type 'recipes' to see your book.\r\n"
+                };
+            }
+            return { success: true, value: recipe.id };
         }
-        return { success: true, value: recipe.id };
     });
 
     // Register the two bootstrap recipes.
