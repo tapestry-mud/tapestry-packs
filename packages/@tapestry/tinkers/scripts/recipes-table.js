@@ -117,7 +117,7 @@
     });
 
     // Sibling files (commands/craft.js, commands/recipes.js) consume these via
-    // tapestry.packs.require('@tapestry/tinkers') — late-bound, so file load order
+    // tapestry.packs.require('@tapestry/tinkers') -- late-bound, so file load order
     // does not matter (the importers sort BEFORE this file and that is fine).
     tapestry.packs.export('findRecipe', findRecipe, {
         kind: 'query',

@@ -20,8 +20,8 @@ tapestry.commands.register({
         }
 
         // 2. Recipe knowledge check:
-        //    benchLevelRequired:0 → craftable without knowing it (bootstrap)
-        //    benchLevelRequired:1+ → must be in player's recipe book
+        //    benchLevelRequired:0 -> craftable without knowing it (bootstrap)
+        //    benchLevelRequired:1+ -> must be in player's recipe book
         if (recipe.benchLevelRequired > 0) {
             var knownRaw = tapestry.world.getProperty(actor.entityId, 'known_recipes') || [];
             var knownList = Array.isArray(knownRaw) ? knownRaw : [];
@@ -60,7 +60,7 @@ tapestry.commands.register({
             }
         }
 
-        // 4. Resolve inputs — validate ALL before consuming any
+        // 4. Resolve inputs -- validate ALL before consuming any
         var invItemsFull = tapestry.inventory.getContents(actor.entityId) || [];
         var toRemove = []; // flat list of entity ids to destroy
 
@@ -90,7 +90,7 @@ tapestry.commands.register({
                 var what = input.material ? input.material : input.id;
                 actor.send("You don't have enough to build that -- still need " + missing + "x " + what +
                     ". (See 'recipes " + tinkers.displayName(recipe) + "'.)\r\n");
-                return; // validation failed — nothing consumed yet
+                return; // validation failed -- nothing consumed yet
             }
 
             for (var fi = 0; fi < needed; fi++) {
@@ -98,7 +98,7 @@ tapestry.commands.register({
             }
         }
 
-        // 5. Consume inputs — inventory.destroy detaches from contents + untracks
+        // 5. Consume inputs -- inventory.destroy detaches from contents + untracks
         for (var ri = 0; ri < toRemove.length; ri++) {
             tapestry.inventory.destroy(actor.entityId, toRemove[ri]);
         }
@@ -106,7 +106,7 @@ tapestry.commands.register({
         // 6. Spawn output
         var output = tapestry.items.spawnToInventory(recipe.output, actor.entityId);
         if (!output) {
-            actor.send("Something went wrong — the crafted item couldn't be created.\r\n");
+            actor.send("Something went wrong -- the crafted item couldn't be created.\r\n");
             return;
         }
 
