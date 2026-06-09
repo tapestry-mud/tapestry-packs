@@ -33,4 +33,4 @@ body: |
   Editing a pack-owned area writes an overlay side-car; the area then
   shows as [pack +edits] in the areas list. Areas are created with
   'create area'; 'edit area' never creates one.
-see_also: [create area, edit room, suggestions, builder-areas]
+see_also: [create area, edit room, suggestions, areas]

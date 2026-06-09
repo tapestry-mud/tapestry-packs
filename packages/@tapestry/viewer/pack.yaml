@@ -1,5 +1,5 @@
 name: "@tapestry/viewer"
-version: "0.1.0"
+version: "0.1.1"
 type: module
 display_name: "Tapestry Viewer"
 description: >
