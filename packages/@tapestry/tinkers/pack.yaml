@@ -8,7 +8,7 @@ description: >
   Proves Phase 2 cross-pack composition: a Tinkers campfire recipe outputs a cooking heat source.
 author: "Tapestry"
 license: "AGPL-3.0"
-engine: ">=0.1.24"
+engine: ">=0.1.25"
 validation: strict
 dependencies:
   "@tapestry/core": "^0.1.4"

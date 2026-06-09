@@ -8,7 +8,7 @@ description: >
   depends on core for link/unlink.
 author: "Tapestry"
 license: "AGPL-3.0"
-engine: ">=0.1.24"
+engine: ">=0.1.25"
 validation: strict
 dependencies:
   "@tapestry/core": "^0.1.5"
