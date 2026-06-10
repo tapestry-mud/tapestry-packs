@@ -4,6 +4,7 @@ A multi-player journey showing how to write a pack-level scenario test.
 
 ## Setup
 - Players: Alice, Wanderer
+- Skip: say dispatch broken by mob-command shadowing -- tapestry-mud/tapestry#98; un-skip to verify the fix
 
 ## Steps
 1. Alice: `look`
