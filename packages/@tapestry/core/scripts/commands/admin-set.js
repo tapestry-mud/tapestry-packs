@@ -2,7 +2,7 @@
 //
 // Declared attributes (PropertyRegistry / TagRegistry) flow through the engine's
 // registry-driven dispatch -- "declared <=> settable". A small retained table below
-// handles the 11 out-of-scope subsystem ops (EntityStats / alignment / training /
+// handles the 14 out-of-scope subsystem ops (EntityStats / alignment / training /
 // currency / npc hp) that are NOT stored properties; these keep their current
 // command paths until StatRegistry (north-star section 9) lands.
 
@@ -65,6 +65,9 @@ var domainSetOps = {
     'player:dex': { handler: statHandler('dexterity', 'Dexterity') },
     'player:con': { handler: statHandler('constitution', 'Constitution') },
     'player:luck': { handler: statHandler('luck', 'Luck') },
+    'player:hp': { handler: statHandler('max_hp', 'max HP') },
+    'player:mana': { handler: statHandler('max_resource', 'max Mana') },
+    'player:mv': { handler: statHandler('max_movement', 'max Movement') },
     'player:prof': {
         handler: function(actor, target, rest) {
             var parts = rest.split(' ');
