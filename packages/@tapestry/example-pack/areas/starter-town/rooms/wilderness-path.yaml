@@ -16,5 +16,7 @@ spawns:
     count: 2
   - mob: "tapestry-example-pack:goblin-chief"
     count: 1
+  - mob: "tapestry-example-pack:drowsy-wolf"
+    count: 1
 fixtures:
   - "tapestry-example-pack:gnarled-staff"

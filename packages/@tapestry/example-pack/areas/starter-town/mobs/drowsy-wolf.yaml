@@ -1,0 +1,37 @@
+id: "tapestry-example-pack:drowsy-wolf"
+name: "a drowsy wolf"
+type: "npc"
+tags: []
+keywords: [wolf, drowsy, beast]
+behavior: wander
+stats:
+  strength: 10
+  dexterity: 13
+  constitution: 9
+  intelligence: 4
+  wisdom: 6
+  luck: 8
+  max_hp: 35
+  max_resource: 0
+  max_movement: 80
+properties:
+  mob_level: 2
+  # Spawns asleep. MobAI honors rest_state: while sleeping it neither wanders
+  # nor fires its idle commands. Attack it (combat auto-wake) and it stands,
+  # then wanders and idles like any other mob -- the posture gate in action.
+  rest_state: sleeping
+  wander_interval: 15
+  wander_chance: 0.5
+  wander_boundary: "area"
+  idle_commands:
+    - "emote yawns and stretches."
+    - "emote sniffs at the air."
+  idle_chance: 0.5
+  idle_interval: 12
+  regen_hp: 1
+  flee_threshold: 0.15
+  corpse_decay: 180
+  description: "A lean grey wolf curled nose-to-tail beside the path, its sides rising and falling in slow, even breaths. It is fast asleep."
+  ac:
+    slash: 1
+    bash: 1
