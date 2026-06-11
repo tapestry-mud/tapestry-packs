@@ -19,3 +19,7 @@ properties:
     description: "Player is silenced from all chat channels"
     type: bool
     applies_to: [player]
+  noemote:
+    description: "Player is silenced from emotes"
+    type: bool
+    applies_to: [player]

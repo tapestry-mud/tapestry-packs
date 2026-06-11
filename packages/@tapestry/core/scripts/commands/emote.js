@@ -9,6 +9,11 @@
         message: { type: 'text', required: true }
     },
     handler: function(actor, resolved) {
+        if (tapestry.world.getProperty(actor.entityId, 'noemote')) {
+            actor.send('You cannot emote right now.\r\n');
+            return;
+        }
+
         actor.send(actor.name + ' ' + resolved.message + '\r\n');
         tapestry.world.sendToRoomExcept(
             actor.roomId,
