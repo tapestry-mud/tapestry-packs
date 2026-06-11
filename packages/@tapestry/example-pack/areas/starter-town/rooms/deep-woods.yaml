@@ -10,5 +10,8 @@ exits:
   north: "tapestry-example-pack:wilderness-path"
 properties:
   terrain: forest
+spawns:
+  - mob: "tapestry-example-pack:grizzled-scout"
+    count: 1
 fixtures:
   - "tapestry-example-pack:wolfskin-gloves"

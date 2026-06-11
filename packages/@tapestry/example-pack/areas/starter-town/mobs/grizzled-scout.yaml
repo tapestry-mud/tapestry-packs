@@ -1,0 +1,25 @@
+id: "tapestry-example-pack:grizzled-scout"
+name: "a grizzled scout"
+type: "npc"
+tags: []
+keywords: [scout, grizzled, man]
+behavior: stationary
+stats:
+  strength: 10
+  dexterity: 11
+  constitution: 10
+  intelligence: 9
+  wisdom: 9
+  luck: 8
+  max_hp: 30
+  max_resource: 0
+  max_movement: 40
+properties:
+  mob_level: 3
+  corpse_decay: 180
+  description: "A wiry scout in travel-stained leathers, eyes flicking to every shadow."
+# Worn gear so `look scout` also exercises the equipment list. Neutral +
+# stationary + modest HP so it's easy to inspect, provoke, and finish off.
+equipment:
+  - "tapestry-example-pack:rusty-dagger"
+  - "tapestry-example-pack:leather-cap"
