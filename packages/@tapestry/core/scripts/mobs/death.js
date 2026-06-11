@@ -54,9 +54,11 @@ tapestry.events.on("entity.vital.depleted", function(event) {
         }
     }
 
-    // Publish death event for other systems
+    // Publish death event for other systems (the onDeath hook reads mobName/
+    // killerId off this -- the mob entity itself is already gone by now).
     tapestry.events.publish("mob.death", {
         templateId: templateId,
+        mobName: mobName,
         roomId: roomId,
         corpseId: corpseId,
         killerId: killerId
