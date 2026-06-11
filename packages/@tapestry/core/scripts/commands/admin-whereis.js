@@ -7,7 +7,7 @@ function whereisRender(actor, keyword, typeFilter, label) {
     var filtered = [];
     for (var i = 0; i < matches.length; i++) {
         var m = matches[i];
-        if (typeFilter && m.type !== typeFilter) { continue; }
+        if (typeFilter && typeFilter.indexOf(m.type) === -1) { continue; }
         filtered.push(m);
     }
     if (filtered.length === 0) {
@@ -60,7 +60,7 @@ tapestry.commands.register({
     admin: true,
     args: { keyword: { type: 'text', required: true } },
     handler: function(actor, resolved) {
-        whereisRender(actor, resolved.keyword, 'npc', 'NPCs');
+        whereisRender(actor, resolved.keyword, ['npc'], 'NPCs');
     }
 });
 
@@ -71,6 +71,6 @@ tapestry.commands.register({
     admin: true,
     args: { keyword: { type: 'text', required: true } },
     handler: function(actor, resolved) {
-        whereisRender(actor, resolved.keyword, 'item', 'items');
+        whereisRender(actor, resolved.keyword, ['item', 'container'], 'items');
     }
 });
