@@ -1,0 +1,21 @@
+id: "templates"
+title: "Templates"
+category: "admin"
+role: "admin"
+keywords: [vnum, count, template, mob list, item list, spawn list, admin]
+brief: "List mob/item templates matching a keyword, with live instance counts."
+syntax:
+  - "templates [keyword]"
+  - "templates all"
+body: |
+  Templates searches the registered mob and item templates by ID or
+  name and shows how many live instances of each exist in the world
+  right now. "templates all" lists everything.
+
+  This is the Tapestry answer to ROM's vnum and count commands:
+  template IDs are the identity of spawnable content. The IDs shown
+  here are what spawn and loaditem take as arguments.
+
+  Output is capped at 100 rows - refine the keyword if a search
+  overflows.
+see_also: [spawn, loaditem, whereis, admin]

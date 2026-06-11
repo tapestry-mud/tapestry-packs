@@ -1,0 +1,18 @@
+id: "peace"
+title: "Peace"
+category: "admin"
+role: "admin"
+keywords: [stop combat, calm, fight, end combat, admin]
+brief: "Stop all combat in your current room."
+syntax:
+  - "peace"
+body: |
+  Peace immediately ends every fight in the room you are standing in.
+  All combatants - players and NPCs alike - are removed from combat,
+  including anyone fighting multiple opponents.
+
+  Use peace to break up fights during events, rescue a player from a
+  bad pull while testing, or quiet a room before working in it. It
+  does not heal anyone; pair it with restore if the victims need
+  patching up.
+see_also: [restore, kill, admin]

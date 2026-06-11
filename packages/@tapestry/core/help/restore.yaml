@@ -1,0 +1,18 @@
+id: "restore"
+title: "Restore"
+category: "admin"
+role: "admin"
+keywords: [heal, refill, hp, mana, movement, vitals, admin]
+brief: "Restore a player to full vitals, or all online players."
+syntax:
+  - "restore [player]"
+  - "restore all"
+body: |
+  Restore refills a player's HP, mana, and movement to their maximums.
+  With "all" it restores every player currently online. Each restored
+  player sees "You feel completely restored."
+
+  Restore changes current vitals only - it does not raise caps or cure
+  anything beyond the three vital pools. To change a player's maximum
+  vitals, use set (see help set).
+see_also: [peace, set, admin]

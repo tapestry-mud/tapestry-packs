@@ -9,16 +9,25 @@ body: |
   only available to players with admin-level role access.
 
   PLAYER MANAGEMENT: Use inspect to view full details on any target.
-  Use set to modify player, NPC, or item fields directly. Use grant
+  Use set to modify player, NPC, or item fields directly - including
+  vital caps and mute flags (notell, nochannels, noemote). Use grant
   to award experience or trains, and forget/learn to remove or add
-  abilities.
+  abilities. restore refills a player's vitals; force makes a player
+  or mob execute a command; peace stops all combat in your room.
 
   WORLD MANAGEMENT: spawn creates a mob from a template in your room.
   loaditem adds an item from a template to your inventory. purge removes
   NPCs, items, or all entities from the current room. teleport moves
-  yourself or another player to a room or player.
+  yourself or another player to a room or player. at runs a command
+  in another room and returns you home.
+
+  FINDING THINGS: whereis/mwhere/owhere locate entities anywhere in
+  the world by name. templates lists mob/item templates with live
+  instance counts. abilities (slookup) searches the ability registry.
+
+  SERVER: wizlock toggles admin-only logins (resets on reboot).
 
   CLASS TOOLS: setclass assigns a class to a player and grants their
   level-1 abilities. settrainable is a debug tool for toggling stats
   in and out of the trainable list.
-see_also: [forget, grant, inspect, learn, loaditem, purge, set, setclass, settrainable, spawn, teleport]
+see_also: [abilities, at, force, forget, grant, inspect, learn, loaditem, peace, purge, restore, set, setclass, settrainable, spawn, teleport, templates, whereis, wizlock]

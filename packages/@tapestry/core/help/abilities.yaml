@@ -1,0 +1,19 @@
+id: "abilities"
+title: "Abilities"
+category: "admin"
+role: "admin"
+keywords: [slookup, skill lookup, spell lookup, ability list, admin]
+brief: "Look up registered abilities by keyword."
+syntax:
+  - "abilities [keyword]"
+  - "abilities all"
+  - "slookup [keyword]"
+body: |
+  Abilities searches the ability registry by ID or name and lists
+  each match with its type, category, and owning pack. "abilities
+  all" lists every registered ability. slookup is an alias for ROM
+  muscle memory.
+
+  The IDs shown here are what learn, forget, and "set player prof"
+  take as arguments.
+see_also: [learn, forget, practice, admin]

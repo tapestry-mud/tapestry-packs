@@ -1,0 +1,22 @@
+id: "force"
+title: "Force"
+category: "admin"
+role: "admin"
+keywords: [command, control, puppet, make, admin]
+brief: "Force a player or mob to execute a command."
+syntax:
+  - "force [player] [command]"
+  - "force [mob] [command]"
+body: |
+  Force makes another character execute a command as if they typed it
+  themselves. Players are matched by name anywhere online; mobs are
+  matched by name in your current room. The target sees who forced
+  them and to what.
+
+  Forced commands run with the TARGET's permissions, not yours - you
+  cannot force a player to run an admin command they could not run
+  themselves. You also cannot force another admin.
+
+  Use force to unstick players, drive NPCs during events, or test
+  command behavior from another character's point of view.
+see_also: [at, snoop, admin]

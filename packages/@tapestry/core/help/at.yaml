@@ -1,0 +1,19 @@
+id: "at"
+title: "At"
+category: "admin"
+role: "admin"
+keywords: [remote, execute, room, elsewhere, admin]
+brief: "Execute a command as if standing in another room."
+syntax:
+  - "at [player] [command]"
+  - "at [room-id] [command]"
+body: |
+  At runs a single command as yourself in another location, then
+  returns you to where you started. The target can be a player name
+  (you act in their room) or a room ID in pack format ("pack:room-id").
+
+  Example: "at tavern:common-room look" shows you the room without
+  the round trip. You are briefly present in the target room while
+  the command runs, and you always snap back home afterward - even
+  if the command itself moved you.
+see_also: [teleport, force, admin]

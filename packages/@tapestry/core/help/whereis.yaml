@@ -1,0 +1,23 @@
+id: "whereis"
+title: "Whereis"
+category: "admin"
+role: "admin"
+keywords: [mwhere, owhere, locate, find, where, search, admin]
+brief: "Locate entities anywhere in the world by name."
+syntax:
+  - "whereis [keyword]"
+  - "mwhere [keyword]"
+  - "owhere [keyword]"
+body: |
+  Whereis searches every entity in the world by name and lists each
+  match with its location. Carried items show who is holding them,
+  including items inside carried containers.
+
+  mwhere narrows the search to NPCs; owhere narrows it to items and
+  containers (corpses included). Keywords match anywhere in the name
+  and may be multiple words.
+
+  Output is capped at 100 rows - refine the keyword if a search
+  overflows. Room IDs in the results can be used directly with at
+  and teleport.
+see_also: [at, teleport, inspect, templates, admin]

@@ -1,0 +1,19 @@
+id: "wizlock"
+title: "Wizlock"
+category: "admin"
+role: "admin"
+keywords: [lock, logins, maintenance, closed, admin]
+brief: "Toggle wizlock: only admins may log in."
+syntax:
+  - "wizlock"
+body: |
+  Wizlock toggles a server-wide login lock. While locked, anyone
+  without the admin role is refused at login with "The game is
+  wizlocked." - both existing characters and new character creation.
+  Admins log in normally, and players who are already connected are
+  NOT kicked.
+
+  Wizlock is runtime-only: it resets to unlocked when the server
+  restarts. Use it for maintenance windows, content surgery, or any
+  time you want the world to yourself.
+see_also: [admin]

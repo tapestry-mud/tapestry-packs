@@ -2,18 +2,27 @@ id: "set"
 title: "Set"
 category: "admin"
 role: "admin"
-keywords: [modify, edit, field, property, player, npc, item, admin]
+keywords: [modify, edit, field, property, player, npc, item, noemote, notell, nochannels, hp, mana, admin]
 brief: "Modify player, NPC, or item fields directly."
 syntax:
-  - "set [target] [field] [value]"
+  - "set [kind] [attr] [target] [value]"
+  - "set player hp [player] [value]"
+  - "set player noemote [player] true|false"
 body: |
-  Set modifies a specific field on a player, NPC, or item. The field
-  names and valid values depend on the entity type.
+  Set modifies a specific attribute on a player, NPC, or item. The
+  attribute comes BEFORE the target: "set player str Bob 14", not
+  "set player Bob str 14". Run set with no value to see what is
+  settable on a kind.
 
-  Common uses: adjusting HP, gold, level, or stat values for testing
-  or support. Use inspect first to see the available fields and
-  current values on a target.
+  Stats: str/int/wis/dex/con/luck set base attributes. hp/mana/mv set
+  a player's BASE vital caps - displayed maximums also include class
+  and race modifiers, so the in-game number may read higher than the
+  base you set. "set npc hp" sets an NPC's hp and max hp together.
 
-  Changes made with set take effect immediately. Some fields may
-  require a save or relog to persist across sessions.
-see_also: [inspect, grant, admin]
+  Mutes and flags: declared properties are settable by name, e.g.
+  "set player notell Bob true", "set player nochannels Bob true",
+  "set player noemote Bob true".
+
+  Changes take effect immediately. Use inspect to see current values
+  on a target, and restore to refill vitals after changing caps.
+see_also: [inspect, grant, restore, admin]
