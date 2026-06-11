@@ -38,10 +38,11 @@ function domainResolveTarget(kind, name) {
     return null;
 }
 
-function statHandler(statKey, label) {
+function statHandler(statKey, label, min) {
     return function(actor, target, rest) {
         var n = parseInt(rest, 10);
         if (isNaN(n)) { actor.send('Value must be a number.\r\n'); return; }
+        if (min !== undefined && n < min) { actor.send(label + ' must be at least ' + min + '.\r\n'); return; }
         tapestry.stats.setBase(target.id, statKey, n);
         actor.send(target.name + "'s " + label + " set to " + n + ".\r\n");
     };
@@ -65,9 +66,9 @@ var domainSetOps = {
     'player:dex': { handler: statHandler('dexterity', 'Dexterity') },
     'player:con': { handler: statHandler('constitution', 'Constitution') },
     'player:luck': { handler: statHandler('luck', 'Luck') },
-    'player:hp': { handler: statHandler('max_hp', 'max HP') },
-    'player:mana': { handler: statHandler('max_resource', 'max Mana') },
-    'player:mv': { handler: statHandler('max_movement', 'max Movement') },
+    'player:hp': { handler: statHandler('max_hp', 'max HP', 1) },
+    'player:mana': { handler: statHandler('max_resource', 'max Mana', 1) },
+    'player:mv': { handler: statHandler('max_movement', 'max Movement', 1) },
     'player:prof': {
         handler: function(actor, target, rest) {
             var parts = rest.split(' ');
