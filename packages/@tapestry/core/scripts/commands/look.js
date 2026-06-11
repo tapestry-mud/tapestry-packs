@@ -14,6 +14,51 @@ function getHealthTierText(entityId) {
     return "is near death";
 }
 
+// ROM-style worn slot label, e.g. "<worn on head>". Multi-slots arrive keyed
+// "finger:0" -- strip the index. Unknown/custom slots fall back to a generic
+// phrase. Spaces inside the brackets keep these out of the markup allowlist, so
+// they pass through to the player literally (ColorRenderer only matches single-
+// token tags).
+function wornSlotPhrase(slotKey) {
+    var base = slotKey.indexOf(':') >= 0 ? slotKey.substring(0, slotKey.indexOf(':')) : slotKey;
+    var phrases = {
+        light: '<used as light>',
+        head: '<worn on head>',
+        neck: '<worn around neck>',
+        torso: '<worn on body>',
+        cloak: '<worn about body>',
+        waist: '<worn about waist>',
+        arms: '<worn on arms>',
+        hands: '<worn on hands>',
+        wrist: '<worn around wrist>',
+        finger: '<worn on finger>',
+        shield: '<worn as shield>',
+        legs: '<worn on legs>',
+        feet: '<worn on feet>',
+        held: '<held in hands>',
+        floating: '<floating nearby>',
+        wield: '<wielded>'
+    };
+    return phrases[base] || ('<worn on ' + base + '>');
+}
+
+// ROM-style worn-equipment list: occupied slots only, in SlotRegistry order.
+// getSlots reads any entity (resolves by id), so this works for players and mobs.
+function renderWornEquipment(actor, entityId, entityName) {
+    var slots = tapestry.equipment.getSlots(entityId);
+    if (!slots || slots.length === 0) { return; }
+    var header = false;
+    for (var i = 0; i < slots.length; i++) {
+        var s = slots[i];
+        if (s.empty) { continue; }
+        if (!header) {
+            actor.send('\r\n' + entityName + ' is using:\r\n');
+            header = true;
+        }
+        actor.send(wornSlotPhrase(s.slot) + ' ' + s.itemName + '\r\n');
+    }
+}
+
 function lookAtTarget(actor, resolved) {
     if (!resolved) { return false; }
 
@@ -57,6 +102,15 @@ function lookAtTarget(actor, resolved) {
         actor.send('<npc>---' + Array(details.name.length + 3).join('-') + '---</npc>\r\n');
         var healthText = getHealthTierText(resolved.id);
         if (healthText) { actor.send('  ' + details.name + ' ' + healthText + '.\r\n'); }
+        // onLook mob hook fires at the look callsite, before the worn list renders.
+        var npcTemplateId = tapestry.world.getProperty(resolved.id, 'template_id');
+        if (npcTemplateId) {
+            tapestry.mobs.invokeHook(npcTemplateId, 'onLook',
+                { entityId: resolved.id, name: details.name, roomId: actor.roomId },
+                { entityId: actor.entityId, name: actor.name },
+                null);
+        }
+        renderWornEquipment(actor, resolved.id, details.name);
         return true;
     }
 
@@ -64,6 +118,7 @@ function lookAtTarget(actor, resolved) {
         var playerHealth = getHealthTierText(resolved.id);
         actor.send('\r\n<player>' + details.name + ' is here.</player>\r\n');
         if (playerHealth) { actor.send('  ' + details.name + ' ' + playerHealth + '.\r\n'); }
+        renderWornEquipment(actor, resolved.id, details.name);
         return true;
     }
 
