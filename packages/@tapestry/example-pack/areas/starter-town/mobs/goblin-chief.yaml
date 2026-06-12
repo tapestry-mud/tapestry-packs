@@ -2,7 +2,7 @@ id: "tapestry-example-pack:goblin-chief"
 name: "the goblin chief"
 type: "npc"
 tags: []
-base_disposition: hostile
+base_disposition: neutral
 keywords: [goblin, chief, chieftain, creature]
 behavior: stationary
 stats:
