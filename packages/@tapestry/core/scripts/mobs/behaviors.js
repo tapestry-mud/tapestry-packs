@@ -122,24 +122,10 @@ tapestry.mobs.registerBehavior("patrol", function(mob) {
     tapestry.world.setProperty(mob.entityId, "_patrol_direction", direction);
 });
 
-// Aggro — attacks first player in room. Checks room safety tags.
-tapestry.mobs.registerBehavior("aggro", function(mob) {
-    var players = tapestry.world.getEntitiesInRoom(mob.roomId, "player");
-    if (!players || players.length === 0) {
-        return;
-    }
-
-    var roomTags = tapestry.world.getRoomTags(mob.roomId);
-    if (roomTags && roomTags.indexOf("safe") >= 0) {
-        return;
-    }
-
-    // Publishes event for combat system (Phase 3b) to handle
-    tapestry.events.publish("mob.aggro", {
-        attackerId: mob.entityId,
-        targetId: players[0].id
-    });
-});
+// Aggro is NOT a behavior. Hostility is disposition-driven: set base_disposition:
+// hostile (or a `disposition:` rules block) and the engine aggros on room entry
+// (instant) AND on the tick, respecting posture + safe rooms + admin exemption.
+// This keeps aggro orthogonal to movement (a mob can wander AND be hostile).
 
 // Combatant — dispatches battlecommands during combat at configurable intervals.
 // Empty string command = intentional noop (skip ability, auto-attack only).
