@@ -44,9 +44,11 @@ shop commands) or "player" and "mob" (open/close).
   "Nothing for sale matches that."
   (packages/@tapestry/core/scripts/commands/shop.js:81-99)
 
-- Each matching item is displayed as a dot-padded line: "  <name> .... <price> gold",
-  where the dot run fills to a total line width of 50 characters (minimum one dot).
-  (packages/@tapestry/core/scripts/commands/shop.js:101-107)
+- Each matching item is displayed as a dot-padded line: "  <name> .... <price> gold".
+  The dot run is sized so the name plus the "<price> gold" string together span 50
+  characters (`50 - name.length - price.length` dots, with a one-dot minimum); with the
+  two-space indent and the single spaces flanking the dots, the rendered line is 54
+  characters wide. (packages/@tapestry/core/scripts/commands/shop.js:101-107)
 
 - A GMCP `Response.Shop.List` payload is sent containing shopkeeper name, items array
   (id, name, price per item), and the filter value; the text response is then suppressed

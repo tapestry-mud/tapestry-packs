@@ -57,10 +57,16 @@ regular commands.
   `gender === 'female'` -> "herself", any other value (including absent) -> "themselves".
   (packages/@tapestry/core/scripts/socials/init.js:16-17)
 
-- The `no_target` replacement applies only a single `$n` token (String.replace with a
-  string literal, not a regex), so only the first occurrence is substituted in that
-  message. All other message fields use global regex replacement (`/\$n/g` or `/\$N/g`).
-  (packages/@tapestry/core/scripts/socials/init.js:22; 26; 32; 36; 41; 45; 48)
+- First-person (player-facing) messages substitute the `$n` token with a single literal
+  `String.replace('$n', 'You')`, so only the first `$n` occurrence is replaced; this holds
+  for the `no_target`, `self`, and `targeted` strings, and the `self` string likewise uses a
+  single literal replace for `$mself`. The third-person room and victim messages
+  (`no_target_room`, `self_room`, `targeted_room`, `targeted_victim`) use global regex
+  replacement (`/\$n/g`, `/\$N/g`, `/\$mself/g`). The split is deliberate: "You" appears once
+  in first-person text, while names can recur. (packages/@tapestry/core/scripts/socials/init.js:22;
+  packages/@tapestry/core/scripts/socials/init.js:32; packages/@tapestry/core/scripts/socials/init.js:41;
+  packages/@tapestry/core/scripts/socials/init.js:26; packages/@tapestry/core/scripts/socials/init.js:36;
+  packages/@tapestry/core/scripts/socials/init.js:45; packages/@tapestry/core/scripts/socials/init.js:49)
 
 - The help topic `social` (category "social", role "player") describes the system and
   lists available socials. Its keyword list includes: emote, action, gesture, expression,
@@ -74,7 +80,7 @@ regular commands.
   scream, shiver, snore, spin, squeeze, stare, strut, twiddle, and others) not mentioned in
   the help text. The canonical runtime list is the YAML data file.
 
-- The 90 socials registered at runtime (from socials.yaml) are:
+- The 91 socials registered at runtime (from socials.yaml) are:
   ack, applaud, bark, beam, blush, boggle, bonk, bounce, bow, burp, cackle, cheer,
   chuckle, clap, comb, comfort, cough, cringe, cry, cuddle, curse, dance, drool,
   eye, faint, flex, flip, flirt, flutter, frown, fume, gag, gasp, giggle, glare,
@@ -87,7 +93,9 @@ regular commands.
 
 ## Rejected and Reverted
 
-- None on record.
+- **Offensive legacy ROM socials (deliberately not ported):** a number of socials from the
+  original ROM set are intentionally omitted because they encode attitudes that have no place
+  in a modern game. This is a deliberate exclusion, not an incomplete port. Do not backfill them.
 
 ## Change Log
 

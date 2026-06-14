@@ -47,7 +47,7 @@ that names it in `specs:`.
   where the line part may be a single line `:123` or a range `:123-145`, and may be omitted only
   for whole-file claims. Several anchors may share one set of parentheses, joined by `; `. A test
   name in the same parentheses also counts. Lint pattern (the gate IS this regex, keep them in
-  sync): `\([@\w./\\-]+\.(js|mjs|cjs|ya?ml|json)(:\d+(-\d+)?)?\)`. A file with no matches in its
+  sync): `\([@\w./\\-]+\.(js|mjs|cjs|ya?ml|json)(:\d+(-\d+)?)?[^)]*\)`. A file with no matches in its
   Behavior section fails validation outright.
 - An empty Rejected and Reverted section contains the single line `- None on record.` under the
   heading (the heading itself is always present).

@@ -178,9 +178,16 @@ not clan management (create/join/leave have no implementation in this file).
 - `group.disbanded` -- published on disband and on leader-leave when no
   successor can be found.
   (packages/@tapestry/core/scripts/commands/groups.js:464, 571)
-- `follow.started` / `follow.ended` -- published on follow/unfollow events with
-  a `reason` field ('command', 'nofollow', or 'cleanup').
-  (packages/@tapestry/core/scripts/commands/groups.js:175-178, 142-147, 206-211, 265-270)
+- `follow.started` -- published when a follow begins, carrying `followerId` and
+  `leaderId` only (no `reason` field).
+  (packages/@tapestry/core/scripts/commands/groups.js:175-178)
+- `follow.ended` -- published when a follow ends, carrying `followerId`, `leaderId`,
+  and a `reason` field whose value is 'command' (explicit unfollow), 'nofollow'
+  (the target turned nofollow on), or 'cleanup' (logout, death, or teleport).
+  (packages/@tapestry/core/scripts/commands/groups.js:142-147;
+  packages/@tapestry/core/scripts/commands/groups.js:206-211;
+  packages/@tapestry/core/scripts/commands/groups.js:266-270;
+  packages/@tapestry/core/scripts/commands/groups.js:280-284)
 
 ### Clan channel
 

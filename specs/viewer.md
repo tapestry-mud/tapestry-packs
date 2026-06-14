@@ -85,7 +85,7 @@ rules. (packages/@tapestry/viewer/pack.yaml:15-17)
   packages/@tapestry/viewer/help/reply.yaml:13-14)
 
 - The pack sets `load_order: 10` and `validation: strict`.
-  (packages/@tapestry/viewer/pack.yaml:19-20)
+  (packages/@tapestry/viewer/pack.yaml:18; packages/@tapestry/viewer/pack.yaml:14)
 
 - The policy contrast: when `@tapestry/viewer` is NOT installed and `@tapestry/core`
   runs its own tell/reply (which use plain `send`), spectators on `/watch` see DM
