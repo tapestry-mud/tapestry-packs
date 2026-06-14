@@ -1,0 +1,55 @@
+# Tapestry Packs -- specs
+
+Capability specs for the Tapestry content packs. Each file describes one pack system's current
+behavior (mechanics, registrations, interop), known constraints, and change history. This
+directory is the canonical, public source of truth for how each system behaves now -- a fresh
+agent or contributor answers "how does X behave?" from the relevant file alone.
+
+## Index
+
+| Capability | File | Last Updated |
+|------------|------|--------------|
+| biomes | [biomes.md](biomes.md) | 2026-06-13 |
+| cooking | [cooking.md](cooking.md) | 2026-06-13 |
+| socials | [socials.md](socials.md) | 2026-06-13 |
+| example-pack | [example-pack.md](example-pack.md) | 2026-06-13 |
+| survival | [survival.md](survival.md) | 2026-06-13 |
+| tinkers | [tinkers.md](tinkers.md) | 2026-06-13 |
+| builder | [builder.md](builder.md) | 2026-06-13 |
+| viewer | [viewer.md](viewer.md) | 2026-06-13 |
+| core-init | [core-init.md](core-init.md) | 2026-06-13 |
+| core-admin | [core-admin.md](core-admin.md) | 2026-06-13 |
+| core-communication | [core-communication.md](core-communication.md) | 2026-06-13 |
+| core-navigation | [core-navigation.md](core-navigation.md) | 2026-06-13 |
+| core-combat | [core-combat.md](core-combat.md) | 2026-06-13 |
+| core-abilities | [core-abilities.md](core-abilities.md) | 2026-06-13 |
+| core-inventory | [core-inventory.md](core-inventory.md) | 2026-06-13 |
+| core-economy | [core-economy.md](core-economy.md) | 2026-06-13 |
+| core-mobs | [core-mobs.md](core-mobs.md) | 2026-06-13 |
+| core-groups | [core-groups.md](core-groups.md) | 2026-06-13 |
+| core-progression | [core-progression.md](core-progression.md) | 2026-06-13 |
+
+## Contract summary
+
+Each capability spec has four required sections: Overview, Behavior, Rejected and Reverted,
+Change Log. Change records live in `specs/changes/` and use the frontmatter fields `release:`
+(the pack version that shipped it) and `specs:` (capability files touched).
+
+Hotfixes, regressions, and dependency bumps owe no change record. Tombstones on any reversal
+of shipped behavior are mandatory.
+
+A capability spec is current if its Change Log references the latest shipped change record
+that names it in `specs:`.
+
+## Format rules (mechanically linted)
+
+- Behavior claims carry inline anchors in exactly one form: `(repo-relative/path/File.ext:123)`,
+  where the line part may be a single line `:123` or a range `:123-145`, and may be omitted only
+  for whole-file claims. Several anchors may share one set of parentheses, joined by `; `. A test
+  name in the same parentheses also counts. Lint pattern (the gate IS this regex, keep them in
+  sync): `\([@\w./\\-]+\.(js|mjs|cjs|ya?ml|json)(:\d+(-\d+)?)?\)`. A file with no matches in its
+  Behavior section fails validation outright.
+- An empty Rejected and Reverted section contains the single line `- None on record.` under the
+  heading (the heading itself is always present).
+- Change Log is a one-line-per-record list, newest first: `- YYYY-MM-DD [slug](changes/...)`.
+  Not a table.
