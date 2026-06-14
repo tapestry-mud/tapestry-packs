@@ -47,6 +47,8 @@ The verification sequence for any pack change:
 2. Boot the engine in `strict` mode against a composed set that includes your pack. Look for `Pack validation complete: 0 issue(s) found`.
 3. Playtest the affected behavior.
 
+`tapestry validate` is lighter than strict boot, so step 2 is the real gate. The most common thing that passes validate but fails strict boot: a `spawn_on` (or any applied) tag must be **declared** in the pack's root `tags.yml` with `applies_to` covering every entity type that carries it. An undeclared or inline-only tag throws "unknown or from another pack not declared as a dependency" at boot.
+
 ## Key conventions
 
 **Manifest keys are snake_case.** `display_name`, `load_order`, `area_definitions`, `optional_dependencies` -- not camelCase.
