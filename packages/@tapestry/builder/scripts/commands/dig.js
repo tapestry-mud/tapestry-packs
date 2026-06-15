@@ -109,16 +109,18 @@ tapestry.commands.register({
         //   From packed room:   wire boundary as a connection record (spec B 5.1).
         // -----------------------------------------------------------------------
 
-        // Mint a collision-free key.
+        // Mint a collision-free key. Area IDs are namespace:slug, so take only the
+        // slug portion to avoid double-colon room IDs on Windows paths.
         var existing = tapestry.world.getRoomsInArea(area) || [];
         var taken = {};
         for (var i = 0; i < existing.length; i++) {
             taken[existing[i]] = true;
         }
+        var areaSlug = area.indexOf(':') >= 0 ? area.substring(area.lastIndexOf(':') + 1) : area;
         var n = existing.length;
         var newId;
         do {
-            newId = namespace + ':' + area + '-' + n;
+            newId = namespace + ':' + areaSlug + '-' + n;
             n++;
         } while (taken[newId]);
 
