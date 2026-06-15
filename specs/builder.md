@@ -1,6 +1,6 @@
 ---
 capability: builder
-last-updated: 2026-06-13
+last-updated: 2026-06-15
 ---
 
 # builder
@@ -11,7 +11,7 @@ The builder pack (`@tapestry/builder`) provides in-MUD Online Level Creation (OL
 commands that let admin and builder roles author areas, rooms, and exits without
 leaving the game. It wraps the always-on engine world-authoring API
 (`tapestry.authoring.*`) and depends on `@tapestry/core` (^0.1.5) for `link`/`unlink`.
-Current version: 0.2.3; requires engine >=0.1.25.
+Current version: 0.2.4; requires engine >=0.1.36.
 
 The pack registers five commands (`create`, `dig`, `edit`, `rooms`, `map`), four help
 topics, and two editor flows (`builder_edit_room`, `builder_edit_area`). It exports
@@ -61,10 +61,21 @@ loaded after it.
   same area without creating a new room or moving the builder. `<target>` can be a
   bare short id (namespace inferred from the current room) or a fully-qualified id.
   (packages/@tapestry/builder/scripts/commands/dig.js:65)
-- Both paths refuse with a clear message if the builder is standing in a pack-owned
-  room (detected via `source_pack` property), because exits written to the side-car
-  against pack rooms vanish on reload.
-  (packages/@tapestry/builder/scripts/commands/dig.js:54)
+- `dig <dir>` from a pack-owned room (detected via `source_pack`) routes into a
+  carve-into-pack branch instead of refusing: a shadow guard confirms the chosen
+  direction is free on the pack room, the authored room is minted, and the boundary
+  link is wired as a connection record via `tapestry.connections.create` (not a
+  side-car exit), so it never mutates pack data and survives restarts and pack updates.
+  The builder is teleported in and gets an ASCII boundary message ("belongs to a pack
+  - your way back is a connection..."). Digging onward from the new authored room is
+  the unchanged authored-to-authored inline-exit path.
+  (packages/@tapestry/builder/scripts/commands/dig.js)
+- Shadow guard: before creating anything, `dig` calls `getExitTarget(fromId, dir)`.
+  If the direction is occupied on the pack room, it refuses with "already taken" and
+  changes nothing. (packages/@tapestry/builder/scripts/commands/dig.js)
+- `dig <dir> <target>` (connect) still refuses when the from-room is pack-owned - the
+  CONNECT path cannot safely use side-car exits against a pack room.
+  (packages/@tapestry/builder/scripts/commands/dig.js)
 - The connect path enforces ordered guards before writing anything: no self-link,
   target must exist, target must be authored (not pack-owned), target must be in the
   same area, and the chosen direction must be free on the source room.
@@ -72,8 +83,9 @@ loaded after it.
 - If the target's reverse slot is already occupied, `dig` wires only the forward exit
   and notifies the builder rather than refusing.
   (packages/@tapestry/builder/scripts/commands/dig.js:111)
-- `dig` is intra-area only; to attach an area to the wider world, builders use `link`
-  (provided by `@tapestry/core`). (packages/@tapestry/builder/scripts/commands/dig.js:49)
+- `dig` is intra-area (both CARVE and CONNECT). To attach an authored area to the
+  wider world, builders use `link` (provided by `@tapestry/core`).
+  (packages/@tapestry/builder/scripts/commands/dig.js)
 
 ### `edit` command
 
@@ -192,4 +204,4 @@ loaded after it.
 
 ## Change Log
 
-- None on record.
+- 2026-06-15 [extend-baked-in-areas](changes/2026-06-15-extend-baked-in-areas.md)
