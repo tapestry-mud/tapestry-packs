@@ -1,12 +1,8 @@
 // packages/@tapestry/builder/scripts/commands/dig.js
 //
-// dig <dir>            — carve a NEW room in a direction, wire two-way exits, move in.
-// dig <dir> <target>   — connect a two-way exit to an EXISTING authored room in the
-//                        same area; do not create anything, do not move. <target> is a
-//                        short id (castle-3 -> prefix inferred from the current room's
-//                        namespace) or a fully-qualified id (castle:castle-3).
-//
-// The active area + namespace are inferred from the builder's current room.
+// dig <dir>            - carve a NEW room in a direction, wire two-way exits, move in.
+// dig <dir> <target>  - connect a two-way exit to an EXISTING authored room in the
+//                        same area; do not create anything, do not move.
 tapestry.commands.register({
     name: 'dig',
     aliases: [],
@@ -18,7 +14,6 @@ tapestry.commands.register({
         target: { type: 'keyword', required: false }
     },
     handler: function (actor, resolved) {
-        // Accept abbreviations (n/s/e/w/u/d) as well as full names.
         var dirAliases = {
             n: 'north', s: 'south', e: 'east', w: 'west', u: 'up', d: 'down',
             north: 'north', south: 'south', east: 'east', west: 'west', up: 'up', down: 'down'
@@ -44,26 +39,21 @@ tapestry.commands.register({
             return;
         }
         var namespace = fromId.substring(0, fromId.indexOf(':'));
-
-        // Seam: dig is intra-area only — it wires INLINE exits between authored rooms (which
-        // export with the pack). You cannot dig off a PRE-EXISTING (pack) room: an exit on a
-        // pack room can't persist in the rooms side-car (it's skipped on reload because the
-        // room already loaded from the pack), so the way back would vanish on restart. Attach
-        // a new area to the existing world once, explicitly, with 'link'. Pack rooms carry the
-        // engine-set source_pack property; authored rooms do not.
         var fromProps = tapestry.world.getRoomProperties(fromId) || {};
-        if (fromProps.source_pack) {
-            actor.send("You can't dig off '" + fromId + "' - it belongs to a pack. Dig only " +
-                "within an area you're authoring; use 'link' to attach your area to the world.\r\n");
-            return;
-        }
 
-        // ---------------------------------------------------------------------------
-        // CONNECT path: dig <dir> <target> — wire a door to an EXISTING authored room.
-        // Spec §4.1 guards, in order; on any failure send a specific message, change nothing.
-        // ---------------------------------------------------------------------------
+        // -----------------------------------------------------------------------
+        // CONNECT path: dig <dir> <target> - wire exits to an EXISTING authored room.
+        // -----------------------------------------------------------------------
         if (resolved.target) {
-            // Resolve the target id: prefix inference (castle-3 -> castle:castle-3).
+            // Guard: from-room must be authored. A side-car exit against a pack room
+            // vanishes on reload; connections.create is not appropriate for CONNECT
+            // because the target is already an authored room that owns its exits.
+            if (fromProps.source_pack) {
+                actor.send("You can't connect from '" + fromId + "' - it belongs to a pack. " +
+                    "Use 'link' to attach your area to the world.\r\n");
+                return;
+            }
+
             var targetRef = String(resolved.target);
             var targetId = targetRef.indexOf(':') >= 1
                 ? targetRef
@@ -74,24 +64,18 @@ tapestry.commands.register({
                 return;
             }
 
-            // Guard 2: the target must exist.
             var targetName = tapestry.world.getRoomName(targetId);
             if (!targetName) {
-                actor.send("There is no room '" + targetId + "'. Use 'rooms' to list this " +
-                    "area's rooms.\r\n");
+                actor.send("There is no room '" + targetId + "'. Use 'rooms' to list this area's rooms.\r\n");
                 return;
             }
 
-            // Guard 3: the target must be authored (no source_pack) — an exit onto a pack
-            // room can't persist in the side-car and would vanish on reload.
             var targetProps = tapestry.world.getRoomProperties(targetId) || {};
             if (targetProps.source_pack) {
-                actor.send("'" + targetId + "' belongs to a pack - you can only connect rooms " +
-                    "you've authored. Use 'link' to attach your area to the world.\r\n");
+                actor.send("'" + targetId + "' belongs to a pack - you can only connect rooms you've authored.\r\n");
                 return;
             }
 
-            // Guard 4: same area.
             var targetArea = tapestry.world.getRoomArea(targetId);
             if (targetArea !== area) {
                 actor.send("'" + targetId + "' is not in this area" +
@@ -100,14 +84,12 @@ tapestry.commands.register({
                 return;
             }
 
-            // Guard 5: the chosen direction must be free here — never clobber an exit.
             var existingTarget = tapestry.world.getExitTarget(fromId, dir);
             if (existingTarget) {
                 actor.send("Your " + dir + " exit is already taken (it goes to " + existingTarget + ").\r\n");
                 return;
             }
 
-            // Guard 6: if the target's reverse slot is occupied, wire forward-only + notice.
             var reverseTaken = tapestry.world.getExitTarget(targetId, opposite);
             tapestry.authoring.setRoomExit(fromId, dir, targetId);
             if (reverseTaken) {
@@ -121,11 +103,13 @@ tapestry.commands.register({
             return;
         }
 
-        // ---------------------------------------------------------------------------
-        // CARVE path: dig <dir> — today's behavior, unchanged.
-        // ---------------------------------------------------------------------------
+        // -----------------------------------------------------------------------
+        // CARVE path: dig <dir> - mint a new room and wire exits.
+        //   From authored room: inline side-car exits (unchanged behavior).
+        //   From packed room:   wire boundary as a connection record (spec B 5.1).
+        // -----------------------------------------------------------------------
 
-        // Mint a collision-free key: area-<n>, bumping n past any existing id.
+        // Mint a collision-free key.
         var existing = tapestry.world.getRoomsInArea(area) || [];
         var taken = {};
         for (var i = 0; i < existing.length; i++) {
@@ -138,10 +122,40 @@ tapestry.commands.register({
             n++;
         } while (taken[newId]);
 
+        // Shadow guard (spec B 5.2): refuse before creating anything if the pack room
+        // already has an exit in the chosen direction. Applying a connection exit over
+        // an existing pack exit would shadow the pack's own topology at runtime.
+        if (fromProps.source_pack) {
+            var shadowTarget = tapestry.world.getExitTarget(fromId, dir);
+            if (shadowTarget) {
+                actor.send("Your " + dir + " exit is already taken (it goes to " + shadowTarget + ").\r\n");
+                return;
+            }
+        }
+
         if (!tapestry.authoring.createRoom(area, newId, 'New Room', 'An undescribed room.')) {
             actor.send("Could not dig that room.\r\n");
             return;
         }
+
+        if (fromProps.source_pack) {
+            // Carve-into-pack (spec B 5.1): wire the boundary as a connection record so
+            // neither side of the link is stored in pack data. The connection system
+            // applies both exits at runtime and persists the record under data/connections/.
+            // RemoveConnectionBackedExits keeps the connection exit out of the authored
+            // room's side-car on any subsequent WriteSideCar call.
+            tapestry.connections.create(
+                fromId, 'direction', { direction: dir },
+                newId, 'direction', { direction: opposite });
+            tapestry.world.teleportEntity(actor.entityId, newId);
+            // Boundary message (spec B 5.3): ASCII only.
+            actor.send("You dig " + dir + " into a new room. (" + fromId +
+                " belongs to a pack - your way back is a connection kept outside the" +
+                " pack, so it survives pack updates.)\r\n");
+            return;
+        }
+
+        // Authored from-room: inline side-car exits (original behavior, unchanged).
         tapestry.authoring.setRoomExit(fromId, dir, newId);
         tapestry.authoring.setRoomExit(newId, opposite, fromId);
         tapestry.world.teleportEntity(actor.entityId, newId);
