@@ -1,3 +1,8 @@
+---
+capability: core-communication
+last-updated: 2026-06-13
+---
+
 # core-communication
 
 Player-to-player messaging and broadcast channels in @tapestry/core.

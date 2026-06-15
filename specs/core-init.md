@@ -1,3 +1,8 @@
+---
+capability: core-init
+last-updated: 2026-06-13
+---
+
 # core-init
 
 ## Overview

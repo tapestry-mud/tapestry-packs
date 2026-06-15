@@ -28,6 +28,7 @@ agent or contributor answers "how does X behave?" from the relevant file alone.
 | core-mobs | [core-mobs.md](core-mobs.md) | 2026-06-13 |
 | core-groups | [core-groups.md](core-groups.md) | 2026-06-13 |
 | core-progression | [core-progression.md](core-progression.md) | 2026-06-13 |
+| Validation Ledger | [validation-ledger.md](validation-ledger.md) | 2026-06-13 |
 
 ## Contract summary
 
@@ -53,3 +54,21 @@ that names it in `specs:`.
   heading (the heading itself is always present).
 - Change Log is a one-line-per-record list, newest first: `- YYYY-MM-DD [slug](changes/...)`.
   Not a table.
+
+<!-- spec-lint:start -->
+Mode: strict
+
+Required sections: Overview, Behavior, Rejected and Reverted, Change Log
+
+Anchor regex (Behavior): \([@\w./\\-]+\.(cs|js|ts|json|ya?ml|md)(:\d+(-\d+)?)?[^)]*\)
+
+Empty-reversal sentinel: - None on record.
+
+Change Log: list, newest-first by date, not a table. Empty is valid for unmodified capabilities.
+
+Index sync: every capability .md on disk appears in README index; every indexed file exists on disk; index date matches file last-updated.
+
+Currency: for each change record naming a capability, the top Change Log entry references that record and last-updated >= record date. A capability named by zero records may have an empty Change Log.
+
+Tombstone: a change record with status:reverted requires a tombstone entry in the capability Rejected and Reverted (not the empty sentinel).
+<!-- spec-lint:end -->

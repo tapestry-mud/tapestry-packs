@@ -1,3 +1,8 @@
+---
+capability: core-progression
+last-updated: 2026-06-13
+---
+
 # core-progression
 
 XP tracks, leveling, training, character state, and quests in @tapestry/core.

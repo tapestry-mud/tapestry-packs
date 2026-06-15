@@ -1,3 +1,8 @@
+---
+capability: core-inventory
+last-updated: 2026-06-13
+---
+
 # core-inventory
 
 Item manipulation, equipping, and loot protection provided by `@tapestry/core`.

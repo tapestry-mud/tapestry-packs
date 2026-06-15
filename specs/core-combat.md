@@ -1,3 +1,8 @@
+---
+capability: core-combat
+last-updated: 2026-06-13
+---
+
 # core-combat
 
 Combat commands and output formatting provided by @tapestry/core.

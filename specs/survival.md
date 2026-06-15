@@ -1,3 +1,8 @@
+---
+capability: survival
+last-updated: 2026-06-13
+---
+
 # Capability Spec: survival
 
 Pack: `@tapestry/survival` v0.1.3

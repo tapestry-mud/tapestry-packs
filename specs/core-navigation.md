@@ -1,3 +1,8 @@
+---
+capability: core-navigation
+last-updated: 2026-06-13
+---
+
 # core-navigation
 
 World movement, room observation, and session commands in @tapestry/core.

@@ -1,3 +1,8 @@
+---
+capability: viewer
+last-updated: 2026-06-13
+---
+
 # viewer
 
 Watch-mode DM privacy for 1:1 player messaging (tell and reply).

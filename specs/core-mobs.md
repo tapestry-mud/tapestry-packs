@@ -1,3 +1,8 @@
+---
+capability: core-mobs
+last-updated: 2026-06-13
+---
+
 # core-mobs
 
 NPC subsystem for @tapestry/core. Covers registered movement behaviors, the

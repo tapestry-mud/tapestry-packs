@@ -1,3 +1,8 @@
+---
+capability: example-pack
+last-updated: 2026-06-13
+---
+
 # example-pack
 
 ## Overview

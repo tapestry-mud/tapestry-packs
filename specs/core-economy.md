@@ -1,3 +1,8 @@
+---
+capability: core-economy
+last-updated: 2026-06-13
+---
+
 # core-economy
 
 Shop commerce and container/door access in @tapestry/core.

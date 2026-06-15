@@ -1,3 +1,8 @@
+---
+capability: core-admin
+last-updated: 2026-06-13
+---
+
 # core-admin
 
 Privileged administration commands in @tapestry/core. All commands require the `admin`

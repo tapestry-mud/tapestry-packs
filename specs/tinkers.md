@@ -1,3 +1,8 @@
+---
+capability: tinkers
+last-updated: 2026-06-13
+---
+
 # tinkers
 
 ## Overview

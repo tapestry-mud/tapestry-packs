@@ -1,4 +1,11 @@
+---
+capability: validation-ledger
+last-updated: 2026-06-13
+---
+
 # specs validation ledger
+
+## Overview
 
 Adjudication record for `/backfill-specs` Validate-mode passes over this repo's capability
 specs. One line per finding: date, file, finding, verdict (fixed / below-bar / not-real), and
@@ -11,6 +18,11 @@ statement; a leak past the repo's visibility rules; a contract lint failure. Eve
 is BELOW-BAR: logged here, never looped.
 
 Stopping rule: validated when two consecutive passes produce zero NEW blockers.
+
+## Behavior
+
+Adjudication findings are recorded in the Findings table below. A row with a settled verdict
+is closed unless new evidence overrides it. (specs/README.md)
 
 ## Findings
 
@@ -36,3 +48,9 @@ Stopping rule: validated when two consecutive passes produce zero NEW blockers.
 | 2026-06-13 | builder.md | Spec says "Reset interval (seconds)"; code label is "Reset interval (s)" | below-bar | Descriptive (non-quoted) field name; minor abbreviation difference. |
 | 2026-06-13 | example-pack.md | pack.yaml version anchor 8-13 omits the version line (2); guide keyword quotes representative | below-bar | All facts (version 0.1.9, deps, keyword responses) correct; anchor range and quotes are imprecise but verifiable. |
 | 2026-06-13 | viewer.md | Help-text claim says both entries state "tell or reply content" | below-bar | tell.yaml says "tell content", reply.yaml says "reply content"; each states only its own command. Paraphrase. |
+
+## Rejected and Reverted
+
+- None on record.
+
+## Change Log

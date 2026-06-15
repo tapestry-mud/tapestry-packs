@@ -1,3 +1,8 @@
+---
+capability: socials
+last-updated: 2026-06-13
+---
+
 # Socials
 
 ## Overview

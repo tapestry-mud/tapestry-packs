@@ -1,3 +1,8 @@
+---
+capability: biomes
+last-updated: 2026-06-13
+---
+
 # biomes
 
 ## Overview

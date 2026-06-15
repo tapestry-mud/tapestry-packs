@@ -1,3 +1,8 @@
+---
+capability: core-groups
+last-updated: 2026-06-13
+---
+
 # core-groups
 
 Party system, follow mechanics, and clan channel in @tapestry/core.

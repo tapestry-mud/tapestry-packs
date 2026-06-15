@@ -1,3 +1,8 @@
+---
+capability: core-abilities
+last-updated: 2026-06-13
+---
+
 # core-abilities
 
 ## Overview
