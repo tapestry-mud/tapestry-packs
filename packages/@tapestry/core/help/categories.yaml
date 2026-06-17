@@ -1,0 +1,28 @@
+categories:
+  - id: movement
+    label: Movement
+  - id: communication
+    label: Communication
+  - id: character
+    label: Character
+  - id: combat
+    label: Combat
+  - id: inventory
+    label: Inventory
+  - id: shop
+    label: Trade
+  - id: group
+    label: Grouping
+  - id: world
+    label: World
+  - id: rest
+    label: Rest
+  - id: social
+    label: Socials
+    hidden: true
+  - id: accessibility
+    label: Accessibility
+  - id: builder
+    label: Building
+  - id: admin
+    label: Immortal
