@@ -22,3 +22,4 @@ content:
   rooms: "areas/**/rooms/*.yaml"
   items: "items/**/*.yaml"
   scripts: "scripts/**/*.js"
+  help: "help/**/*.yaml"
