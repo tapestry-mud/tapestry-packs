@@ -4,70 +4,103 @@ tapestry.commands.register({
     roles: ['player'],
     args: {},
     handler: function(actor, resolved) {
-        var filter = resolved.rest && resolved.rest.length > 0 ? resolved.rest[0].toLowerCase() : null;
-        var entries = tapestry.commands.listForPlayer(actor.entityId);
+        var filterRaw = resolved.rest && resolved.rest.length > 0
+            ? resolved.rest.join(' ').trim()
+            : '';
+        var filter = filterRaw.toLowerCase();
 
-        var grouped = {};
+        var vocab = tapestry.commands.categories();        // [{id,label}] declared order, visible only
+        var entries = tapestry.commands.listForPlayer(actor.entityId); // {keyword,category,description,aliases}
+
+        // Apply the free-text filter: keyword | alias | category id | category label.
+        var labelById = {};
+        for (var v = 0; v < vocab.length; v++) {
+            labelById[vocab[v].id] = vocab[v].label;
+        }
+        var visible = [];
         for (var i = 0; i < entries.length; i++) {
             var e = entries[i];
-            if (filter && e.category.toLowerCase() !== filter) { continue; }
-            if (!grouped[e.category]) { grouped[e.category] = []; }
-            grouped[e.category].push(e);
+            if (!filter) {
+                visible.push(e);
+                continue;
+            }
+            if (matchesFilter(e, labelById[e.category] || '', filter)) {
+                visible.push(e);
+            }
         }
 
-        var categories = Object.keys(grouped).sort();
-        if (categories.length === 0) {
-            actor.send('No commands match.\r\n');
+        if (visible.length === 0) {
+            if (filter) {
+                actor.send("No commands match '" + filterRaw + "'.\r\n");
+            } else {
+                actor.send('No commands available.\r\n');
+            }
+            tapestry.gmcp.send(actor.entityId, 'Commands.Open', filter ? { filter: filterRaw } : {});
             return;
         }
 
-        var sections = [];
-        for (var c = 0; c < categories.length; c++) {
-            sections.push(buildCategorySection(categories[c], grouped[categories[c]]));
+        // Group visible entries by category id.
+        var byCat = {};
+        for (var g = 0; g < visible.length; g++) {
+            var cat = visible[g].category;
+            if (!byCat[cat]) { byCat[cat] = []; }
+            byCat[cat].push(visible[g]);
         }
 
-        var output = tapestry.ui.panel({ sections: sections });
+        var effWidth = tapestry.ui.width(actor.entityId); // 0 = wrapping off / unbounded
+        var usable = (effWidth > 0 ? effWidth : 80) - 4;  // panel frame "| " + " |"
+        var longest = 0;
+        for (var k = 0; k < visible.length; k++) {
+            if (visible[k].keyword.length > longest) { longest = visible[k].keyword.length; }
+        }
+        var colWidth = longest + 2; // 2-space inter-column gap
+        var cols = Math.floor((usable - 2) / colWidth); // 2 = left indent
+        if (cols < 1) { cols = 1; }
+
+        var sections = [{ rows: [{ type: 'title', left: 'Commands (' + visible.length + ')' }] }];
+
+        for (var c = 0; c < vocab.length; c++) {
+            var id = vocab[c].id;
+            var members = byCat[id];
+            if (!members || members.length === 0) { continue; } // omit empty sections
+
+            members.sort(function(a, b) { return a.keyword.localeCompare(b.keyword); });
+
+            var titleRow = id === 'admin'
+                ? { type: 'title', left: vocab[c].label + ' (' + members.length + ')', right: 'admins only' }
+                : { type: 'title', left: vocab[c].label + ' (' + members.length + ')' };
+
+            var rows = [titleRow];
+            for (var r = 0; r < members.length; r += cols) {
+                var cells = [{ content: '', width: 2 }]; // left indent
+                for (var j = 0; j < cols && r + j < members.length; j++) {
+                    cells.push({ content: members[r + j].keyword, width: colWidth });
+                }
+                rows.push({ type: 'cell', cells: cells });
+            }
+
+            sections.push({ separatorAbove: 'minor', rows: rows });
+        }
+
+        sections.push({
+            separatorAbove: 'minor',
+            rows: [{ type: 'footer', content: 'commands <text> to filter . help <cmd> for detail' }]
+        });
+
+        var output = tapestry.ui.panel({ forEntity: actor.entityId, sections: sections });
         actor.send('\r\n' + output + '\r\n');
+        tapestry.gmcp.send(actor.entityId, 'Commands.Open', filter ? { filter: filterRaw } : {});
     }
 });
 
-function buildCategorySection(category, entries) {
-    entries.sort(function(a, b) { return a.keyword.localeCompare(b.keyword); });
-
-    var label = category.charAt(0).toUpperCase() + category.slice(1);
-    var titleRow = category === 'admin'
-        ? { type: 'title', left: label, right: 'admins only' }
-        : { type: 'title', left: label };
-
-    var rows = [titleRow];
-
-    var described = [];
-    var undescribed = [];
-    for (var i = 0; i < entries.length; i++) {
-        if (entries[i].description) {
-            described.push(entries[i]);
-        } else {
-            undescribed.push(entries[i]);
+function matchesFilter(entry, label, filter) {
+    if (entry.keyword.toLowerCase().indexOf(filter) !== -1) { return true; }
+    if (entry.category.toLowerCase().indexOf(filter) !== -1) { return true; }
+    if (label.toLowerCase().indexOf(filter) !== -1) { return true; }
+    if (entry.aliases) {
+        for (var a = 0; a < entry.aliases.length; a++) {
+            if (entry.aliases[a].toLowerCase().indexOf(filter) !== -1) { return true; }
         }
     }
-
-    for (var d = 0; d < described.length; d++) {
-        rows.push({
-            type: 'cell',
-            cells: [
-                { content: '  ' + described[d].keyword, width: 18 },
-                { content: described[d].description, width: 'fill' }
-            ]
-        });
-    }
-
-    if (undescribed.length > 0) {
-        var names = [];
-        for (var u = 0; u < undescribed.length; u++) {
-            names.push(undescribed[u].keyword);
-        }
-        rows.push({ type: 'text', content: '  ' + names.join(', ') });
-    }
-
-    return { separatorAbove: 'minor', rows: rows };
+    return false;
 }
