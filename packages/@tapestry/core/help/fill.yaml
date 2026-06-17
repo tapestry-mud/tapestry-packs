@@ -15,4 +15,4 @@ body: |
   specify it. If there are multiple, name the one you want.
 
   A filled container can then be used with drink to consume the liquid.
-see_also: [drink, inventory]
+see_also: [inventory]

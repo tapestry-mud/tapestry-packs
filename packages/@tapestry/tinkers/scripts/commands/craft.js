@@ -1,8 +1,6 @@
 var tinkers = tapestry.packs.require('@tapestry/tinkers');
 tapestry.commands.register({
     name: 'craft',
-    description: 'Craft an item using a known recipe and materials in your inventory.',
-    category: 'inventory',
     roles: ['player'],
     args: {
         // The 'recipe' arg type (registered in recipes-table.js) resolves the typed

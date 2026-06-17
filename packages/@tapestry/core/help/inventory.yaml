@@ -20,4 +20,4 @@ body: |
   CONTAINERS: Some items are containers - bags, packs, chests - that
   hold other items. Use put and get to move items in and out of them.
   Containers let you carry more by organizing your items.
-see_also: [get, drop, put, give, fill, eat, drink, equipment]
+see_also: [get, drop, put, give, fill, equipment]

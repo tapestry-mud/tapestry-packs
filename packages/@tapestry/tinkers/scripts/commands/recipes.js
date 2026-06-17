@@ -1,8 +1,6 @@
 var tinkers = tapestry.packs.require('@tapestry/tinkers');
 tapestry.commands.register({
     name: 'recipes',
-    description: "List the recipes in your book, or show one recipe's details: recipes [name]",
-    category: 'inventory',
     roles: ['player'],
     args: {
         // Optional: when given, resolves (via the 'recipe' arg type) to a recipe id

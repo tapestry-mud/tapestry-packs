@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'copy',
-    description: 'Copy a schematic or set of plans into your recipe book.',
-    category: 'inventory',
     roles: ['player'],
     args: {
         item: { type: 'findable', required: true }
