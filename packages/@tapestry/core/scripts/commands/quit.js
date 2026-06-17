@@ -1,8 +1,6 @@
 tapestry.commands.register({
     name: 'quit',
     aliases: ['qq'],
-    description: 'Disconnect from the game.',
-    category: 'system',
     roles: ['player'],
     priority: 0,
     args: {},

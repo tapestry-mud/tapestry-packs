@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'settrainable',
-    description: 'Admin: toggle a stat in or out of the trainable list.',
-    category: 'admin',
     admin: true,
     args: {
         entity: { type: 'keyword', required: true },

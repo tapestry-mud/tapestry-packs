@@ -11,8 +11,6 @@
 
 tapestry.commands.register({
     name: 'width',
-    description: 'Set your screen width for word-wrapping (e.g. "width 80", "width off", "width auto").',
-    category: 'info',
     roles: ['player'],
     args: {
         value: { type: 'text', required: false }

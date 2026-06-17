@@ -7,8 +7,6 @@ if (!socials) {
 socials.forEach(function(social) {
     tapestry.commands.register({
         name: social.name,
-        category: 'social',
-        description: social.no_target,
         args: {
             target: { type: 'visible', required: false }
         },

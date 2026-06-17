@@ -1,8 +1,6 @@
 tapestry.commands.register({
     name: 'sac',
     aliases: ['sacrifice'],
-    description: 'Sacrifice a corpse to remove it from the world.',
-    category: 'inventory',
     roles: ['player'],
     args: {
         item: { type: 'room_item', required: true }

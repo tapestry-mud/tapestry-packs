@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'eat',
-    description: 'Eat food from your inventory.',
-    category: 'inventory',
     roles: ['player'],
     args: {
         item: { type: 'inventory', required: true }

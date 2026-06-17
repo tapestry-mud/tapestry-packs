@@ -1,6 +1,5 @@
 ﻿tapestry.commands.register({
     name: 'skills',
-    description: 'List your learned skills.',
     handler: function(player, args) {
         var learned = tapestry.abilities.getLearnedAbilities(player.entityId);
         var skills = [];
@@ -36,7 +35,6 @@
 
 tapestry.commands.register({
     name: 'spells',
-    description: 'List your learned spells.',
     handler: function(player, args) {
         var learned = tapestry.abilities.getLearnedAbilities(player.entityId);
         var spells = [];

@@ -7,8 +7,6 @@ function scorePad(str, n) {
 
 tapestry.commands.register({
     name: 'score',
-    description: 'Display your character stats and status.',
-    category: 'info',
     roles: ['player'],
     args: {},
     handler: function(actor, resolved) {

@@ -1,7 +1,5 @@
 ﻿tapestry.commands.register({
     name: 'remove',
-    description: 'Remove a worn or wielded item.',
-    category: 'inventory',
     roles: ['player'],
     args: {
         item: { type: 'keyword', required: true }

@@ -4,8 +4,6 @@
 tapestry.commands.register({
     name: 'revokerole',
     aliases: [],
-    description: 'Revoke a role from a player (e.g. revokerole Bob builder).',
-    category: 'admin',
     admin: true,
     args: {
         target: { type: 'keyword', required: true },

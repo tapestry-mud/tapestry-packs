@@ -64,8 +64,6 @@ registerEditor('area', function (actor, args) {
 tapestry.commands.register({
     name: 'edit',
     aliases: [],
-    description: 'Edit a builder entity: edit <room>.',
-    category: 'builder',
     roles: ['admin', 'builder'],
     args: {
         noun: { type: 'keyword', required: true },

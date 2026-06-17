@@ -1,8 +1,6 @@
 tapestry.commands.register({
     name: 'link',
     aliases: [],
-    description: 'Link rooms across packs via guided flow.',
-    category: 'admin',
     admin: true,
     args: {},
     handler: function(actor, resolved) {

@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'rest',
-    description: 'Sit down and rest.',
-    category: 'world',
     roles: ['player', 'mob'],
     args: {},
     handler: function(actor, resolved) {

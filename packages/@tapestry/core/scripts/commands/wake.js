@@ -1,8 +1,6 @@
 tapestry.commands.register({
     name: 'wake',
     aliases: ['stand'],
-    description: 'Wake up and stand.',
-    category: 'world',
     roles: ['player', 'mob'],
     args: {},
     handler: function(actor, resolved) {

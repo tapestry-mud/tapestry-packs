@@ -6,8 +6,6 @@
 tapestry.commands.register({
     name: 'grantrole',
     aliases: [],
-    description: 'Grant a role to a player (e.g. grantrole Bob builder).',
-    category: 'admin',
     admin: true,
     args: {
         target: { type: 'keyword', required: true },

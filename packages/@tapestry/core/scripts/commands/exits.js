@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'exits',
-    description: 'List available exits from the current room.',
-    category: 'info',
     roles: ['player'],
     args: {},
     handler: function(actor, resolved) {

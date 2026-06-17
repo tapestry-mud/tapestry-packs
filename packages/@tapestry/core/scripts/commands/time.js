@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'time',
-    description: 'Show the current in-game time.',
-    category: 'info',
     roles: ['player'],
     args: {},
     priority: 0,

@@ -1,8 +1,6 @@
 tapestry.commands.register({
     name: 'quests',
     aliases: ['journal'],
-    description: 'View your active quests and progress.',
-    category: 'info',
     roles: ['player'],
     args: {
         subcommand: { type: 'keyword', required: false },

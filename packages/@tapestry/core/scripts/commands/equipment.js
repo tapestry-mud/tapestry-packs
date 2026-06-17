@@ -1,8 +1,6 @@
 tapestry.commands.register({
     name: 'equipment',
     aliases: ['eq'],
-    description: 'Show your equipped items.',
-    category: 'info',
     roles: ['player'],
     args: {},
     handler: function(actor, resolved) {

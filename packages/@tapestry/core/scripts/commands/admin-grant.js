@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'grant',
-    description: 'Admin: award progression or trains to a player, npc, or item.',
-    category: 'admin',
     admin: true,
     args: {
         entity: { type: 'keyword', required: true },

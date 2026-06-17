@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'yell',
-    description: 'Shout a message to the entire area.',
-    category: 'social',
     roles: ['player', 'mob'],
     args: {
         message: { type: 'text', required: true }

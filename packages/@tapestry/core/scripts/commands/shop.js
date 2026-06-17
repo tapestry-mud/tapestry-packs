@@ -5,8 +5,6 @@
 tapestry.commands.register({
     name: 'shop',
     aliases: ['list'],
-    description: 'List items for sale at a shop.',
-    category: 'progression',
     roles: ['player'],
     args: {
         filter: { type: 'keyword', required: false }
@@ -18,8 +16,6 @@ tapestry.commands.register({
 
 tapestry.commands.register({
     name: 'buy',
-    description: 'Buy an item from a shop.',
-    category: 'progression',
     roles: ['player'],
     args: {
         item: { type: 'keyword', required: true }
@@ -31,8 +27,6 @@ tapestry.commands.register({
 
 tapestry.commands.register({
     name: 'sell',
-    description: 'Sell an item to a shop.',
-    category: 'progression',
     roles: ['player'],
     args: {
         item: { type: 'keyword', required: true }
@@ -44,8 +38,6 @@ tapestry.commands.register({
 
 tapestry.commands.register({
     name: 'value',
-    description: 'Check what a shop would pay or charge for an item.',
-    category: 'progression',
     roles: ['player'],
     args: {
         item: { type: 'keyword', required: true }

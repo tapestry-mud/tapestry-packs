@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'open',
-    description: 'Open a door or container.',
-    category: 'world',
     roles: ['player', 'mob'],
     args: {
         target: { type: 'door', required: true }

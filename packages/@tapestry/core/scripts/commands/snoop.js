@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'snoop',
-    description: 'Admin: mirror another online player\'s output to your screen. "snoop off" to stop.',
-    category: 'admin',
     admin: true,
     args: {
         target: { type: 'keyword', required: true }

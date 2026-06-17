@@ -2,7 +2,6 @@
 tapestry.commands.register({
     name: "kill",
     aliases: ["attack"],
-    description: "Attack a target to initiate combat.",
     args: {
         target: { type: 'npc', required: true }
     },
@@ -32,7 +31,6 @@ tapestry.commands.register({
 // --- flee command ---
 tapestry.commands.register({
     name: "flee",
-    description: "Attempt to flee from combat.",
     handler: function(player, args) {
         if (!tapestry.combat.isInCombat(player.entityId)) {
             player.send("You're not in combat.\r\n");
@@ -47,7 +45,6 @@ tapestry.commands.register({
 // --- wimpy command ---
 tapestry.commands.register({
     name: "wimpy",
-    description: "Set HP threshold to automatically flee combat.",
     handler: function(player, args) {
         if (!args || args.length === 0) {
             var current = tapestry.world.getProperty(player.entityId, "wimpy_threshold") || 0;
@@ -74,7 +71,6 @@ tapestry.commands.register({
 tapestry.commands.register({
     name: "consider",
     aliases: ["con"],
-    description: "Assess how dangerous a target is compared to you.",
     args: {
         target: { type: 'npc', required: true }
     },

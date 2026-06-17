@@ -1,8 +1,6 @@
 tapestry.commands.register({
     name: 'connections',
     aliases: [],
-    description: 'List connections for this room or all rooms.',
-    category: 'admin',
     admin: true,
     args: {},
     priority: 10,

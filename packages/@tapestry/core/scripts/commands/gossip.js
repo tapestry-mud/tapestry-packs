@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'gossip',
-    description: 'Send a message to all players.',
-    category: 'social',
     roles: ['player', 'mob'],
     args: {
         message: { type: 'text', required: true }

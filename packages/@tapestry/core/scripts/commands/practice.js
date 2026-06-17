@@ -48,8 +48,6 @@ function renderPracticeList(actor) {
 tapestry.commands.register({
     name: 'practice',
     aliases: ['prac'],
-    description: 'Show your proficiencies or practice with a trainer.',
-    category: 'progression',
     roles: ['player'],
     args: {
         skill: { type: 'keyword', required: false }

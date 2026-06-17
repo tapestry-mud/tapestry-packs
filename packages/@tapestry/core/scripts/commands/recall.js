@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'recall',
-    description: 'Teleport to the recall room.',
-    category: 'world',
     roles: ['player'],
     args: {},
     handler: function(actor, resolved) {

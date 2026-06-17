@@ -207,7 +207,6 @@ tapestry.abilities.register({
 // --- Cast command ---
 tapestry.commands.register({
     name: "cast",
-    description: 'Cast a spell.',
     aliases: ["c"],
     args: {
         spell_and_target: { type: 'text', required: true }

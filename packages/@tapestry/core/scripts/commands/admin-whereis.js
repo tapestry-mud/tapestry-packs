@@ -44,8 +44,6 @@ function whereisRender(actor, keyword, typeFilter, label) {
 
 tapestry.commands.register({
     name: 'whereis',
-    description: 'Locate all entities matching a name.',
-    category: 'admin',
     admin: true,
     args: { keyword: { type: 'text', required: true } },
     handler: function(actor, resolved) {
@@ -55,8 +53,6 @@ tapestry.commands.register({
 
 tapestry.commands.register({
     name: 'mwhere',
-    description: 'Locate all NPCs matching a name.',
-    category: 'admin',
     admin: true,
     args: { keyword: { type: 'text', required: true } },
     handler: function(actor, resolved) {
@@ -66,8 +62,6 @@ tapestry.commands.register({
 
 tapestry.commands.register({
     name: 'owhere',
-    description: 'Locate all items matching a name.',
-    category: 'admin',
     admin: true,
     args: { keyword: { type: 'text', required: true } },
     handler: function(actor, resolved) {

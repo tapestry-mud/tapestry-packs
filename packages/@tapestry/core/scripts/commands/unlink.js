@@ -1,8 +1,6 @@
 tapestry.commands.register({
     name: 'unlink',
     aliases: [],
-    description: 'Remove a connection from this room.',
-    category: 'admin',
     admin: true,
     args: {},
     handler: function(actor, resolved) {

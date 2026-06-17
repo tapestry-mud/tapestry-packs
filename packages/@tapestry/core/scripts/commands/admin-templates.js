@@ -4,8 +4,6 @@
 
 tapestry.commands.register({
     name: 'templates',
-    description: 'List mob/item templates matching a keyword, with live instance counts.',
-    category: 'admin',
     admin: true,
     args: { keyword: { type: 'text', required: true } },
     handler: function(actor, resolved) {

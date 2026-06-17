@@ -1,8 +1,6 @@
 ﻿tapestry.commands.register({
     name: 'say',
     aliases: ["'"],
-    description: 'Speak to others in the room.',
-    category: 'communication',
     roles: ['player', 'mob'],
     gmcp: { channel: 'say', prependSender: false },
     args: {

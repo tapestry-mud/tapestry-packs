@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'restore',
-    description: 'Restore a player to full vitals, or all online players.',
-    category: 'admin',
     admin: true,
     args: {
         target: { type: 'keyword', required: true }

@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'weather',
-    description: 'Show the current weather.',
-    category: 'info',
     roles: ['player'],
     args: {},
     priority: 0,

@@ -8,8 +8,6 @@ tapestry.commands.register({
     name: 'tell',
     override: true,
     aliases: ['t'],
-    description: 'Send a private message to a player.',
-    category: 'social',
     roles: ['player'],
     args: {
         target: { type: 'player', required: true },

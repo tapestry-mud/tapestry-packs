@@ -4,8 +4,6 @@
 tapestry.commands.register({
     name: 'abilities',
     aliases: ['slookup'],
-    description: 'Look up registered abilities by keyword.',
-    category: 'admin',
     admin: true,
     args: { keyword: { type: 'text', required: true } },
     handler: function(actor, resolved) {

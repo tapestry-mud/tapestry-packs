@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'drink',
-    description: 'Drink from a container in your inventory or a source in the room.',
-    category: 'inventory',
     roles: ['player'],
     args: {
         item: { type: 'findable', required: true }

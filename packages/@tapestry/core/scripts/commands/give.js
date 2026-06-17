@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'give',
-    description: 'Give an item to a player or NPC in the room.',
-    category: 'inventory',
     roles: ['player', 'mob'],
     args: {
         item: { type: 'inventory', required: true },

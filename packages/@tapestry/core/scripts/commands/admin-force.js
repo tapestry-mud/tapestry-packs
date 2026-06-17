@@ -4,8 +4,6 @@
 // session / bad id), world.send went nowhere, so no stray notification.
 tapestry.commands.register({
     name: 'force',
-    description: 'Force a player or mob to execute a command.',
-    category: 'admin',
     admin: true,
     args: {
         target: { type: 'keyword', required: true },

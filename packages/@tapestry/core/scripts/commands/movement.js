@@ -21,8 +21,6 @@ directions.forEach(function(entry) {
     tapestry.commands.register({
         name: dir,
         aliases: [entry.alias],
-        description: 'Move ' + dir + '.',
-        category: 'world',
         roles: ['player'],
         args: {},
         priority: 10,

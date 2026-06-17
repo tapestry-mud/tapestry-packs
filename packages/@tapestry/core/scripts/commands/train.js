@@ -51,8 +51,6 @@ function renderTrainList(actor) {
 
 tapestry.commands.register({
     name: 'train',
-    description: 'Spend a train to raise a stat.',
-    category: 'progression',
     roles: ['player'],
     args: {
         stat: { type: 'keyword', required: false }

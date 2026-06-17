@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'clan',
-    description: 'Send a message to your clan.',
-    category: 'social',
     roles: ['player'],
     args: {
         message: { type: 'rest', required: true, prompt: 'Clan what?' }

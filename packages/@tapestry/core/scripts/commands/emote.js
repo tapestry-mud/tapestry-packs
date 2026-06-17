@@ -1,8 +1,6 @@
 ﻿tapestry.commands.register({
     name: 'emote',
     aliases: [':'],
-    description: 'Perform an emote action.',
-    category: 'communication',
     roles: ['player', 'mob'],
     gmcp: { channel: 'emote', prependSender: false },
     args: {

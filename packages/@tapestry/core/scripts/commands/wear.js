@@ -1,7 +1,5 @@
 ﻿tapestry.commands.register({
     name: 'wear',
-    description: 'Wear an item from your inventory.',
-    category: 'inventory',
     roles: ['player'],
     args: {
         item: { type: 'inventory', required: true, bulk: true }

@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'unlock',
-    description: 'Unlock a door.',
-    category: 'world',
     roles: ['player'],
     args: {
         target: { type: 'door', required: true }

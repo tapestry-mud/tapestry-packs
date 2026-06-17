@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'tags',
-    description: 'Inspect and manage tags, keywords, roles, and the tag registry.',
-    category: 'admin',
     admin: true,
     handler: function(actor, rawArgs) {
         var sub = (rawArgs && rawArgs.length > 0) ? rawArgs[0].toLowerCase() : '';

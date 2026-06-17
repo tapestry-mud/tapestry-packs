@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'peace',
-    description: 'Stop all combat in your room.',
-    category: 'admin',
     admin: true,
     handler: function(actor, resolved) {
         if (!actor.roomId) {

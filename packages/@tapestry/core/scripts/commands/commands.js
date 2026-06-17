@@ -1,8 +1,6 @@
 tapestry.commands.register({
     name: 'commands',
     aliases: ['cmds'],
-    description: 'List commands available to you.',
-    category: 'info',
     roles: ['player'],
     args: {},
     handler: function(actor, resolved) {

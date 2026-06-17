@@ -6,8 +6,6 @@
 tapestry.commands.register({
     name: 'areas',
     aliases: [],
-    description: 'List the world\'s areas by level range.',
-    category: 'info',
     roles: ['player'],
     args: {},
     priority: 0,

@@ -1,8 +1,6 @@
 tapestry.commands.register({
     name: 'help',
     aliases: ['?'],
-    description: 'Browse or search help topics.',
-    category: 'info',
     priority: 100,
     roles: ['player'],
     args: {

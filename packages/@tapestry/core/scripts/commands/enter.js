@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'enter',
-    description: 'Enter a portal or special exit.',
-    category: 'world',
     roles: ['player'],
     args: {
         portal: { type: 'keyword', required: true }

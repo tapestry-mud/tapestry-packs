@@ -1,7 +1,5 @@
 ﻿tapestry.commands.register({
     name: 'drop',
-    description: 'Drop an item from your inventory.',
-    category: 'inventory',
     roles: ['player', 'mob'],
     args: {
         item: { type: 'inventory', required: true, bulk: true }

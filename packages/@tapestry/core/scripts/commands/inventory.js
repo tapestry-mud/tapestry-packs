@@ -1,8 +1,6 @@
 tapestry.commands.register({
     name: 'inventory',
     aliases: ['i'],
-    description: 'Show items you are carrying.',
-    category: 'info',
     roles: ['player'],
     args: {},
     priority: 0,

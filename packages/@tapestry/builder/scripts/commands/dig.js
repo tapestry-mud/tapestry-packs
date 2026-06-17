@@ -6,8 +6,6 @@
 tapestry.commands.register({
     name: 'dig',
     aliases: [],
-    description: 'Dig a new room (dig north) or connect to an existing one (dig north castle-3).',
-    category: 'builder',
     roles: ['admin', 'builder'],
     args: {
         direction: { type: 'keyword', required: true },

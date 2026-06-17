@@ -6,8 +6,6 @@ tapestry.commands.register({
     name: 'reply',
     override: true,
     aliases: ['r'],
-    description: 'Reply to the last player who sent you a tell.',
-    category: 'social',
     roles: ['player'],
     args: {
         message: { type: 'text', required: true }

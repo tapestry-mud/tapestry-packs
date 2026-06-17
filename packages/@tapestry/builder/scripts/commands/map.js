@@ -6,8 +6,6 @@
 tapestry.commands.register({
     name: 'map',
     aliases: [],
-    description: 'Show a map of your surroundings.',
-    category: 'info',
     roles: ['player'],
     args: {},
     handler: function (actor, resolved) {

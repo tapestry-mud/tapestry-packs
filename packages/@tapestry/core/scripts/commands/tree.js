@@ -116,8 +116,6 @@ function renderTree(actor, filter) {
 
 tapestry.commands.register({
     name: 'tree',
-    description: 'Show your class path and learned abilities.',
-    category: 'progression',
     roles: ['player'],
     args: {
         filter: { type: 'keyword', required: false }

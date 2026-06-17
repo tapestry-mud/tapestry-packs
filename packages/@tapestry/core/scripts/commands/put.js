@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'put',
-    description: 'Put an item into a container.',
-    category: 'inventory',
     roles: ['player', 'mob'],
     args: {
         item: { type: 'inventory', required: true, bulk: true },

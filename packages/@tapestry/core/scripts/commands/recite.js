@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'recite',
-    description: 'Recite a scroll from your inventory.',
-    category: 'social',
     roles: ['player'],
     args: {
         item: { type: 'inventory', required: true },

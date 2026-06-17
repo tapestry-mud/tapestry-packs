@@ -1,8 +1,6 @@
 tapestry.commands.register({
     name: 'immtalk',
     aliases: [';'],
-    description: 'Send a message on the immortal channel.',
-    category: 'social',
     admin: true,
     args: {
         message: { type: 'text', required: true }

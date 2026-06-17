@@ -1,8 +1,6 @@
 tapestry.commands.register({
     name: 'version',
     aliases: ['ver'],
-    description: 'Show engine and pack version info.',
-    category: 'info',
     roles: ['player'],
     priority: 0,
     args: {},

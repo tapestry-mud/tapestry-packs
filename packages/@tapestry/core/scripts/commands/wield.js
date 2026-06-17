@@ -1,7 +1,5 @@
 ﻿tapestry.commands.register({
     name: 'wield',
-    description: 'Wield a weapon from your inventory.',
-    category: 'inventory',
     roles: ['player'],
     args: {
         item: { type: 'inventory', required: true }

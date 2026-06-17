@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'wizlock',
-    description: 'Toggle wizlock: only admins may log in.',
-    category: 'admin',
     admin: true,
     handler: function(actor, resolved) {
         var locked = !tapestry.admin.isWizlocked();

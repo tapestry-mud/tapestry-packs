@@ -1,8 +1,6 @@
 // packs/tapestry-core/scripts/commands/fill.js
 tapestry.commands.register({
     name: 'fill',
-    description: 'Fill a container from a source.',
-    category: 'inventory',
     roles: ['player'],
     args: {
         item: { type: 'inventory', required: true },

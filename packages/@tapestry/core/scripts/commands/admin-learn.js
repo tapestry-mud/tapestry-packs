@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'learn',
-    description: 'Grant an ability to a player at a specified proficiency.',
-    category: 'admin',
     admin: true,
     args: {
         entity: { type: 'keyword', required: true },

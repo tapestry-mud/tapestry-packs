@@ -13,7 +13,6 @@ tapestry.abilities.register({
 
 tapestry.commands.register({
     name: "rescue",
-    description: 'Rescue an ally from combat.',
     priority: 1,
     visibleTo: function(entity) {
         var prof = tapestry.abilities.getProficiency(entity.entityId, "rescue");

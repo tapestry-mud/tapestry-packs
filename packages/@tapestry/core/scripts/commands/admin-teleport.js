@@ -1,8 +1,6 @@
 tapestry.commands.register({
     name: 'teleport',
     aliases: ['tp'],
-    description: 'Teleport a player to a room.',
-    category: 'admin',
     admin: true,
     args: {
         player: { type: 'keyword', required: true },

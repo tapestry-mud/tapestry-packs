@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'leave',
-    description: 'Leave a portal or special exit.',
-    category: 'world',
     roles: ['player'],
     args: {},
     handler: function(actor, resolved) {

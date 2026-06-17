@@ -8,8 +8,6 @@
 tapestry.commands.register({
     name: 'rooms',
     aliases: [],
-    description: 'List this area\'s rooms with an id-annotated map, or list rooms in <area> (builder).',
-    category: 'builder',
     roles: ['admin', 'builder'],
     args: {
         area: { type: 'keyword', required: false }

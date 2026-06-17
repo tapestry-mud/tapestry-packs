@@ -40,8 +40,6 @@ function getRoleBadge(roles) {
 
 tapestry.commands.register({
     name: 'who',
-    description: 'List players currently online.',
-    category: 'info',
     roles: ['player'],
     args: {},
     priority: 0,

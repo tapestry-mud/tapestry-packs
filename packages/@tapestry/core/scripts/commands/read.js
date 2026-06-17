@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'read',
-    description: 'Read a sign, letter, book, or other written item.',
-    category: 'inventory',
     roles: ['player'],
     args: {
         item: { type: 'findable', required: true }

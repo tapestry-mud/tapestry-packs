@@ -1,8 +1,6 @@
 tapestry.commands.register({
     name: 'get',
     aliases: ['take'],
-    description: 'Pick up an item from the room or a container.',
-    category: 'inventory',
     roles: ['player', 'mob'],
     args: {
         item: { type: 'keyword', required: true },

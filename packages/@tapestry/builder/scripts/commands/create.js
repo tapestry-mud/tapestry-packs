@@ -99,8 +99,6 @@ registerCreator('room', function (actor, args) {
 tapestry.commands.register({
     name: 'create',
     aliases: [],
-    description: 'Create a builder entity: create <area|room> [args].',
-    category: 'builder',
     roles: ['admin', 'builder'],
     args: {
         noun: { type: 'keyword', required: true },

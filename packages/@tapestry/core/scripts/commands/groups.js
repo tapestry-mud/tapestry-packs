@@ -111,8 +111,6 @@ function padLeft(str, len) {
 
 tapestry.commands.register({
     name: 'follow',
-    description: 'Follow a player or stop following. Usage: follow [player] | follow stop',
-    category: 'movement',
     roles: ['player'],
     args: {
         target: { type: 'keyword', required: false }
@@ -183,8 +181,6 @@ tapestry.commands.register({
 
 tapestry.commands.register({
     name: 'nofollow',
-    description: 'Toggle whether others can follow you. When active, drops current followers.',
-    category: 'movement',
     roles: ['player'],
     args: {},
     handler: function(actor, resolved) {
@@ -315,8 +311,6 @@ tapestry.events.on('player.teleported', function(event) {
 tapestry.commands.register({
     name: 'group',
     aliases: ['gr'],
-    description: 'Manage your group. Subcommands: invite, accept, decline, leave, kick, promote, disband',
-    category: 'progression',
     roles: ['player'],
     args: {
         subcommand: { type: 'keyword', required: false },
@@ -610,8 +604,6 @@ function handleGroupList(actor) {
 tapestry.commands.register({
     name: 'gtell',
     aliases: ['gt'],
-    description: 'Send a message to your group',
-    category: 'communication',
     roles: ['player'],
     args: {
         message: { type: 'text', required: true }

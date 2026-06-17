@@ -16,8 +16,6 @@
 //   behavior: at always returns you regardless of what the command did.
 tapestry.commands.register({
     name: 'at',
-    description: 'Execute a command as if standing in another room.',
-    category: 'admin',
     admin: true,
     args: {
         target: { type: 'keyword', required: true },

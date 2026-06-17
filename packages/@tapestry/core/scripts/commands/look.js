@@ -211,8 +211,6 @@ function buildRoomLookPayload(actor) {
 tapestry.commands.register({
     name: 'look',
     aliases: ['l'],
-    description: 'Look at the room, an entity, or an item.',
-    category: 'info',
     roles: ['player'],
     args: {
         target: { type: 'visible', required: false }
@@ -275,8 +273,6 @@ tapestry.commands.register({
 tapestry.commands.register({
     name: 'examine',
     aliases: ['ex', 'exa'],
-    description: 'Examine an item or entity in detail.',
-    category: 'info',
     roles: ['player'],
     args: {
         target: { type: 'visible', required: true }

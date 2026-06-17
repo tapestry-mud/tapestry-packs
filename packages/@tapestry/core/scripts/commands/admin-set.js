@@ -115,8 +115,6 @@ var domainSetOps = {
 
 tapestry.commands.register({
     name: 'set',
-    description: 'Admin: modify player/npc/item attributes.',
-    category: 'admin',
     admin: true,
     args: {
         entity: { type: 'keyword', required: true },

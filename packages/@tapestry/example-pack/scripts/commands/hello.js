@@ -3,8 +3,6 @@
 tapestry.commands.register({
     name: 'hello',
     aliases: ['hi'],
-    description: 'Greet the world',
-    category: 'social',
     roles: ['player'],
     args: {
         target: { type: 'text', required: false }

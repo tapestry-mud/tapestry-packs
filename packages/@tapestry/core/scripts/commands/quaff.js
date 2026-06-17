@@ -1,7 +1,5 @@
 tapestry.commands.register({
     name: 'quaff',
-    description: 'Quaff a potion from your inventory.',
-    category: 'inventory',
     roles: ['player'],
     args: {
         item: { type: 'inventory', required: true }

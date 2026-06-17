@@ -235,8 +235,6 @@ function renderAreaInspect(actor, areaId) {
 
 tapestry.commands.register({
     name: 'inspect',
-    description: 'Show detailed stats/properties for a target, or inspect a room or area.',
-    category: 'admin',
     admin: true,
     handler: function(actor, rawArgs) {
         if (!rawArgs || rawArgs.length === 0) {
