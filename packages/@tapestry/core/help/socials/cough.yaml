@@ -1,0 +1,10 @@
+id: cough
+title: cough
+category: social
+brief: Perform the 'cough' social.
+body: |-
+  Perform the 'cough' social.
+
+  You cough politely.
+keywords:
+  - cough

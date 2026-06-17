@@ -1,0 +1,10 @@
+id: bark
+title: bark
+category: social
+brief: Perform the 'bark' social.
+body: |-
+  Perform the 'bark' social.
+
+  You bark loudly.
+keywords:
+  - bark

@@ -1,0 +1,10 @@
+id: ack
+title: ack
+category: social
+brief: Perform the 'ack' social.
+body: |-
+  Perform the 'ack' social.
+
+  You go 'ack!'
+keywords:
+  - ack

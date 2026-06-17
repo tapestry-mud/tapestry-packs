@@ -1,0 +1,10 @@
+id: salute
+title: salute
+category: social
+brief: Perform the 'salute' social.
+body: |-
+  Perform the 'salute' social.
+
+  You salute crisply.
+keywords:
+  - salute

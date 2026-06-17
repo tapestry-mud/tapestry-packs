@@ -1,0 +1,10 @@
+id: peer
+title: peer
+category: social
+brief: Perform the 'peer' social.
+body: |-
+  Perform the 'peer' social.
+
+  You peer around suspiciously.
+keywords:
+  - peer
