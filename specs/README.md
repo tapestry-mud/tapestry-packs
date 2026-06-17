@@ -29,6 +29,7 @@ agent or contributor answers "how does X behave?" from the relevant file alone.
 | core-groups | [core-groups.md](core-groups.md) | 2026-06-13 |
 | core-progression | [core-progression.md](core-progression.md) | 2026-06-13 |
 | Validation Ledger | [validation-ledger.md](validation-ledger.md) | 2026-06-13 |
+| Command Help Content | [command-help-content.md](command-help-content.md) | 2026-06-17 |
 
 ## Contract summary
 
