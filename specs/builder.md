@@ -1,6 +1,6 @@
 ---
 capability: builder
-last-updated: 2026-06-15
+last-updated: 2026-06-17
 ---
 
 # builder
@@ -11,7 +11,7 @@ The builder pack (`@tapestry/builder`) provides in-MUD Online Level Creation (OL
 commands that let admin and builder roles author areas, rooms, and exits without
 leaving the game. It wraps the always-on engine world-authoring API
 (`tapestry.authoring.*`) and depends on `@tapestry/core` (^0.1.5) for `link`/`unlink`.
-Current version: 0.2.4; requires engine >=0.1.36.
+Current version: 0.2.5; requires engine >=0.1.36.
 
 The pack registers five commands (`create`, `dig`, `edit`, `rooms`, `map`), four help
 topics, and two editor flows (`builder_edit_room`, `builder_edit_area`). It exports
@@ -62,17 +62,20 @@ loaded after it.
   bare short id (namespace inferred from the current room) or a fully-qualified id.
   (packages/@tapestry/builder/scripts/commands/dig.js:65)
 - `dig <dir>` from a pack-owned room (detected via `source_pack`) routes into a
-  carve-into-pack branch instead of refusing: a shadow guard confirms the chosen
-  direction is free on the pack room, the authored room is minted, and the boundary
+  carve-into-pack branch instead of refusing: the existing-exit guard confirms the
+  chosen direction is free, the authored room is minted, and the boundary
   link is wired as a connection record via `tapestry.connections.create` (not a
   side-car exit), so it never mutates pack data and survives restarts and pack updates.
   The builder is teleported in and gets an ASCII boundary message ("belongs to a pack
   - your way back is a connection..."). Digging onward from the new authored room is
   the unchanged authored-to-authored inline-exit path.
   (packages/@tapestry/builder/scripts/commands/dig.js)
-- Shadow guard: before creating anything, `dig` calls `getExitTarget(fromId, dir)`.
-  If the direction is occupied on the pack room, it refuses with "already taken" and
-  changes nothing. (packages/@tapestry/builder/scripts/commands/dig.js)
+- Existing-exit guard: before creating anything, `dig <dir>` calls
+  `getExitTarget(fromId, dir)`. If the direction is already occupied on the from-room
+  - whether by an inline side-car exit or a connection-backed (linked) exit, and
+  whether the from-room is pack-owned or authored - it refuses with "already taken"
+  and changes nothing (no new room, no repointed exit, no one-way orphan).
+  (packages/@tapestry/builder/scripts/commands/dig.js)
 - `dig <dir> <target>` (connect) still refuses when the from-room is pack-owned - the
   CONNECT path cannot safely use side-car exits against a pack room.
   (packages/@tapestry/builder/scripts/commands/dig.js)
@@ -204,4 +207,5 @@ loaded after it.
 
 ## Change Log
 
+- 2026-06-17 [dig-existing-exit-guard](changes/2026-06-17-dig-existing-exit-guard.md)
 - 2026-06-15 [extend-baked-in-areas](changes/2026-06-15-extend-baked-in-areas.md)

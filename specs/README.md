@@ -15,7 +15,7 @@ agent or contributor answers "how does X behave?" from the relevant file alone.
 | example-pack | [example-pack.md](example-pack.md) | 2026-06-13 |
 | survival | [survival.md](survival.md) | 2026-06-13 |
 | tinkers | [tinkers.md](tinkers.md) | 2026-06-13 |
-| builder | [builder.md](builder.md) | 2026-06-15 |
+| builder | [builder.md](builder.md) | 2026-06-17 |
 | viewer | [viewer.md](viewer.md) | 2026-06-13 |
 | core-init | [core-init.md](core-init.md) | 2026-06-13 |
 | core-admin | [core-admin.md](core-admin.md) | 2026-06-13 |
