@@ -1,0 +1,12 @@
+id: "kick"
+title: "Kick"
+category: "combat"
+brief: "Kick your opponent for physical damage."
+body: |
+  Kick is an active skill that deals bash damage to a target NPC.
+  Damage is rolled from a 2d6+4 base, scaled by your kick
+  proficiency, and reduced by the target's armor class. Your
+  damage_roll stat adds to the result. The skill costs movement
+  points and can only be used against NPCs.
+keywords: [kick, skill, bash, damage, combat]
+see_also: [bash, skills, combat]

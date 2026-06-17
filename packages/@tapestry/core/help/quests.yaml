@@ -1,0 +1,10 @@
+id: "quests"
+title: "Quests"
+category: "character"
+brief: "List your active and completed quests."
+body: |
+  Quests shows all quests currently in your log: active quests with
+  their objectives, and completed quests you have finished. Use it
+  to track your progress and decide what to work on next.
+keywords: [quests, quest, log, objectives]
+see_also: [character, score]

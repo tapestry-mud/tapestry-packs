@@ -1,0 +1,12 @@
+id: "recipes"
+title: "Recipes"
+category: "inventory"
+brief: "List your known recipes, or show the details of a specific recipe."
+body: |
+  Recipes with no argument lists every recipe in your book, showing
+  each recipe's name and whether it requires a crafting bench. Pass
+  a recipe name to see its full details: required materials, bench
+  level needed, and the craft command to build it. An empty recipe
+  book means you have no schematics copied yet.
+keywords: [recipes, recipe, book, crafting, tinkers]
+see_also: [craft, copy, inventory]

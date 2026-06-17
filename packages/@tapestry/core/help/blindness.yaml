@@ -1,0 +1,11 @@
+id: "blindness"
+title: "Blindness"
+category: "combat"
+brief: "Cast a blindness spell that impairs a target's Dexterity."
+body: |
+  Blindness is a debuff spell that applies the is_blind flag and a
+  Dexterity penalty to the target for an extended duration. The
+  target makes a spell saving throw; on a successful save the spell
+  has no effect. Can be cast on NPCs or other players.
+keywords: [blindness, blind, debuff, dexterity, spell, combat]
+see_also: [cast, spells, combat, affects]

@@ -1,0 +1,11 @@
+id: "mwhere"
+title: "Mwhere"
+category: "admin"
+brief: "Find all live mob instances matching a keyword."
+body: |
+  Mwhere searches the world for mob instances whose name contains
+  the given keyword and reports their location. This command
+  requires admin privileges. Use it to check spawning, track down
+  a specific NPC, or verify that a purge cleared all instances.
+keywords: [mwhere, mob, find, locate, admin]
+see_also: [owhere, spawn, purge, admin]

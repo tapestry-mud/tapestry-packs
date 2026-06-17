@@ -1,0 +1,11 @@
+id: "badinput"
+title: "Badinput"
+category: "admin"
+hidden: true
+brief: "Trigger the bad-input error handler for testing."
+body: |
+  Badinput intentionally triggers the server's bad-input handler.
+  This command exists for development and diagnostic use only and
+  requires admin privileges. It is not listed in normal help output.
+keywords: [badinput, debug, admin]
+see_also: [admin]

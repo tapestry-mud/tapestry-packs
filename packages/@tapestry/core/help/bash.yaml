@@ -1,0 +1,12 @@
+id: "bash"
+title: "Bash"
+category: "combat"
+brief: "Bash your opponent for heavy physical damage and briefly stun them."
+body: |
+  Bash is an active skill that deals bash damage to a target NPC
+  and applies a short stun effect. Damage is rolled from a 2d8+6
+  base, scaled by your bash proficiency, and reduced by the
+  target's armor class. The stun lasts one combat tick. This skill
+  costs more movement points than kick and can only target NPCs.
+keywords: [bash, skill, stun, damage, combat]
+see_also: [kick, skills, combat]

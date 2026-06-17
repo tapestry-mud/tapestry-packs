@@ -1,0 +1,10 @@
+id: "grantrole"
+title: "Grant Role"
+category: "admin"
+brief: "Grant a role to a player account."
+body: |
+  Grantrole assigns the named role to the specified player. This
+  command requires admin privileges. Common roles include builder
+  and admin. Changes take effect at the player's next login.
+keywords: [grantrole, role, grant, privilege, admin]
+see_also: [revokerole, admin]

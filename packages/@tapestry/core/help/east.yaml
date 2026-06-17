@@ -1,0 +1,9 @@
+id: "east"
+title: "East"
+category: "movement"
+brief: "Move east."
+body: |
+  Moves your character east if an exit exists in that direction.
+  Each move costs a small amount of movement points.
+keywords: [east, e]
+see_also: [movement, exits]

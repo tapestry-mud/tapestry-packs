@@ -1,0 +1,11 @@
+id: "owhere"
+title: "Owhere"
+category: "admin"
+brief: "Find all live object instances matching a keyword."
+body: |
+  Owhere searches the world for item instances whose name contains
+  the given keyword and reports their location. This command
+  requires admin privileges. Use it to track down a specific item,
+  verify that loaditem placed it correctly, or find stray inventory.
+keywords: [owhere, item, object, find, locate, admin]
+see_also: [mwhere, loaditem, admin]

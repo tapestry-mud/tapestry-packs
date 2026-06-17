@@ -1,0 +1,11 @@
+id: "revokerole"
+title: "Revoke Role"
+category: "admin"
+brief: "Revoke a role from a player account."
+body: |
+  Revokerole removes the named role from the specified player. This
+  command requires admin privileges. Changes take effect at the
+  player's next login. Use grantrole to restore a role that was
+  removed by mistake.
+keywords: [revokerole, role, revoke, privilege, admin]
+see_also: [grantrole, admin]

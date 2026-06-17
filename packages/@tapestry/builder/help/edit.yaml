@@ -1,0 +1,11 @@
+id: "edit"
+title: "Edit"
+category: "builder"
+brief: "Edit an existing area or room."
+body: |
+  Edit is the top-level builder command for modifying existing
+  content. Supply a subcommand to specify what you are editing.
+  Use 'edit area' to modify area-level fields and 'edit room' to
+  describe the room you are in. Builder privileges are required.
+keywords: [edit, builder, area, room, olc]
+see_also: [edit area, edit room, builder]

@@ -1,0 +1,11 @@
+id: "create"
+title: "Create"
+category: "builder"
+brief: "Create new areas and entities in the game world."
+body: |
+  Create is the top-level builder command for adding new content.
+  Use it to create areas, rooms, and other entities from within the
+  game. Supply a subcommand to specify what you are creating.
+  Builder privileges are required to use this command.
+keywords: [create, builder, area, new]
+see_also: [create area, edit area, builder, dig]

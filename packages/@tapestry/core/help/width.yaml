@@ -1,0 +1,11 @@
+id: "width"
+title: "Width"
+category: "accessibility"
+brief: "Set your terminal display width."
+body: |
+  Width sets the column count the server uses when wrapping output
+  for your connection. Supply a number to set a specific width, or
+  no argument to see the current setting. Match this to your actual
+  terminal width for clean line wrapping.
+keywords: [width, terminal, columns, wrap, display]
+see_also: [accessibility, screen-reader]

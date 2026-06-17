@@ -1,0 +1,10 @@
+id: "sac"
+title: "Sac"
+category: "inventory"
+brief: "Sacrifice an item to gain experience."
+body: |
+  Sac destroys the target item and awards you a small amount of
+  experience in return. Use it to clear unwanted loot from your
+  inventory. The item is gone permanently after the sacrifice.
+keywords: [sac, sacrifice, experience, xp]
+see_also: [drop, inventory]

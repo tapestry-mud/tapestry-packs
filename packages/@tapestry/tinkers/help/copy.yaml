@@ -1,0 +1,12 @@
+id: "copy"
+title: "Copy"
+category: "inventory"
+brief: "Copy a schematic into your recipe book to learn the recipe."
+body: |
+  Copy transcribes a schematic or set of plans you are holding into
+  your recipe book, permanently teaching you that recipe. The
+  schematic is consumed in the process - one schematic teaches one
+  player. If you already know the recipe, the command tells you so
+  and the schematic is left untouched.
+keywords: [copy, schematic, recipe, learn, crafting]
+see_also: [recipes, craft, read]

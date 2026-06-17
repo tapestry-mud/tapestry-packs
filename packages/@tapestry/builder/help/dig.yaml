@@ -1,0 +1,11 @@
+id: "dig"
+title: "Dig"
+category: "builder"
+brief: "Dig a new room connection from the current room."
+body: |
+  Dig carves a new exit from your current room and creates a new
+  room on the other end. Supply a direction and optionally a name
+  for the new room. The connection and new room are immediately
+  available for editing. Builder privileges are required.
+keywords: [dig, room, exit, connection, builder]
+see_also: [create, edit room, rooms, map, builder]

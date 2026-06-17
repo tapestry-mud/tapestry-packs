@@ -1,0 +1,12 @@
+id: "cook"
+title: "Cook"
+category: "inventory"
+brief: "Cook a raw food item into a prepared meal."
+body: |
+  Cook transforms a cookable item in your inventory into a prepared
+  meal. You need a cooking tool (such as a pan or pot) in your
+  inventory or in the room, and a nearby heat source unless the tool
+  is self-contained. Single-use tools are consumed after cooking.
+  The cooked result is placed in your inventory.
+keywords: [cook, food, meal, recipe, cooking]
+see_also: [inventory]

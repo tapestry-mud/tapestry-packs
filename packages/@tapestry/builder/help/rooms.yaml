@@ -1,0 +1,11 @@
+id: "rooms"
+title: "Rooms"
+category: "builder"
+brief: "List all rooms in the current area."
+body: |
+  Rooms prints a list of every room in the area you are standing in,
+  showing each room's id and name. Use it to get an overview of an
+  area's contents before editing, or to find a room you need to
+  navigate to. Builder privileges are required.
+keywords: [rooms, list, area, builder]
+see_also: [map, dig, edit room, builder]

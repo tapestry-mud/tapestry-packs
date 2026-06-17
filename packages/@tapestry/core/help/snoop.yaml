@@ -1,0 +1,11 @@
+id: "snoop"
+title: "Snoop"
+category: "admin"
+brief: "Monitor a player's output stream."
+body: |
+  Snoop attaches your session to the named player's output so you
+  receive a copy of everything they see. This command requires admin
+  privileges. Use it to observe player behavior, debug scripted
+  output, or assist someone without being in the same room.
+keywords: [snoop, monitor, watch, output, admin]
+see_also: [admin]

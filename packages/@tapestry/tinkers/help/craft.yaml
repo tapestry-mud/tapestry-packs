@@ -1,0 +1,13 @@
+id: "craft"
+title: "Craft"
+category: "inventory"
+brief: "Craft an item from a known recipe using materials in your inventory."
+body: |
+  Craft consumes the required materials from your inventory and
+  produces the recipe's output item. You must have the recipe in
+  your book (copy it from a schematic first) and possess any
+  required crafting bench. All materials are validated before any
+  are consumed, so a missing ingredient will tell you what is
+  needed without wasting anything you do have.
+keywords: [craft, crafting, recipe, materials, tinkers]
+see_also: [recipes, copy, inventory]

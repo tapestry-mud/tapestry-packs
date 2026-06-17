@@ -1,0 +1,11 @@
+id: "battle_stance"
+title: "Battle Stance"
+category: "combat"
+brief: "Adopt a fierce battle stance that temporarily boosts Strength."
+body: |
+  Battle Stance is an active skill. When used, you settle into a
+  combat-ready posture that applies a Strength bonus for a limited
+  duration. The bonus scales with your proficiency in this skill.
+  It costs movement points to activate and is usable on yourself.
+keywords: [battle_stance, stance, skill, strength, combat]
+see_also: [skills, combat, affects]

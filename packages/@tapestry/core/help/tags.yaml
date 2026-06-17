@@ -1,0 +1,11 @@
+id: "tags"
+title: "Tags"
+category: "admin"
+brief: "Inspect the tags applied to an entity."
+body: |
+  Tags displays all tag values currently set on the target entity.
+  This command requires admin privileges. Use it to diagnose
+  spawn_on behavior, buff/effect flags, or any other tag-driven
+  system without needing to check source files.
+keywords: [tags, entity, inspect, flags, admin]
+see_also: [inspect, admin]

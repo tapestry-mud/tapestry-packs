@@ -1,0 +1,9 @@
+id: "west"
+title: "West"
+category: "movement"
+brief: "Move west."
+body: |
+  Moves your character west if an exit exists in that direction.
+  Each move costs a small amount of movement points.
+keywords: [west, w]
+see_also: [movement, exits]

@@ -1,0 +1,11 @@
+id: "map"
+title: "Map"
+category: "builder"
+brief: "Display an ASCII map of the current area."
+body: |
+  Map renders a text-based layout of the area you are in, showing
+  rooms and their connections. Use it to orient yourself while
+  building, spot missing links, or review the overall shape of an
+  area before sharing it. Builder privileges are required.
+keywords: [map, area, layout, ascii, builder]
+see_also: [rooms, dig, create, builder]

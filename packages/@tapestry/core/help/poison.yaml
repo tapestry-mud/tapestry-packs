@@ -1,0 +1,12 @@
+id: "poison"
+title: "Poison"
+category: "combat"
+brief: "Cast a poison spell that drains Strength and blocks healing."
+body: |
+  Poison is a debuff spell that applies the is_poisoned and no_heal
+  flags plus a Strength penalty to the target for an extended
+  duration. The target makes a spell saving throw; on a successful
+  save the spell has no effect. While poisoned, the target cannot
+  be healed by cure spells. Can be cast on NPCs or other players.
+keywords: [poison, debuff, strength, no_heal, spell, combat]
+see_also: [cast, spells, combat, affects]

@@ -1,0 +1,11 @@
+id: "shield"
+title: "Shield"
+category: "combat"
+brief: "Cast a magical shield that surrounds the target for protection."
+body: |
+  Shield is a protective spell that applies the shield flag to the
+  target for a long duration. It can be cast on yourself or another
+  player. The shield effect interacts with combat damage and other
+  systems that check for the shield flag.
+keywords: [shield, protect, buff, spell, combat]
+see_also: [cast, spells, combat, affects]

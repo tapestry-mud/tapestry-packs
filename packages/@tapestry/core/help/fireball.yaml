@@ -1,0 +1,12 @@
+id: "fireball"
+title: "Fireball"
+category: "combat"
+brief: "Cast a fireball that deals fire damage to a target."
+body: |
+  Fireball is an offensive spell that deals fire damage to a target
+  NPC. Damage is rolled from a 3d8+10 base, scaled by proficiency,
+  and reduced by the target's channeling_protection. Your
+  channeling_damage stat adds to the result. Casting costs mana and
+  automatically engages the target in combat if not already fighting.
+keywords: [fireball, spell, fire, damage, combat]
+see_also: [cast, spells, combat]

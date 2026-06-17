@@ -1,0 +1,10 @@
+id: "version"
+title: "Version"
+category: "world"
+brief: "Display the server engine version."
+body: |
+  Version prints the running engine version string. Use it to
+  confirm which build is live, especially after an update or when
+  reporting a bug.
+keywords: [version, server, build, engine]
+see_also: [world, time]

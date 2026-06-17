@@ -1,0 +1,11 @@
+id: "save"
+title: "Save"
+category: "character"
+brief: "Save your character to disk."
+body: |
+  Save writes your character's current state to persistent storage.
+  The engine also saves automatically at regular intervals and on
+  clean logout, so manual use is optional but available if you want
+  to be sure your progress is recorded.
+keywords: [save, persist, checkpoint]
+see_also: [quit, score]
