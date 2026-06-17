@@ -1,6 +1,6 @@
 id: "exits"
 title: "Exits"
-category: "navigation"
+category: "movement"
 role: "player"
 keywords: [exit, doors, directions, out, where, go]
 brief: "List available exits from the current room."

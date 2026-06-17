@@ -1,6 +1,6 @@
 id: "enter"
 title: "Enter"
-category: "navigation"
+category: "movement"
 role: "player"
 keywords: [portal, gateway, passage, go in, go through]
 brief: "Enter a portal or special exit."

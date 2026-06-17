@@ -1,6 +1,6 @@
 id: "wield"
 title: "Wield"
-category: "equipment"
+category: "inventory"
 role: "player"
 keywords: [weapon, hold, equip, sword, main hand, offhand]
 brief: "Wield a weapon from your inventory."

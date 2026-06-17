@@ -1,6 +1,6 @@
 id: "movement"
 title: "Movement"
-category: "navigation"
+category: "movement"
 role: "player"
 keywords: [north, south, east, west, up, down, n, s, e, w, u, d, walk, go, direction]
 brief: "Move between rooms using directional commands."

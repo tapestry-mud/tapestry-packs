@@ -1,6 +1,6 @@
 id: "wear"
 title: "Wear"
-category: "equipment"
+category: "inventory"
 role: "player"
 keywords: [equip, put on, armor, clothing, slot]
 brief: "Wear an item from your inventory."

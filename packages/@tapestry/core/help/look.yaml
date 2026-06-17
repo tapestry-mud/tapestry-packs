@@ -1,6 +1,6 @@
 id: "look"
 title: "Look"
-category: "navigation"
+category: "movement"
 role: "player"
 keywords: [l, see, view, describe, room, description]
 brief: "Look at the room, an entity, or an item."

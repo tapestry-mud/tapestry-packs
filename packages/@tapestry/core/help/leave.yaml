@@ -1,6 +1,6 @@
 id: "leave"
 title: "Leave"
-category: "navigation"
+category: "movement"
 role: "player"
 keywords: [exit portal, out, depart]
 brief: "Leave a portal or special exit."

@@ -1,6 +1,6 @@
 id: "remove"
 title: "Remove"
-category: "equipment"
+category: "inventory"
 role: "player"
 keywords: [unequip, take off, unwield, dequip]
 brief: "Remove a worn or wielded item and return it to inventory."

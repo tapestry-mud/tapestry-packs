@@ -1,6 +1,6 @@
 id: "equipment"
 title: "Equipment"
-category: "equipment"
+category: "inventory"
 role: "player"
 keywords: [eq, worn, wear, wield, armor, weapon, slot, gear]
 brief: "View and manage your equipped items."

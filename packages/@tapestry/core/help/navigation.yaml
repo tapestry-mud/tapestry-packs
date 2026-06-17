@@ -1,6 +1,6 @@
 id: "navigation"
 title: "Navigation"
-category: "navigation"
+category: "movement"
 role: "player"
 keywords: [move, movement, travel, direction, walk, go, room, exit]
 brief: "How to move through the world and interact with your surroundings."

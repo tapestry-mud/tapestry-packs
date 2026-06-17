@@ -1,6 +1,6 @@
 id: "open"
 title: "Open"
-category: "navigation"
+category: "movement"
 role: "player"
 keywords: [door, container, lid, unlock and open]
 brief: "Open a door or container."

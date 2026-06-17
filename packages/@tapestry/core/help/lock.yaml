@@ -1,6 +1,6 @@
 id: "lock"
 title: "Lock"
-category: "navigation"
+category: "movement"
 role: "player"
 keywords: [key, secure, door, container]
 brief: "Lock a door or container."

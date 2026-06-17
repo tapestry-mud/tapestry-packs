@@ -1,6 +1,6 @@
 id: "train"
 title: "Train"
-category: "progression"
+category: "character"
 role: "player"
 keywords: [stat, attribute, trains, raise, strength, intelligence, dexterity]
 brief: "Spend a train to permanently raise a core attribute."

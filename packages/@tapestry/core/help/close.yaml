@@ -1,6 +1,6 @@
 id: "close"
 title: "Close"
-category: "navigation"
+category: "movement"
 role: "player"
 keywords: [door, shut, container]
 brief: "Close a door or container."

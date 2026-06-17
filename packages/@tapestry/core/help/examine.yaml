@@ -1,6 +1,6 @@
 id: "examine"
 title: "Examine"
-category: "navigation"
+category: "movement"
 role: "player"
 keywords: [ex, exa, inspect, detail, study, look at]
 brief: "Examine an item or entity in detail."
