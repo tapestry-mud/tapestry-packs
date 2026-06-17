@@ -35,4 +35,4 @@ body: |
 
   Use 'teleport <id>' with an id from 'rooms <area-id>' to jump to a
   room you want to edit.
-see_also: [create area, edit area, edit room, builder]
+see_also: [create-area, edit-area, edit-room]

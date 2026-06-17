@@ -8,4 +8,4 @@ body: |
   for the new room. The connection and new room are immediately
   available for editing. Builder privileges are required.
 keywords: [dig, room, exit, connection, builder]
-see_also: [create, edit room, rooms, map, builder]
+see_also: [create, edit-room, rooms, map]

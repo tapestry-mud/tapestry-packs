@@ -8,4 +8,4 @@ body: |
   Use 'edit area' to modify area-level fields and 'edit room' to
   describe the room you are in. Builder privileges are required.
 keywords: [edit, builder, area, room, olc]
-see_also: [edit area, edit room, builder]
+see_also: [edit-area, edit-room]

@@ -16,4 +16,4 @@ body: |
 
   Use connections before unlinking to confirm which direction you
   want to remove.
-see_also: [link, connections, builder]
+see_also: [link, connections]

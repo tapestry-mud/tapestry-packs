@@ -1,4 +1,4 @@
-id: "edit room"
+id: "edit-room"
 title: "Edit Room"
 category: "builder"
 role: "builder"
@@ -24,4 +24,4 @@ body: |
   tells you the new id when this happens.
 
   Type 'cancel' at any prompt to leave without saving.
-see_also: [edit area, suggestions, areas, builder]
+see_also: [edit-area, suggestions, areas]

@@ -31,4 +31,4 @@ body: |
 
   Suggestions require an AI provider to be configured and enabled for
   the server; otherwise the editor just asks for a plain value.
-see_also: [edit room, edit area, builder]
+see_also: [edit-room, edit-area]

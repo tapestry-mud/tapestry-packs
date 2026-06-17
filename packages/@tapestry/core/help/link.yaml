@@ -17,4 +17,4 @@ body: |
 
   After linking, use connections to verify the new exit is correctly
   configured.
-see_also: [unlink, connections, builder]
+see_also: [unlink, connections]

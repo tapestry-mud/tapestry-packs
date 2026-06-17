@@ -15,4 +15,4 @@ body: |
   Use "connections all" to list every connection across all rooms
   in the loaded packs. Useful for finding broken or missing links
   during world building.
-see_also: [link, unlink, builder]
+see_also: [link, unlink]
