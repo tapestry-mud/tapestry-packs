@@ -124,15 +124,17 @@ tapestry.commands.register({
             n++;
         } while (taken[newId]);
 
-        // Shadow guard (spec B 5.2): refuse before creating anything if the pack room
-        // already has an exit in the chosen direction. Applying a connection exit over
-        // an existing pack exit would shadow the pack's own topology at runtime.
-        if (fromProps.source_pack) {
-            var shadowTarget = tapestry.world.getExitTarget(fromId, dir);
-            if (shadowTarget) {
-                actor.send("Your " + dir + " exit is already taken (it goes to " + shadowTarget + ").\r\n");
-                return;
-            }
+        // Existing-exit guard: refuse before creating anything if the chosen direction
+        // is already occupied on the from-room - whether by a side-car exit or a
+        // connection-backed (linked) exit. Digging over it would repoint the forward
+        // exit to the new room and orphan the old reverse exit as a one-way link.
+        // getExitTarget reads the live world, so it also sees connection-applied exits.
+        // For a pack from-room this is additionally spec B 5.2: never shadow real pack
+        // topology with a connection exit.
+        var existingExit = tapestry.world.getExitTarget(fromId, dir);
+        if (existingExit) {
+            actor.send("Your " + dir + " exit is already taken (it goes to " + existingExit + ").\r\n");
+            return;
         }
 
         if (!tapestry.authoring.createRoom(area, newId, 'New Room', 'An undescribed room.')) {
