@@ -220,12 +220,17 @@ version, width, quit).
   "Response.Help" message.
   (packages/@tapestry/core/scripts/commands/help.js:1-71)
 
-- "commands" (alias: cmds) lists all commands available to the calling player, grouped by
-  category. An optional first positional argument filters to a single category. Commands
-  with descriptions are listed with name and description; those without descriptions are
-  grouped in a plain comma-separated list. The admin category title includes the
-  annotation "admins only".
-  (packages/@tapestry/core/scripts/commands/commands.js:1-75)
+- "commands" (alias: cmds) lists all commands available to the calling player as a dense
+  keyword chip grid, grouped into sections by category in declared vocabulary order (from
+  the help registry), with a per-section count and a total count in the title. Columns
+  auto-fit to the player's screen width. Empty and hidden categories are omitted. An
+  optional free-text argument ("commands <text>") filters chips by case-insensitive
+  substring against keyword, alias, category id, or category label; no match prints
+  "No commands match '<text>'." The admin section title carries the annotation
+  "admins only". The command always emits a "Commands.Open" GMCP trigger (payload
+  { filter } when a filter was given, else {}) alongside the text grid; GMCP-inactive
+  clients drop it. Drill into a command with "help <cmd>".
+  (packages/@tapestry/core/scripts/commands/commands.js:1-106)
 
 - "motd" re-displays the message of the day by calling tapestry.world.sendMotd.
   (packages/@tapestry/core/scripts/commands/motd.js:1-11)
