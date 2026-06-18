@@ -13,17 +13,14 @@ tapestry.commands.register({
             tagsAddCmd(actor, rest);
         } else if (sub === 'remove') {
             tagsRemoveCmd(actor, rest);
-        } else if (sub === 'registry') {
-            tagsRegistryCmd(actor, rest);
         } else if (sub === 'validate') {
             tagsValidateCmd(actor);
         } else {
-            actor.send('Usage: tags [list|search|add|remove|registry|validate]\r\n');
+            actor.send('Usage: tags [list|search|add|remove|validate]\r\n');
             actor.send('  tags list [entity]      - show tags on an entity\r\n');
             actor.send('  tags search [tag]       - find entities with a tag\r\n');
             actor.send('  tags add [entity] [tag] - add a tag to an entity\r\n');
             actor.send('  tags remove [entity] [tag] - remove a tag\r\n');
-            actor.send('  tags registry [filter]  - dump the tag registry\r\n');
             actor.send('  tags validate           - check all entities for unregistered tags\r\n');
         }
     }
@@ -150,71 +147,6 @@ function tagsRemoveCmd(actor, args) {
         actor.send("Removed tag '" + tag + "' from " + target.name + '.\r\n');
     } else {
         actor.send(target.name + " did not have tag '" + tag + "'.\r\n");
-    }
-}
-
-function tagsRegistryCmd(actor, args) {
-    var filter = (args.length > 0) ? args[0].toLowerCase() : null;
-    var registry = tapestry.world.getTagRegistry();
-
-    if (!registry || registry.length === 0) {
-        actor.send('Tag registry is empty.\r\n');
-        return;
-    }
-
-    // Count by scope
-    var engineCount = 0;
-    var packCount = 0;
-    var filtered = [];
-
-    for (var i = 0; i < registry.length; i++) {
-        var entry = registry[i];
-        if (entry.isEngine) {
-            engineCount++;
-        } else {
-            packCount++;
-        }
-
-        // Apply filter: match against appliesTo types or scope
-        if (filter) {
-            var matchesType = false;
-            for (var j = 0; j < entry.appliesTo.length; j++) {
-                if (entry.appliesTo[j].toLowerCase() === filter) {
-                    matchesType = true;
-                    break;
-                }
-            }
-            if (!matchesType && entry.scope.toLowerCase() !== filter) {
-                continue;
-            }
-        }
-        filtered.push(entry);
-    }
-
-    // Sort: engine first, then by name
-    filtered.sort(function(a, b) {
-        if (a.isEngine && !b.isEngine) { return -1; }
-        if (!a.isEngine && b.isEngine) { return 1; }
-        if (a.name < b.name) { return -1; }
-        if (a.name > b.name) { return 1; }
-        return 0;
-    });
-
-    var title = 'Tag Registry (' + engineCount + ' engine + ' + packCount + ' pack)';
-    if (filter) {
-        title += ' [filter: ' + filter + ']';
-    }
-    actor.send(title + ':\r\n');
-
-    for (var k = 0; k < filtered.length; k++) {
-        var e = filtered[k];
-        var scope = e.isEngine ? 'engine' : e.scope;
-        var types = e.appliesTo.join(', ');
-        actor.send('  [' + scope + '] ' + e.name + ' - ' + e.description + ' (' + types + ')\r\n');
-    }
-
-    if (filtered.length === 0) {
-        actor.send('  (no matching entries)\r\n');
     }
 }
 
