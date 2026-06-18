@@ -1,6 +1,6 @@
 ---
 capability: core-navigation
-last-updated: 2026-06-13
+last-updated: 2026-06-18
 ---
 
 # core-navigation
@@ -230,7 +230,7 @@ version, width, quit).
   "admins only". The command always emits a "Commands.Open" GMCP trigger (payload
   { filter } when a filter was given, else {}) alongside the text grid; GMCP-inactive
   clients drop it. Drill into a command with "help <cmd>".
-  (packages/@tapestry/core/scripts/commands/commands.js:1-106)
+  (packages/@tapestry/core/scripts/commands/commands.js:1-105)
 
 - "motd" re-displays the message of the day by calling tapestry.world.sendMotd.
   (packages/@tapestry/core/scripts/commands/motd.js:1-11)
@@ -260,4 +260,4 @@ version, width, quit).
 
 ## Change Log
 
-- None on record.
+- 2026-06-18 [command-catalog-display](changes/2026-06-18-command-catalog-display.md)

@@ -20,7 +20,7 @@ agent or contributor answers "how does X behave?" from the relevant file alone.
 | core-init | [core-init.md](core-init.md) | 2026-06-13 |
 | core-admin | [core-admin.md](core-admin.md) | 2026-06-13 |
 | core-communication | [core-communication.md](core-communication.md) | 2026-06-13 |
-| core-navigation | [core-navigation.md](core-navigation.md) | 2026-06-13 |
+| core-navigation | [core-navigation.md](core-navigation.md) | 2026-06-18 |
 | core-combat | [core-combat.md](core-combat.md) | 2026-06-13 |
 | core-abilities | [core-abilities.md](core-abilities.md) | 2026-06-13 |
 | core-inventory | [core-inventory.md](core-inventory.md) | 2026-06-13 |
