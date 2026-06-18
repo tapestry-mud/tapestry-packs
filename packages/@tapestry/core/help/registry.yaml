@@ -1,0 +1,39 @@
+id: "registry"
+title: "Registry"
+category: "admin"
+role: "admin"
+keywords: [registry, introspect, commands, kinds, conflicts, shadow, override, provenance, debug]
+brief: "Browse all engine registries - commands, abilities, tags, properties, and more."
+syntax:
+  - "registry"
+  - "registry <kind>"
+  - "registry <kind> <name>"
+  - "registry <kind> <filter>"
+  - "registry conflicts"
+body: |
+  Registry browses all engine registries with progressive disclosure.
+
+  LEVEL 0 - bare 'registry': chip grid of every registry kind with
+  its registration count. Kinds marked ~ use the namespaced model
+  (property, tag); the rest use the policy model with override
+  arbitration.
+
+  LEVEL 1 - 'registry <kind>': list every winner in that kind with
+  its owner and a shadow marker (!) when it shadows another pack.
+
+  LEVEL 2 - 'registry <kind> <name>': full ledger for one name -
+  source file, line, winner/loser, and override chain. This is the
+  heartbeat-bug query: who won this name and what did they shadow?
+
+  FILTER - 'registry <kind> <text>': if the text does not match an
+  exact name, it filters Level 1 output by name or owner substring.
+
+  CONFLICTS - 'registry conflicts': cross-kind view of every shadow
+  (policy model) and every ambiguous bare name (namespaced model).
+  The standing answer to "did anything silently clobber anything?"
+
+  The 'registry tag' view replaces 'tags registry'. Properties now
+  have a browser for the first time: name, owner, value type,
+  constraints, and applies-to scope.
+
+see_also: [admin, inspect]

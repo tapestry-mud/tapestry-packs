@@ -30,4 +30,4 @@ body: |
   CLASS TOOLS: setclass assigns a class to a player and grants their
   level-1 abilities. settrainable is a debug tool for toggling stats
   in and out of the trainable list.
-see_also: [abilities, at, force, forget, grant, inspect, learn, loaditem, peace, purge, restore, set, setclass, settrainable, spawn, teleport, templates, whereis, wizlock]
+see_also: [abilities, at, force, forget, grant, inspect, learn, loaditem, peace, purge, registry, restore, set, setclass, settrainable, spawn, teleport, templates, whereis, wizlock]
