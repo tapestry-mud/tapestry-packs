@@ -2,11 +2,9 @@ tapestry.commands.register({
     name: 'commands',
     aliases: ['cmds'],
     roles: ['player'],
-    args: {},
+    args: { filter: { type: 'text', required: false } },
     handler: function(actor, resolved) {
-        var filterRaw = resolved.rest && resolved.rest.length > 0
-            ? resolved.rest.join(' ').trim()
-            : '';
+        var filterRaw = resolved.filter ? String(resolved.filter).trim() : '';
         var filter = filterRaw.toLowerCase();
 
         var vocab = tapestry.commands.categories();        // [{id,label}] declared order, visible only
@@ -48,13 +46,14 @@ tapestry.commands.register({
         }
 
         var effWidth = tapestry.ui.width(actor.entityId); // 0 = wrapping off / unbounded
-        var usable = (effWidth > 0 ? effWidth : 80) - 4;  // panel frame "| " + " |"
+        var panelWidth = effWidth > 0 ? effWidth : 80;    // the grid auto-fits the player width
         var longest = 0;
         for (var k = 0; k < visible.length; k++) {
             if (visible[k].keyword.length > longest) { longest = visible[k].keyword.length; }
         }
         var colWidth = longest + 2; // 2-space inter-column gap
-        var cols = Math.floor((usable - 2) / colWidth); // 2 = left indent
+        // panelWidth - 2 frame - 2 left indent leaves the column band; the frame pads the remainder.
+        var cols = Math.floor((panelWidth - 4) / colWidth);
         if (cols < 1) { cols = 1; }
 
         var sections = [{ rows: [{ type: 'title', left: 'Commands (' + visible.length + ')' }] }];
@@ -87,7 +86,7 @@ tapestry.commands.register({
             rows: [{ type: 'footer', content: 'commands <text> to filter . help <cmd> for detail' }]
         });
 
-        var output = tapestry.ui.panel({ forEntity: actor.entityId, sections: sections });
+        var output = tapestry.ui.panel({ width: panelWidth, forEntity: actor.entityId, sections: sections });
         actor.send('\r\n' + output + '\r\n');
         tapestry.gmcp.send(actor.entityId, 'Commands.Open', filter ? { filter: filterRaw } : {});
     }
