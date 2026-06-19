@@ -2,6 +2,8 @@
 // Backed by the engine-wide world.findEntitiesByName query; carried items resolve
 // their room through the holder and report the holder's name.
 
+import * as tapestry from "@tapestry/engine";
+
 function whereisRender(actor, keyword, typeFilter, label) {
     var matches = tapestry.world.findEntitiesByName(keyword);
     var filtered = [];

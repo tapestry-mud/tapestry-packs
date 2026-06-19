@@ -2,6 +2,8 @@
 // (ROM vnum + count parity). Tapestry has no vnums; templates are the identity
 // equivalent. Keyword 'all' lists every registered template.
 
+import * as tapestry from "@tapestry/engine";
+
 tapestry.commands.register({
     name: 'templates',
     admin: true,

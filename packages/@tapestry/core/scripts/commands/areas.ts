@@ -3,6 +3,9 @@
 // areas -- list world areas by level range.
 // Players see name/short/level range.
 // Builders and admins additionally see id, provenance tag, room count, and override count.
+
+import * as tapestry from "@tapestry/engine";
+
 tapestry.commands.register({
     name: 'areas',
     aliases: [],

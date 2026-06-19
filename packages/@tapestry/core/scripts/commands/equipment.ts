@@ -1,3 +1,5 @@
+import * as tapestry from "@tapestry/engine";
+
 tapestry.commands.register({
     name: 'equipment',
     aliases: ['eq'],
@@ -6,7 +8,7 @@ tapestry.commands.register({
     handler: function(actor, resolved) {
         var slots = tapestry.equipment.getSlots(actor.entityId);
         var emptyText = tapestry.equipment.getEmptyText();
-        var contentRows = [{ type: 'empty' }];
+        var contentRows: any[] = [{ type: 'empty' }];
 
         if (!slots || slots.length === 0) {
             contentRows.push({ type: 'text', content: '  You are wearing nothing.' });

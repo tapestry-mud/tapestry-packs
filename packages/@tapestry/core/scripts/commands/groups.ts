@@ -1,3 +1,5 @@
+import * as tapestry from "@tapestry/engine";
+
 function generateGroupId() {
     return 'grp_' + Date.now().toString(36) + '_' + Math.floor(Math.random() * 0xfffff).toString(36);
 }

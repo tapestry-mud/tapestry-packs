@@ -1,3 +1,5 @@
+import * as tapestry from "@tapestry/engine";
+
 tapestry.commands.register({
     name: 'commands',
     aliases: ['cmds'],
@@ -56,7 +58,7 @@ tapestry.commands.register({
         var cols = Math.floor((panelWidth - 4) / colWidth);
         if (cols < 1) { cols = 1; }
 
-        var sections = [{ rows: [{ type: 'title', left: 'Commands (' + visible.length + ')' }] }];
+        var sections: any[] = [{ rows: [{ type: 'title', left: 'Commands (' + visible.length + ')' }] }];
 
         for (var c = 0; c < vocab.length; c++) {
             var id = vocab[c].id;
@@ -69,7 +71,7 @@ tapestry.commands.register({
                 ? { type: 'title', left: vocab[c].label + ' (' + members.length + ')', right: 'admins only' }
                 : { type: 'title', left: vocab[c].label + ' (' + members.length + ')' };
 
-            var rows = [titleRow];
+            var rows: any[] = [titleRow];
             for (var r = 0; r < members.length; r += cols) {
                 var cells = [{ content: '', width: 2 }]; // left indent
                 for (var j = 0; j < cols && r + j < members.length; j++) {

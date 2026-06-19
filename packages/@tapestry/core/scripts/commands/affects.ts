@@ -1,3 +1,5 @@
+import * as tapestry from "@tapestry/engine";
+
 tapestry.commands.register({
     name: 'affects',
     aliases: ['aff', 'effects'],
@@ -19,7 +21,7 @@ tapestry.commands.register({
             return;
         }
 
-        var rows = [{ type: 'title', left: 'Active Effects' }];
+        var rows: any[] = [{ type: 'title', left: 'Active Effects' }];
 
         for (var i = 0; i < active.length; i++) {
             var effect = active[i];

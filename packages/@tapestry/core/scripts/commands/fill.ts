@@ -1,4 +1,7 @@
 // packs/tapestry-core/scripts/commands/fill.js
+
+import * as tapestry from "@tapestry/engine";
+
 tapestry.commands.register({
     name: 'fill',
     roles: ['player'],
