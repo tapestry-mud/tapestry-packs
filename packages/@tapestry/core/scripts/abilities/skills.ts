@@ -1,3 +1,4 @@
+import * as tapestry from "@tapestry/engine";
 // packs/tapestry-core/scripts/abilities/skills.js
 
 tapestry.abilities.register({

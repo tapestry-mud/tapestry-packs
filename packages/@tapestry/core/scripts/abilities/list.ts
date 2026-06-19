@@ -1,4 +1,5 @@
-﻿tapestry.commands.register({
+﻿import * as tapestry from "@tapestry/engine";
+tapestry.commands.register({
     name: 'skills',
     handler: function(player, args) {
         var learned = tapestry.abilities.getLearnedAbilities(player.entityId);
@@ -16,7 +17,7 @@
             return;
         }
 
-        var rows = [{ type: 'title', left: 'Your Skills' }];
+        var rows: any[] = [{ type: 'title', left: 'Your Skills' }];
         for (var j = 0; j < skills.length; j++) {
             rows.push({
                 type: 'cell',
@@ -51,7 +52,7 @@ tapestry.commands.register({
             return;
         }
 
-        var rows = [{ type: 'title', left: 'Your Spells' }];
+        var rows: any[] = [{ type: 'title', left: 'Your Spells' }];
         for (var j = 0; j < spells.length; j++) {
             rows.push({
                 type: 'cell',

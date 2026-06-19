@@ -1,3 +1,4 @@
+import * as tapestry from "@tapestry/engine";
 tapestry.events.on("communication.message", function(event) {
     var data = event.data;
     var recipients = [];

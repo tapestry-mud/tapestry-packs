@@ -1,3 +1,4 @@
+import * as tapestry from "@tapestry/engine";
 tapestry.events.on("mob.ai.tick", function(event) {
     var mob = event.data;
 

@@ -1,10 +1,11 @@
+import * as tapestry from "@tapestry/engine";
 // Loot protection for player corpses
 // Pack config property: player_corpse_loot_policy
-//   "owner_only" — only the corpse owner can loot
-//   "permission" — owner can grant access (future: allow command)
-//   "none" — anyone can loot (PvP loot enabled)
+//   "owner_only" - only the corpse owner can loot
+//   "permission" - owner can grant access (future: allow command)
+//   "none" - anyone can loot (PvP loot enabled)
 //
-// No tapestry.config module exists yet — defaulting to "owner_only"
+// No tapestry.config module exists yet - defaulting to "owner_only"
 
 tapestry.events.on("container.access.check", function(event) {
     var container = tapestry.world.getEntity(event.targetEntityId);
@@ -24,7 +25,7 @@ tapestry.events.on("container.access.check", function(event) {
     var owner = container.properties && container.properties.owner;
 
     if (policy === "none") {
-        // Anyone can loot — no restriction
+        // Anyone can loot - no restriction
         return;
     }
 

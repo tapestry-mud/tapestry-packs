@@ -1,3 +1,4 @@
+import * as tapestry from "@tapestry/engine";
 // --- Combat engage output ---
 tapestry.events.on("combat.engage", function(event) {
     var data = event.data || {};
@@ -127,7 +128,7 @@ tapestry.events.on("combat.kill", function(event) {
     }
 });
 
-// Player death — create corpse, transfer gear, recall naked
+// Player death - create corpse, transfer gear, recall naked
 tapestry.events.on("entity.vital.depleted", function(event) {
     if (!event.data || event.data.vital !== "hp") {
         return;

@@ -1,3 +1,4 @@
+import * as tapestry from "@tapestry/engine";
 // Fire the onDeath mob hook. Hangs on mob.death (published by death.js once the
 // corpse exists), so the hook reads name/room/killer/corpse off the event -- the
 // mob entity itself has already been removed from the world by this point.

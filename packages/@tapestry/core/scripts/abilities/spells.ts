@@ -1,4 +1,5 @@
-﻿// packs/tapestry-core/scripts/abilities/spells.js
+﻿import * as tapestry from "@tapestry/engine";
+// packs/tapestry-core/scripts/abilities/spells.js
 
 function findCastTarget(player, targetName) {
     var entities = tapestry.world.getEntitiesInRoom(player.roomId, "npc");

@@ -1,3 +1,4 @@
+import * as tapestry from "@tapestry/engine";
 var socials = tapestry.data.loadYaml('scripts/socials/socials.yaml');
 
 if (!socials) {

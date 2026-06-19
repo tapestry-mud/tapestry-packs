@@ -1,4 +1,5 @@
-﻿// --- kill / attack command ---
+﻿import * as tapestry from "@tapestry/engine";
+// --- kill / attack command ---
 tapestry.commands.register({
     name: "kill",
     aliases: ["attack"],

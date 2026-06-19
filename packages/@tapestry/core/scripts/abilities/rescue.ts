@@ -1,4 +1,5 @@
-﻿// packs/tapestry-core/scripts/abilities/rescue.js
+﻿import * as tapestry from "@tapestry/engine";
+// packs/tapestry-core/scripts/abilities/rescue.js
 
 tapestry.abilities.register({
     id: "rescue",

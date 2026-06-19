@@ -1,3 +1,4 @@
+import * as tapestry from "@tapestry/engine";
 // packs/tapestry-core/scripts/abilities/passives.js
 
 // --- Passive Skills (binary check) ---

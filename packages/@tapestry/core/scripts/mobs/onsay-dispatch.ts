@@ -1,3 +1,4 @@
+import * as tapestry from "@tapestry/engine";
 tapestry.events.on("player.say", function(event) {
     var data = event.data;
     var mobs = tapestry.world.getEntitiesInRoom(data.roomId, "npc");

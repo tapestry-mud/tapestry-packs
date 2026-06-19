@@ -1,3 +1,4 @@
+import * as tapestry from "@tapestry/engine";
 // Fire the onAttack mob hook when a scripted mob becomes a combat target.
 // combat.engage publishes once per engagement (Source = attacker, Target =
 // the entity being attacked); we only fire for NPCs that registered a script.

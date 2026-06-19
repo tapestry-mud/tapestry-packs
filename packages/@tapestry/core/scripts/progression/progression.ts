@@ -1,4 +1,7 @@
+import * as tapestry from "@tapestry/engine";
 // packs/tapestry-core/scripts/progression/progression.js
+// getSameRoomGroupMembers is defined in commands/groups.ts; shared Jint realm.
+declare function getSameRoomGroupMembers(entityId: string): string[];
 // ============================================================
 // Progression system for tapestry-core pack
 // ============================================================

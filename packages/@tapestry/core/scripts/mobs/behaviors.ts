@@ -1,9 +1,10 @@
-// Stationary — does nothing. Hook exists for future flavor (emotes, idle text).
+import * as tapestry from "@tapestry/engine";
+// Stationary - does nothing. Hook exists for future flavor (emotes, idle text).
 tapestry.mobs.registerBehavior("stationary", function(mob) {
     // intentionally empty
 });
 
-// Wander — move to a random adjacent room within boundary.
+// Wander - move to a random adjacent room within boundary.
 tapestry.mobs.registerBehavior("wander", function(mob) {
     if (tapestry.combat.isInCombat(mob.entityId)) {
         return;
@@ -53,7 +54,7 @@ tapestry.mobs.registerBehavior("wander", function(mob) {
     }
 });
 
-// Patrol — follow a defined waypoint route.
+// Patrol - follow a defined waypoint route.
 tapestry.mobs.registerBehavior("patrol", function(mob) {
     if (tapestry.combat.isInCombat(mob.entityId)) {
         return;
@@ -127,7 +128,7 @@ tapestry.mobs.registerBehavior("patrol", function(mob) {
 // (instant) AND on the tick, respecting posture + safe rooms + admin exemption.
 // This keeps aggro orthogonal to movement (a mob can wander AND be hostile).
 
-// Combatant — dispatches battlecommands during combat at configurable intervals.
+// Combatant - dispatches battlecommands during combat at configurable intervals.
 // Empty string command = intentional noop (skip ability, auto-attack only).
 // Driven by mob.ai.tick so any mob with battlecommands uses them regardless of behavior.
 tapestry.events.on("mob.ai.tick", function(event) {

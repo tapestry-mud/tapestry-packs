@@ -1,3 +1,4 @@
+import * as tapestry from "@tapestry/engine";
 // --- Ability miss output ---
 tapestry.events.on("ability.missed", function(event) {
     var data = event.data || {};

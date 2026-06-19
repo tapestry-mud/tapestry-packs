@@ -1,3 +1,4 @@
+import * as tapestry from "@tapestry/engine";
 tapestry.mobs.registerCommand("say", {
     gmcp: { channel: "say" },
     handler: function(mob, text) {

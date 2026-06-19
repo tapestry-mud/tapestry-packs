@@ -1,4 +1,5 @@
-// Handle NPC death — create corpse container with mob's items
+import * as tapestry from "@tapestry/engine";
+// Handle NPC death - create corpse container with mob's items
 tapestry.events.on("entity.vital.depleted", function(event) {
     // Only handle NPCs
     var entity = tapestry.world.getEntity(event.sourceEntityId);
