@@ -1,3 +1,5 @@
+import * as tapestry from "@tapestry/engine";
+
 tapestry.commands.register({
     name: 'recite',
     roles: ['player'],

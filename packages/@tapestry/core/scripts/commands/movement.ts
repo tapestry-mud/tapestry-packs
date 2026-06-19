@@ -1,3 +1,5 @@
+import * as tapestry from "@tapestry/engine";
+
 var directions = [
     { name: 'north', alias: 'n' },
     { name: 'south', alias: 's' },

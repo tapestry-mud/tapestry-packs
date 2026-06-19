@@ -1,3 +1,5 @@
+import * as tapestry from "@tapestry/engine";
+
 function getHealthTierText(entityId) {
     var stats = tapestry.stats.get(entityId);
     if (!stats) { return null; }

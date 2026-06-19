@@ -1,3 +1,5 @@
+import * as tapestry from "@tapestry/engine";
+
 function tierLabel(capValue) {
     if (capValue <= 25) { return 'Novice (cap 25%)'; }
     if (capValue <= 50) { return 'Apprentice (cap 50%)'; }

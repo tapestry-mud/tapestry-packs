@@ -1,3 +1,5 @@
+import * as tapestry from "@tapestry/engine";
+
 tapestry.commands.register({
     name: 'packs',
     admin: true,
@@ -5,7 +7,7 @@ tapestry.commands.register({
     handler: function(actor, resolved) {
         var loaded = tapestry.packs.list();
 
-        var rows = [{ type: 'title', left: 'Loaded Content Packs' }];
+        var rows: any[] = [{ type: 'title', left: 'Loaded Content Packs' }];
 
         for (var i = 0; i < loaded.length; i++) {
             var pack = loaded[i];

@@ -1,4 +1,6 @@
-﻿tapestry.commands.register({
+﻿import * as tapestry from "@tapestry/engine";
+
+tapestry.commands.register({
     name: 'remove',
     roles: ['player'],
     args: {

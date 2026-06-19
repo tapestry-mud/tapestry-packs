@@ -1,3 +1,5 @@
+import * as tapestry from "@tapestry/engine";
+
 tapestry.commands.register({
     name: 'inventory',
     aliases: ['i'],
@@ -6,7 +8,7 @@ tapestry.commands.register({
     priority: 0,
     handler: function(actor, resolved) {
         var stacks = tapestry.stacking.getStacks(actor.entityId);
-        var contentRows = [{ type: 'empty' }];
+        var contentRows: any[] = [{ type: 'empty' }];
 
         if (!stacks || stacks.length === 0) {
             contentRows.push({ type: 'text', content: '  You are carrying nothing.' });
