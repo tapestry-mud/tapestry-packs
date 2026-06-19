@@ -1,3 +1,4 @@
+import * as tapestry from "@tapestry/engine";
 tapestry.commands.register({
     name: 'drink',
     roles: ['player'],

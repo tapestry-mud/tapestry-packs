@@ -13,5 +13,6 @@ active: true
 load_order: 5
 
 content:
-  scripts: "scripts/**/*.js"
+  scripts: "dist/scripts/**/*.js"
+  scripts_format: esm
   help: "help/**/*.yaml"

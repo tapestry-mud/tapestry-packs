@@ -1,5 +1,4 @@
-(function() {
-'use strict';
+import * as tapestry from "@tapestry/engine";
 var DRAIN_AMOUNT = 1;
 var DRAIN_CADENCE = 300;
 var REMINDER_INTERVAL = 3000;
@@ -8,10 +7,7 @@ var TIER_HUNGRY_MIN = 34;
 
 // The tier model, published for peer packs (cooking reads thresholds rather than
 // hardcoding them). Namespace exports are read-only by convention.
-tapestry.packs.export('tiers', { FULL_MIN: TIER_FULL_MIN, HUNGRY_MIN: TIER_HUNGRY_MIN }, {
-    kind: 'namespace',
-    description: 'Sustenance tier thresholds: >=FULL_MIN is full, >=HUNGRY_MIN is hungry, else famished.'
-});
+export const tiers = Object.freeze({ FULL_MIN: TIER_FULL_MIN, HUNGRY_MIN: TIER_HUNGRY_MIN });
 
 function getSustenanceValue(entityId) {
     var val = tapestry.world.getProperty(entityId, 'sustenance');
@@ -151,34 +147,11 @@ function seedSustenance(entityId) {
 tapestry.events.on('character.created', function(evt) { seedSustenance(evt.sourceEntityId); });
 tapestry.events.on('player.login', function(evt) { seedSustenance(evt.sourceEntityId); });
 
-// ---- Pack interop exports (Phase 1) ----
-// Survival exposes its hunger model to peer packs through the sanctioned, enforced
-// interop surface (tapestry.packs). Callers must declare a dependency edge on
-// @tapestry/survival. See cooking's cook command for the consumer.
-
-tapestry.packs.export('getHungerTier', function (entityId) {
+export function getHungerTier(entityId) {
     return getTier(getSustenanceValue(entityId)); // 'full' | 'hungry' | 'famished'
-}, {
-    kind: 'query',
-    description: 'Hunger tier for an entity, derived from its sustenance value.',
-    params: [{ name: 'entityId', type: 'entity' }],
-    returns: 'string'
-});
+}
 
-tapestry.packs.export('applyWellFedBuff', function (entityId, durationTicks) {
-    tapestry.effects.apply(entityId, {
-        id: 'well-fed',
-        duration: Number(durationTicks),
-        flags: ['well_fed']
-    });
+export function applyWellFedBuff(entityId, durationTicks) {
+    tapestry.effects.apply(entityId, { id: 'well-fed', duration: Number(durationTicks), flags: ['well_fed'] });
     tapestry.world.send(entityId, 'You feel well-fed and satisfied.\r\n');
-}, {
-    kind: 'command',
-    description: 'Suppress hunger drain for the given duration in ticks (a well-fed buff).',
-    params: [
-        { name: 'entityId', type: 'entity' },
-        { name: 'durationTicks', type: 'number' }
-    ],
-    returns: 'undefined'
-});
-})();
+}
