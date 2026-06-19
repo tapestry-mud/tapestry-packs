@@ -33,7 +33,7 @@ function getGroupMembers(entityId) {
     return members;
 }
 
-function getSameRoomGroupMembers(entityId) {
+export function getSameRoomGroupMembers(entityId) {
     var roomId = tapestry.world.getEntityRoomId(entityId);
     var members = getGroupMembers(entityId);
     var result = [];
