@@ -1,3 +1,5 @@
+import * as tapestry from "@tapestry/engine";
+
 function renderTree(actor, filter) {
     var classId = tapestry.world.getProperty(actor.entityId, 'class') || '';
     if (!classId) {
@@ -56,7 +58,7 @@ function renderTree(actor, filter) {
     });
 
     if (learned.length > 0) {
-        var learnedRows = [{ type: 'text', content: '  Learned' }];
+        var learnedRows: any[] = [{ type: 'text', content: '  Learned' }];
         for (var li = 0; li < learned.length; li++) {
             var l = learned[li];
             var displayName = l.def.short_name || l.def.name;
@@ -73,7 +75,7 @@ function renderTree(actor, filter) {
     }
 
     if (upcoming.length > 0) {
-        var upcomingRows = [{ type: 'text', content: '  Upcoming' }];
+        var upcomingRows: any[] = [{ type: 'text', content: '  Upcoming' }];
         for (var ui = 0; ui < upcoming.length; ui++) {
             var u = upcoming[ui];
             var uName = u.def.short_name || u.def.name;
@@ -90,7 +92,7 @@ function renderTree(actor, filter) {
     }
 
     if (alsoLearned.length > 0) {
-        var alsoRows = [{ type: 'text', content: '  Also learned' }];
+        var alsoRows: any[] = [{ type: 'text', content: '  Also learned' }];
         for (var si = 0; si < alsoLearned.length; si++) {
             var a = alsoLearned[si];
             var aName = a.def.short_name || a.def.name;

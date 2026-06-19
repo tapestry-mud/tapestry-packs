@@ -1,3 +1,5 @@
+import * as tapestry from "@tapestry/engine";
+
 function stripPack(id) {
     if (!id) { return ''; }
     var idx = id.indexOf(':');
@@ -48,7 +50,7 @@ tapestry.commands.register({
         var isAdmin = actor.hasRole('admin');
         var currentTick = tapestry.world.getCurrentTick();
 
-        var headerCells = [
+        var headerCells: any[] = [
             { content: '', width: 11 },
             { content: '<subtle>Name</subtle>', width: 14 },
             { content: '<subtle>Lv</subtle>', width: 7 },
@@ -60,7 +62,7 @@ tapestry.commands.register({
         headerCells.push({ content: '<subtle>Idle</subtle> ', width: 'fill', align: 'right' });
         var headerRows = [{ type: 'cell', cells: headerCells }];
 
-        var rows = [{ type: 'empty' }];
+        var rows: any[] = [{ type: 'empty' }];
 
         for (var i = 0; i < players.length; i++) {
             var p = players[i];
@@ -71,7 +73,7 @@ tapestry.commands.register({
             var idle = formatIdleTicks(currentTick, p.lastInputTick);
             var idleDisplay = idle ? idle + ' ' : '';
 
-            var rowCells = [
+            var rowCells: any[] = [
                 { content: badge, width: 11, align: 'right' },
                 { content: ' ' + p.name, width: 14 },
                 { content: 'Lv ' + level, width: 7 },

@@ -1,3 +1,5 @@
+import * as tapestry from "@tapestry/engine";
+
 // Text helper for aligning the compact (narrow-terminal) score layout.
 function scorePad(str, n) {
     str = '' + str;
@@ -207,7 +209,7 @@ tapestry.commands.register({
             rows: [{ type: 'text', content: '  Hunger: ' + susTier + ' (' + susPct + '%)' }]
         };
 
-        var sections = [identitySection];
+        var sections: any[] = [identitySection];
         if (proficiencySection) { sections.push(proficiencySection); }
         sections.push(vitalsSection);
         sections.push(attribSection);

@@ -1,3 +1,5 @@
+import * as tapestry from "@tapestry/engine";
+
 // Player command: set your output screen width for server-side word-wrapping.
 //
 //   width            -> show your current setting

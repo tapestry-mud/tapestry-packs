@@ -1,3 +1,5 @@
+import * as tapestry from "@tapestry/engine";
+
 // Shop commands: list, buy, sell, value
 // Subcommand dispatch via structured args. Bare 'shop' lists items.
 // All player-facing strings live here; tapestry.shop exposes structured result codes.

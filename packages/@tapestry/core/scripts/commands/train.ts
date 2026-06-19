@@ -1,3 +1,5 @@
+import * as tapestry from "@tapestry/engine";
+
 var STAT_PREFIXES = {
     str: 'strength', int: 'intelligence', wis: 'wisdom',
     dex: 'dexterity', con: 'constitution', luc: 'luck', luck: 'luck'
