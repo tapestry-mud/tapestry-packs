@@ -1,8 +1,11 @@
-// packages/@tapestry/builder/scripts/commands/map.js
+// packages/@tapestry/builder/scripts/commands/map.ts
 //
-// map — the player-view map: your surroundings within 3 hops, centered on you,
+// map - the player-view map: your surroundings within 3 hops, centered on you,
 // no room ids (dot label mode), no fog (v1 shows the connected area). Builders get
 // the id-annotated version with 'rooms'.
+
+import * as tapestry from "@tapestry/engine";
+
 tapestry.commands.register({
     name: 'map',
     aliases: [],

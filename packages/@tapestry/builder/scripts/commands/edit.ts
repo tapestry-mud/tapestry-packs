@@ -1,16 +1,18 @@
-// packages/@tapestry/builder/scripts/commands/edit.js
+// packages/@tapestry/builder/scripts/commands/edit.ts
 //
-// `edit <noun> [args...]` — single-token dispatch verb that looks up <noun> in a
+// `edit <noun> [args...]` - single-token dispatch verb that looks up <noun> in a
 // builder-local registry of "editables" and hands off to its handler. Same shape
-// and rationale as create.js: the router resolves only the first token, so `edit`
+// and rationale as create.ts: the router resolves only the first token, so `edit`
 // is the command and the noun is the first arg (captured as a single 'keyword',
-// variable tail captured as greedy 'text' and split ourselves — mirroring
+// variable tail captured as greedy 'text' and split ourselves - mirroring
 // core/scripts/commands/admin-grant.js).
 //
 // REGISTRY SHAPE: plain builder-pack-local object (var editors), NOT the engine
 // tapestry.admin.grant surface. Adding an editable noun is a one-liner.
 // FUTURE (real spec step): promote to a core/engine surface for cross-pack
 // registration, like tapestry.admin.grant.register.
+
+import * as tapestry from "@tapestry/engine";
 
 // --- builder-local editable registry ---------------------------------------
 var editors = {};

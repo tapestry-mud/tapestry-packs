@@ -1,8 +1,11 @@
-// packages/@tapestry/builder/scripts/commands/dig.js
+// packages/@tapestry/builder/scripts/commands/dig.ts
 //
 // dig <dir>            - carve a NEW room in a direction, wire two-way exits, move in.
 // dig <dir> <target>  - connect a two-way exit to an EXISTING authored room in the
 //                        same area; do not create anything, do not move.
+
+import * as tapestry from "@tapestry/engine";
+
 tapestry.commands.register({
     name: 'dig',
     aliases: [],

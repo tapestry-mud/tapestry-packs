@@ -1,6 +1,6 @@
-// packages/@tapestry/builder/scripts/commands/create.js
+// packages/@tapestry/builder/scripts/commands/create.ts
 //
-// `create <noun> [args...]` — a single-token dispatch verb that looks up <noun>
+// `create <noun> [args...]` - a single-token dispatch verb that looks up <noun>
 // in a builder-local registry of "creatables" and hands off to its handler.
 //
 // The engine command router only resolves the FIRST whitespace-delimited token
@@ -16,6 +16,8 @@
 // the register(noun, fn) helper keeps "add a noun" a one-liner. FUTURE (real
 // spec step): promote this to a core/engine surface so OTHER packs can register
 // their own creatables cross-pack, the way tapestry.admin.grant.register works.
+
+import * as tapestry from "@tapestry/engine";
 
 // --- builder-local creatable registry -------------------------------------
 var creators = {};

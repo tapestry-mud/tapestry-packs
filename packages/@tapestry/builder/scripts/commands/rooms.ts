@@ -1,10 +1,13 @@
-// packages/@tapestry/builder/scripts/commands/rooms.js
+// packages/@tapestry/builder/scripts/commands/rooms.ts
 //
 // rooms [<area>] -- the builder's authoring discovery tool.
 //   rooms           -- renders the current area's id-annotated ASCII map (original behavior).
 //   rooms <area>    -- lists every room in <area> (bare or namespaced id) with id, name,
 //                      and per-room provenance tag; handy for navigation/teleport targeting.
 // All map projection/rendering is engine-side (tapestry.world.renderAreaMap); this stays thin.
+
+import * as tapestry from "@tapestry/engine";
+
 tapestry.commands.register({
     name: 'rooms',
     aliases: [],
