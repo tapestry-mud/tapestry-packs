@@ -2,6 +2,7 @@
 // the DM reaches the player but is NOT mirrored to anonymous /watch spectators. reply is a DM too --
 // leaving it on plain send would leak DMs through the back door. Same treatment as the tell override:
 // the two DM-content writes use sendPrivate; guard/feedback lines stay public; GMCP is below the tap.
+import * as tapestry from "@tapestry/engine";
 tapestry.commands.register({
     name: 'reply',
     override: true,

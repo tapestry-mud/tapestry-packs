@@ -4,6 +4,7 @@
 // plain send -- they are feedback to the sender, not DM content, so a watcher seeing them is no leak.
 // The GMCP tell is below the watch tap, so it is private regardless. Requires the dependency edge on
 // @tapestry/core (declared in pack.yaml) + override:true, per the registration-policy override rules.
+import * as tapestry from "@tapestry/engine";
 tapestry.commands.register({
     name: 'tell',
     override: true,
