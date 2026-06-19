@@ -1,8 +1,8 @@
-﻿// abilities (alias: slookup) -- search registered abilities by keyword
+// abilities (alias: slookup) -- search registered abilities by keyword
 // Keyword 'all' lists every ability. ROM slookup parity.
 
 import * as tapestry from "@tapestry/engine";
-tapestry.commands.register(<any>{
+tapestry.commands.register({
     name: 'abilities',
     aliases: ['slookup'],
     admin: true,

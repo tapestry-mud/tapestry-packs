@@ -1,9 +1,9 @@
-﻿// force -- ROM admin parity
+// force -- ROM admin parity
 // Notify-before-execute order: target sees 'X forces you to ...' BEFORE the
 // forced command's output (matching ROM).  If executeAs returns false (no
 // session / bad id), world.send went nowhere, so no stray notification.
 import * as tapestry from "@tapestry/engine";
-tapestry.commands.register(<any>{
+tapestry.commands.register({
     name: 'force',
     admin: true,
     args: {

@@ -1,4 +1,4 @@
-﻿// Admin `set` command.
+// Admin `set` command.
 //
 // Declared attributes (PropertyRegistry / TagRegistry) flow through the engine's
 // registry-driven dispatch -- "declared <=> settable". A small retained table below
@@ -114,7 +114,7 @@ var domainSetOps = {
     }
 };
 
-tapestry.commands.register(<any>{
+tapestry.commands.register({
     name: 'set',
     admin: true,
     args: {
@@ -157,6 +157,6 @@ tapestry.commands.register(<any>{
                 if (parts[i].length > 0) { dispatchArgs.push(parts[i]); }
             }
         }
-        (tapestry.admin.set as any).dispatch(actor.entityId, dispatchArgs);
+        tapestry.admin.set.dispatch(actor.entityId, dispatchArgs);
     }
 });

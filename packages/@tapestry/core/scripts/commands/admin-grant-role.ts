@@ -1,10 +1,10 @@
-﻿// Admin `grantrole` command. Adds a role to an online player.
+// Admin `grantrole` command. Adds a role to an online player.
 //
 // Named `grantrole` (not `grant`) because `grant` is already registered by
 // admin-grant.js for awarding xp/trains/gold; two registrations of the same
 // command name would collide at boot.
 import * as tapestry from "@tapestry/engine";
-tapestry.commands.register(<any>{
+tapestry.commands.register({
     name: 'grantrole',
     aliases: [],
     admin: true,

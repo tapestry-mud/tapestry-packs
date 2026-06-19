@@ -1,8 +1,8 @@
-﻿// Admin `revokerole` command. Removes a role from an online player.
+// Admin `revokerole` command. Removes a role from an online player.
 //
 // Named `revokerole` for symmetry with `grantrole` (see admin-grant-role.js).
 import * as tapestry from "@tapestry/engine";
-tapestry.commands.register(<any>{
+tapestry.commands.register({
     name: 'revokerole',
     aliases: [],
     admin: true,

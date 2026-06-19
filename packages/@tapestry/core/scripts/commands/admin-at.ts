@@ -1,4 +1,4 @@
-﻿// at -- ROM admin parity
+// at -- ROM admin parity
 // Execute a command as yourself as if standing in the target's room, then
 // teleport back.  Target may be a player name (prefix match) or a literal
 // room id.
@@ -15,7 +15,7 @@
 //   the teleport-back still yanks them home regardless.  This matches ROM
 //   behavior: at always returns you regardless of what the command did.
 import * as tapestry from "@tapestry/engine";
-tapestry.commands.register(<any>{
+tapestry.commands.register({
     name: 'at',
     admin: true,
     args: {

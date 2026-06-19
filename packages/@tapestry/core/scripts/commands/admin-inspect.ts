@@ -1,4 +1,4 @@
-﻿// Admin inspect command.
+// Admin inspect command.
 // First raw arg branches: 'inspect room [id]' shows a room view;
 // anything else is entity inspection via tapestry.args.resolve (room-scoped).
 // Note: args.resolve does not support bypass_visibility - admins cannot inspect
@@ -234,7 +234,7 @@ function renderAreaInspect(actor, areaId) {
     actor.send('Provenance:  ' + prov + '\r\n');
 }
 
-tapestry.commands.register(<any>{
+tapestry.commands.register({
     name: 'inspect',
     admin: true,
     handler: function(actor, rawArgs) {

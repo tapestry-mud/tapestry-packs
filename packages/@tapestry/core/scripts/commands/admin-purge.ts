@@ -1,5 +1,5 @@
-﻿import * as tapestry from "@tapestry/engine";
-tapestry.commands.register(<any>{
+import * as tapestry from "@tapestry/engine";
+tapestry.commands.register({
     name: 'purge',
     admin: true,
     args: {
