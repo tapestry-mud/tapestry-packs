@@ -1,3 +1,5 @@
+import * as tapestry from "@tapestry/engine";
+
 tapestry.commands.register({
     name: 'cook',
     roles: ['player'],
@@ -47,7 +49,7 @@ tapestry.commands.register({
             return;
         }
 
-        // Check heat source — skip if tool is self-contained (microwave)
+        // Check heat source - skip if tool is self-contained (microwave)
         if (!tapestry.world.getProperty(toolItem.id, 'heat_source')) {
             var hasHeat = false;
             for (var k = 0; k < roomEntities.length; k++) {
@@ -73,7 +75,7 @@ tapestry.commands.register({
 
         var spawn = tapestry.items.spawnToInventory(cooksInto, actor.entityId);
         if (!spawn) {
-            actor.send("Something went wrong — the cooked result couldn't be created.\r\n");
+            actor.send("Something went wrong - the cooked result couldn't be created.\r\n");
             return;
         }
 
