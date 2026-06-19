@@ -1,4 +1,5 @@
-tapestry.commands.register({
+﻿import * as tapestry from "@tapestry/engine";
+tapestry.commands.register(<any>{
     name: 'peace',
     admin: true,
     handler: function(actor, resolved) {

@@ -1,9 +1,10 @@
-// Admin inspect command.
+﻿// Admin inspect command.
 // First raw arg branches: 'inspect room [id]' shows a room view;
 // anything else is entity inspection via tapestry.args.resolve (room-scoped).
-// Note: args.resolve does not support bypass_visibility — admins cannot inspect
+// Note: args.resolve does not support bypass_visibility - admins cannot inspect
 // hidden entities by name. Use the entity's id directly as a workaround if needed.
 
+import * as tapestry from "@tapestry/engine";
 function renderEntityInspect(actor, keyword) {
     var found = tapestry.args.resolve ? tapestry.args.resolve(actor.entityId, keyword, 'visible') : null;
     if (!found) {
@@ -233,7 +234,7 @@ function renderAreaInspect(actor, areaId) {
     actor.send('Provenance:  ' + prov + '\r\n');
 }
 
-tapestry.commands.register({
+tapestry.commands.register(<any>{
     name: 'inspect',
     admin: true,
     handler: function(actor, rawArgs) {

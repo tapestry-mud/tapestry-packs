@@ -1,10 +1,11 @@
-// Registry introspection command.
+﻿// Registry introspection command.
 // Levels: bare = summary chip grid (Level 0), <kind> = winners list (Level 1),
 // <kind> <name> = full ledger (Level 2), <kind> <text> = filtered Level 1.
 // 'conflicts' = cross-kind shadow/ambiguity view.
 // Filter is a declared text arg (not resolved.rest) to avoid the dead-filter trap.
 
-tapestry.commands.register({
+import * as tapestry from "@tapestry/engine";
+tapestry.commands.register(<any>{
     name: 'registry',
     admin: true,
     args: { filter: { type: 'text', required: false } },

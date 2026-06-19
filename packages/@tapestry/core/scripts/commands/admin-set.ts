@@ -1,4 +1,4 @@
-// Admin `set` command.
+﻿// Admin `set` command.
 //
 // Declared attributes (PropertyRegistry / TagRegistry) flow through the engine's
 // registry-driven dispatch -- "declared <=> settable". A small retained table below
@@ -6,6 +6,7 @@
 // currency / npc hp) that are NOT stored properties; these keep their current
 // command paths until StatRegistry (north-star section 9) lands.
 
+import * as tapestry from "@tapestry/engine";
 function domainResolveTarget(kind, name) {
     var lower = name.toLowerCase();
     if (kind === 'player') {
@@ -38,7 +39,7 @@ function domainResolveTarget(kind, name) {
     return null;
 }
 
-function statHandler(statKey, label, min) {
+function statHandler(statKey, label, min?: any) {
     return function(actor, target, rest) {
         var n = parseInt(rest, 10);
         if (isNaN(n)) { actor.send('Value must be a number.\r\n'); return; }
@@ -113,7 +114,7 @@ var domainSetOps = {
     }
 };
 
-tapestry.commands.register({
+tapestry.commands.register(<any>{
     name: 'set',
     admin: true,
     args: {
@@ -156,6 +157,6 @@ tapestry.commands.register({
                 if (parts[i].length > 0) { dispatchArgs.push(parts[i]); }
             }
         }
-        tapestry.admin.set.dispatch(actor.entityId, dispatchArgs);
+        (tapestry.admin.set as any).dispatch(actor.entityId, dispatchArgs);
     }
 });

@@ -1,4 +1,5 @@
-tapestry.commands.register({
+﻿import * as tapestry from "@tapestry/engine";
+tapestry.commands.register(<any>{
     name: 'grant',
     admin: true,
     args: {
@@ -15,11 +16,11 @@ tapestry.commands.register({
 
         // Reconstruct args array for dispatch: [kind, type, target, ...rest]
         var dispatchArgs = [entityKind, abilityType].concat(valueParts);
-        tapestry.admin.grant.dispatch(actor.entityId, dispatchArgs);
+        (tapestry.admin.grant as any).dispatch(actor.entityId, dispatchArgs);
     }
 });
 
-tapestry.admin.grant.register({
+(tapestry.admin.grant as any).register({
     kind: 'player',
     type: 'xp',
     help: 'grant player xp [target] [amount] [track] - grant XP (track defaults to combat)',
@@ -39,7 +40,7 @@ tapestry.admin.grant.register({
     }
 });
 
-tapestry.admin.grant.register({
+(tapestry.admin.grant as any).register({
     kind: 'player',
     type: 'train',
     help: 'grant player train [target] [amount] - grant training sessions',
@@ -58,7 +59,7 @@ tapestry.admin.grant.register({
     }
 });
 
-tapestry.admin.grant.register({
+(tapestry.admin.grant as any).register({
     kind: 'player',
     type: 'gold',
     help: 'grant player gold [target] [amount] - add (or subtract) gold; negative clamps at 0',

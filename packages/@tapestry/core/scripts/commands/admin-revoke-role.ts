@@ -1,10 +1,9 @@
-// Admin `grantrole` command. Adds a role to an online player.
+﻿// Admin `revokerole` command. Removes a role from an online player.
 //
-// Named `grantrole` (not `grant`) because `grant` is already registered by
-// admin-grant.js for awarding xp/trains/gold; two registrations of the same
-// command name would collide at boot.
-tapestry.commands.register({
-    name: 'grantrole',
+// Named `revokerole` for symmetry with `grantrole` (see admin-grant-role.js).
+import * as tapestry from "@tapestry/engine";
+tapestry.commands.register(<any>{
+    name: 'revokerole',
     aliases: [],
     admin: true,
     args: {
@@ -19,7 +18,7 @@ tapestry.commands.register({
             actor.send('No such player online: ' + targetName + '\r\n');
             return;
         }
-        tapestry.world.addRole(target.id, role);
-        actor.send("Granted role '" + role + "' to " + target.name + ".\r\n");
+        tapestry.world.removeRole(target.id, role);
+        actor.send("Revoked role '" + role + "' from " + target.name + ".\r\n");
     }
 });
