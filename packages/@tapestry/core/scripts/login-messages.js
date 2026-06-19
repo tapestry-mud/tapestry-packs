@@ -4,12 +4,9 @@ tapestry.events.on('player.login', function(event) {
     var name = data.playerName;
     if (!entityId || !name) { return; }
 
-    var roomId = tapestry.world.getEntityRoomId(entityId);
-    if (!roomId) { return; }
-
-    tapestry.world.sendToRoomExcept(
-        roomId,
-        entityId,
-        name + ' materializes from the threads of the Pattern.\r\n'
+    // Server-wide login announce (excludes the logging-in player, like gossip).
+    tapestry.world.sendToAll(
+        'The wheel turns, and ' + name + ' is woven into the pattern once more.\r\n',
+        entityId
     );
 });

@@ -28,6 +28,9 @@ var lastReminder = {};
 
 tapestry.schedule.everyForEach(DRAIN_CADENCE, { type: 'player' }, function(entity) {
     var entityId = entity.id;
+    // Admins don't hunger: skip drain, tier changes, and reminders entirely so an
+    // idle/AFK staffer isn't spammed with hunger messages.
+    if (tapestry.world.hasRole(entityId, 'admin')) { return; }
     var current = getSustenanceValue(entityId);
     var prevTier = getTier(current);
 
