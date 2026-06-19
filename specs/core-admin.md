@@ -1,6 +1,6 @@
 ---
 capability: core-admin
-last-updated: 2026-06-13
+last-updated: 2026-06-19
 ---
 
 # core-admin
@@ -10,12 +10,12 @@ role; the engine rejects them silently for non-admin actors.
 
 ## Overview
 
-The core-admin capability is a suite of 23 admin-gated commands (plus three aliases) that
+The core-admin capability is a suite of 24 admin-gated commands (plus three aliases) that
 expose privileged control over players, NPCs, items, rooms, and the server state. They are
 registered under `category: 'admin'` with `admin: true`, which gates them at the engine's
 command-dispatch layer. Commands broadly fall into five clusters: entity manipulation (set,
 grant, spawn, loaditem, purge, restore, peace, force, at, teleport), inspection (inspect,
-whereis/mwhere/owhere, templates, abilities, tags), ability management (learn, forget,
+whereis/mwhere/owhere, templates, abilities, tags, registry), ability management (learn, forget,
 setclass, settrainable), access control (grantrole, revokerole, wizlock), and observation
 (snoop).
 
@@ -160,10 +160,36 @@ setclass, settrainable), access control (grantrole, revokerole, wizlock), and ob
   (packages/@tapestry/core/scripts/commands/admin-tags.js:96-133)
 - `tags remove [entity] [tag]` removes a tag and reports whether the entity actually had it.
   (packages/@tapestry/core/scripts/commands/admin-tags.js:135-156)
-- `tags registry [filter]` dumps the tag registry sorted engine-first then alphabetically;
-  filter can be an entity type or scope. (packages/@tapestry/core/scripts/commands/admin-tags.js:158-220)
 - `tags validate` scans all loaded entities and reports any that carry unregistered tags
-  (world-wide; limit 100 issues reported). (packages/@tapestry/core/scripts/commands/admin-tags.js:223-265)
+  (world-wide; limit 100 issues reported). (packages/@tapestry/core/scripts/commands/admin-tags.js:153-195)
+- The `tags registry` subcommand was removed; the registry browser now lives under the
+  top-level `registry` command (`registry tag`). See the registry section below.
+
+### registry -- registry provenance browser
+
+- `registry` is a three-level browser over the engine's `tapestry.registry.*` interop. With
+  no argument it renders a Level 0 summary - every kind with its registration count and a
+  conflict flag as a width-fit chip grid (`tapestry.ui.panel`), property and tag flagged as
+  the namespaced model. (packages/@tapestry/core/scripts/commands/admin-registry.js:6-46;
+  packages/@tapestry/core/scripts/commands/admin-registry.js:65-110)
+- `registry <kind>` lists that kind's winners with shadow markers (Level 1); `registry
+  <kind> <name>` shows the full ledger for one name - the winner's source location and, for
+  an override, the shadowed loser it beat (Level 2).
+  (packages/@tapestry/core/scripts/commands/admin-registry.js:148-185;
+  packages/@tapestry/core/scripts/commands/admin-registry.js:226-285)
+- `registry conflicts` is the cross-kind view of every name with more than one claimant;
+  `registry <kind> <text>` filters a kind by name or owner; an unknown kind prints the valid
+  kinds read from the summary, not a hardcoded list.
+  (packages/@tapestry/core/scripts/commands/admin-registry.js:18-46;
+  packages/@tapestry/core/scripts/commands/admin-registry.js:112-146)
+- The honesty rule: policy kinds render shadow/override vocabulary; the namespaced kinds
+  (property, tag) render ambiguity (a bare name declared by two or more packs). Level 2 for
+  property surfaces value type, range, enum, and applies-to.
+  (packages/@tapestry/core/scripts/commands/admin-registry.js:171-184;
+  packages/@tapestry/core/scripts/commands/admin-registry.js:244-270)
+- The command's column helper is named `registryPad` (local, pad-only) rather than a bare
+  `padRight`, which collides with groups.js's same-named truncating global in the shared
+  pack realm. (packages/@tapestry/core/scripts/commands/admin-registry.js:288-292)
 
 ### learn and forget -- ability manipulation
 
@@ -208,8 +234,11 @@ setclass, settrainable), access control (grantrole, revokerole, wizlock), and ob
 
 ## Rejected and Reverted
 
-- None on record.
+- `tags registry [filter]` (removed 2026-06-19, core 0.1.18): the tag-registry dump
+  subcommand was retired when the unified `registry` browser shipped. `registry tag` is
+  its provenance-aware replacement; the other `tags` subcommands are unaffected. See
+  changes/2026-06-19-registry-introspection.md.
 
 ## Change Log
 
-- None on record.
+- 2026-06-19 [registry-introspection](changes/2026-06-19-registry-introspection.md) - new `registry` provenance browser; retired `tags registry`; padRight name-truncation fix
