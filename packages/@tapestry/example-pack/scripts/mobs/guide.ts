@@ -1,5 +1,5 @@
 import * as tapestry from "@tapestry/engine";
-(tapestry.mobs as any).registerScript("tapestry-example-pack:guide", {
+tapestry.mobs.registerScript("tapestry-example-pack:guide", {
     onSay: function(mob, player, text) {
         var lower = text.toLowerCase();
 
