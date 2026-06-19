@@ -1,0 +1,5 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": { "rootDir": "scripts", "outDir": "dist/scripts" },
+  "include": ["scripts/**/*.ts", "../../../types/tapestry-engine.d.ts", "types/**/*.d.ts"]
+}

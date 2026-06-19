@@ -1,3 +1,4 @@
+import * as tapestry from "@tapestry/engine";
 // tapestry-core pack initialization
 // Runs first -- registers rarity tiers, essences, and display config before commands load.
 

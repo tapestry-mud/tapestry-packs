@@ -1,3 +1,4 @@
+import * as tapestry from "@tapestry/engine";
 tapestry.events.on('player.login', function(event) {
     var data = event.data || {};
     var entityId = event.sourceEntityId;

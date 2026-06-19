@@ -1,3 +1,4 @@
+import * as tapestry from "@tapestry/engine";
 // packs/tapestry-core/scripts/flows/link.js
 // Admin flow: guided wizard for creating a room connection.
 

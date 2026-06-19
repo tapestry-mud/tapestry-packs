@@ -1,3 +1,4 @@
+import * as tapestry from "@tapestry/engine";
 // packs/tapestry-core/scripts/flows/unlink.js
 // Admin flow: remove a connection from the current room.
 

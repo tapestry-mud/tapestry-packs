@@ -1,3 +1,4 @@
+import * as tapestry from "@tapestry/engine";
 tapestry.events.on('entity.rest_state.changed', function(evt) {
     var entityId = evt.data.entityId;
     var newState = evt.data.newState;

@@ -16,7 +16,8 @@ content:
   rooms: "areas/**/rooms/*.yaml"
   items: "areas/**/items/*.yaml"
   equipment_slots: "equipment_slots.yaml"
-  scripts: "scripts/**/*.js"
+  scripts: "dist/scripts/**/*.js"
+  scripts_format: esm
   strings: "strings/**/*.yaml"
   help: "help/**/*.yaml"
   motd: "data/motd.txt"

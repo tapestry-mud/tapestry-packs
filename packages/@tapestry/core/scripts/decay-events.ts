@@ -1,3 +1,4 @@
+import * as tapestry from "@tapestry/engine";
 // packs/tapestry-core/scripts/decay-events.js
 tapestry.events.on('corpse.decayed', function(evt) {
     var roomId = evt.data.roomId;
