@@ -133,12 +133,12 @@ function showConflicts(actor) {
             var c = kindConfs[i];
             if (c.model === 'policy') {
                 if (c.isWinner) {
-                    out += '  [winner] ' + padRight(c.name, 16) + ' ' + padRight(c.owner, 24) + ' (shadows ' + c.shadows + ')\r\n';
+                    out += '  [winner] ' + registryPad(c.name, 16) + ' ' + registryPad(c.owner, 24) + ' (shadows ' + c.shadows + ')\r\n';
                 } else {
-                    out += '  [shadow] ' + padRight(c.name, 16) + ' ' + padRight(c.owner, 24) + ' (shadowed by ' + c.shadowedBy + ')\r\n';
+                    out += '  [shadow] ' + registryPad(c.name, 16) + ' ' + registryPad(c.owner, 24) + ' (shadowed by ' + c.shadowedBy + ')\r\n';
                 }
             } else {
-                out += '  [ambig ] ' + padRight(c.name, 16) + ' ' + padRight(c.owner, 24) + ' (also: ' + c.ambiguousOwners.join(', ') + ')\r\n';
+                out += '  [ambig ] ' + registryPad(c.name, 16) + ' ' + registryPad(c.owner, 24) + ' (also: ' + c.ambiguousOwners.join(', ') + ')\r\n';
             }
         }
     }
@@ -175,7 +175,7 @@ function showLevel1(actor, kind, model) {
         } else if (e.isOverride) {
             note = ' (overrides kernel)';
         }
-        out += '  ' + padRight(e.name, 16) + ' ' + padRight(e.owner, 24) + note + '\r\n';
+        out += '  ' + registryPad(e.name, 16) + ' ' + registryPad(e.owner, 24) + note + '\r\n';
     }
 
     if (model === 'namespaced') {
@@ -218,7 +218,7 @@ function showLevel2orFilter(actor, kind, detail, model) {
     for (var i = 0; i < winners.length; i++) {
         var e = winners[i];
         var note = e.shadows ? ' ! shadows ' + e.shadows : '';
-        out += '  ' + padRight(e.name, 16) + ' ' + padRight(e.owner, 24) + note + '\r\n';
+        out += '  ' + registryPad(e.name, 16) + ' ' + registryPad(e.owner, 24) + note + '\r\n';
     }
     actor.send(out);
 }
@@ -285,7 +285,10 @@ function showLevel2(actor, kind, name, entries, model) {
     actor.send(out);
 }
 
-function padRight(str, len) {
+// Unique name: a bare `padRight` collides with groups.js's same-named global in
+// the shared pack realm (its version truncates via substring), which silently cut
+// every registry name to the column width. Keep this local and pad-only.
+function registryPad(str, len) {
     var s = String(str);
     while (s.length < len) { s += ' '; }
     return s;
