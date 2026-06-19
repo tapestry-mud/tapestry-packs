@@ -1,3 +1,4 @@
+import * as tapestry from "@tapestry/engine";
 // Example command: registers "hello" with an alias "hi".
 // Try: hello, hello world, hi
 tapestry.commands.register({

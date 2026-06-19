@@ -1,3 +1,4 @@
+import * as tapestry from "@tapestry/engine";
 // packs/tapestry-core/scripts/races/human.js
 tapestry.races.register({
     id: "human",

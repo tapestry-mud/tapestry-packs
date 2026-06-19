@@ -19,5 +19,6 @@ content:
   rooms: "areas/**/rooms/*.yaml"
   items: "areas/**/items/*.yaml"
   mobs: "areas/**/mobs/*.yaml"
-  scripts: "scripts/**/*.js"
+  scripts: "dist/scripts/**/*.js"
+  scripts_format: esm
   help: "help/**/*.yaml"

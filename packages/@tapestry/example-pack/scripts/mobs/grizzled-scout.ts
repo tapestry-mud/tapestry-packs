@@ -1,6 +1,7 @@
+import * as tapestry from "@tapestry/engine";
 // Demo of the mob behavior hook seam: onLook / onAttack / onDeath.
 // Look at the scout, attack it, then kill it to watch each hook fire.
-tapestry.mobs.registerScript("tapestry-example-pack:grizzled-scout", {
+(tapestry.mobs as any).registerScript("tapestry-example-pack:grizzled-scout", {
     // mob = { entityId, name, roomId }, player = { entityId, name }
     onLook: function(mob, player) {
         tapestry.mobs.command(mob.entityId, "emote looks up and meets your gaze.");

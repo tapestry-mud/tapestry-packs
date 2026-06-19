@@ -1,3 +1,4 @@
+import * as tapestry from "@tapestry/engine";
 // packs/tapestry-core/scripts/classes/mage.js
 tapestry.classes.register({
     id: "mage",

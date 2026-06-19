@@ -1,3 +1,4 @@
+import * as tapestry from "@tapestry/engine";
 tapestry.races.register({
     id: "elf",
     name: "Elf",

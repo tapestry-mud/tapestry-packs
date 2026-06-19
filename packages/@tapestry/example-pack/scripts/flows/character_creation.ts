@@ -1,3 +1,4 @@
+import * as tapestry from "@tapestry/engine";
 // packs/tapestry-core/scripts/flows/character_creation.js
 
 var CORE_GENDER_OPTIONS = [
