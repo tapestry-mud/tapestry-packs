@@ -9,7 +9,7 @@ last-updated: 2026-06-13
 
 Bootstrap registrations and lifecycle setup performed by the `@tapestry/core`
 pack (load_order 0). On startup the pack registers rarity tiers, essence types,
-and equipment display config via `scripts/init.js`, wires event listeners for
+and equipment display config via `scripts/init.ts`, wires event listeners for
 corpse decay and player login messages, declares 16 equipment slots, defines the
 `temperate` weather zone with full state-transition tables and terrain-specific
 flavor text, and seeds the engine with MOTD data files and a two-room core area
@@ -36,38 +36,38 @@ flavor text, and seeds the engine with MOTD data files and a two-room core area
 
 - Six tiers are registered in ascending order (0-5): `common`, `uncommon`,
   `rare`, `epic`, `artifact`, `ooak`.
-  (packages/@tapestry/core/scripts/init.js:4)
+  (packages/@tapestry/core/scripts/init.ts:4)
 - `common` (order 0) has no display text, no decorators, color `white`, and
   `visible: false`; it is intentionally invisible in item labels.
-  (packages/@tapestry/core/scripts/init.js:4)
+  (packages/@tapestry/core/scripts/init.ts:4)
 - `uncommon` (order 1) through `epic` (order 3) share the decorator pair
   `left: '-= '` / `right: ' =-'`. Colors are `white`, `green`, and `cyan`
   respectively.
-  (packages/@tapestry/core/scripts/init.js:5)
+  (packages/@tapestry/core/scripts/init.ts:5)
 - `artifact` (order 4) and `ooak` (order 5) use the heavier decorator pair
   `left: '-=='` / `right: '==-'` and both use color `yellow`.
-  (packages/@tapestry/core/scripts/init.js:8)
+  (packages/@tapestry/core/scripts/init.ts:8)
 - `ooak` ("One of a Kind") overrides the HTML class to
   `text-ansi-bright-magenta` despite sharing the terminal color `yellow` with
   `artifact`.
-  (packages/@tapestry/core/scripts/init.js:9)
+  (packages/@tapestry/core/scripts/init.ts:9)
 - All tiers from `uncommon` upward set `visible: true`.
-  (packages/@tapestry/core/scripts/init.js:5)
+  (packages/@tapestry/core/scripts/init.ts:5)
 
 ### Essence types (init.js)
 
 - Four essences are registered: `fire`, `shadow`, `storm`, `earth`.
-  (packages/@tapestry/core/scripts/init.js:11)
+  (packages/@tapestry/core/scripts/init.ts:11)
 - Glyphs: fire `^`, shadow `~`, storm `*`, earth `#`.
-  (packages/@tapestry/core/scripts/init.js:11)
+  (packages/@tapestry/core/scripts/init.ts:11)
 - Terminal colors: fire `red`, shadow `magenta`, storm `cyan`, earth `yellow`.
-  (packages/@tapestry/core/scripts/init.js:11)
+  (packages/@tapestry/core/scripts/init.ts:11)
 
 ### Equipment display config (init.js)
 
 - `tapestry.equipment.setEmptyText('-nothing-')` is called during init; the
   string `-nothing-` appears in the equipment list for any slot that is unoccupied.
-  (packages/@tapestry/core/scripts/init.js:16)
+  (packages/@tapestry/core/scripts/init.ts:16)
 
 ### Equipment slots (equipment_slots.yaml)
 
@@ -98,26 +98,26 @@ flavor text, and seeds the engine with MOTD data files and a two-room core area
 ### Decay events (decay-events.js)
 
 - A listener is registered on the `corpse.decayed` engine event.
-  (packages/@tapestry/core/scripts/decay-events.js:2)
+  (packages/@tapestry/core/scripts/decay-events.ts:2)
 - When the event fires with a non-empty `itemIds` array and a valid `roomId`,
   the message "Its belongings scatter to the ground." is broadcast to the room.
-  (packages/@tapestry/core/scripts/decay-events.js:6)
+  (packages/@tapestry/core/scripts/decay-events.ts:6)
 - If `roomId` is absent or `itemIds` is empty the handler exits silently.
-  (packages/@tapestry/core/scripts/decay-events.js:6)
+  (packages/@tapestry/core/scripts/decay-events.ts:6)
 
 ### Login messages (login-messages.js)
 
 - A listener is registered on the `player.login` engine event.
-  (packages/@tapestry/core/scripts/login-messages.js:1)
+  (packages/@tapestry/core/scripts/login-messages.ts:1)
 - The handler reads `playerName` from `event.data` and resolves the entity's
   current room via `tapestry.world.getEntityRoomId(entityId)`.
-  (packages/@tapestry/core/scripts/login-messages.js:3)
+  (packages/@tapestry/core/scripts/login-messages.ts:3)
 - If either `entityId` or `name` is missing, or if the entity has no room, the
   handler returns without emitting any message.
-  (packages/@tapestry/core/scripts/login-messages.js:5)
+  (packages/@tapestry/core/scripts/login-messages.ts:5)
 - On a valid login, the message "<name> materializes from the threads of the
   Pattern." is sent to everyone in the room except the logging-in player.
-  (packages/@tapestry/core/scripts/login-messages.js:10)
+  (packages/@tapestry/core/scripts/login-messages.ts:10)
 
 ### Core area and rooms
 

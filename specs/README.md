@@ -10,12 +10,12 @@ agent or contributor answers "how does X behave?" from the relevant file alone.
 | Capability | File | Last Updated |
 |------------|------|--------------|
 | biomes | [biomes.md](biomes.md) | 2026-06-13 |
-| cooking | [cooking.md](cooking.md) | 2026-06-13 |
+| cooking | [cooking.md](cooking.md) | 2026-06-20 |
 | socials | [socials.md](socials.md) | 2026-06-13 |
 | example-pack | [example-pack.md](example-pack.md) | 2026-06-13 |
-| survival | [survival.md](survival.md) | 2026-06-13 |
-| tinkers | [tinkers.md](tinkers.md) | 2026-06-13 |
-| builder | [builder.md](builder.md) | 2026-06-17 |
+| survival | [survival.md](survival.md) | 2026-06-20 |
+| tinkers | [tinkers.md](tinkers.md) | 2026-06-20 |
+| builder | [builder.md](builder.md) | 2026-06-20 |
 | viewer | [viewer.md](viewer.md) | 2026-06-13 |
 | core-init | [core-init.md](core-init.md) | 2026-06-13 |
 | core-admin | [core-admin.md](core-admin.md) | 2026-06-19 |
@@ -26,8 +26,8 @@ agent or contributor answers "how does X behave?" from the relevant file alone.
 | core-inventory | [core-inventory.md](core-inventory.md) | 2026-06-13 |
 | core-economy | [core-economy.md](core-economy.md) | 2026-06-13 |
 | core-mobs | [core-mobs.md](core-mobs.md) | 2026-06-13 |
-| core-groups | [core-groups.md](core-groups.md) | 2026-06-13 |
-| core-progression | [core-progression.md](core-progression.md) | 2026-06-13 |
+| core-groups | [core-groups.md](core-groups.md) | 2026-06-20 |
+| core-progression | [core-progression.md](core-progression.md) | 2026-06-20 |
 | Validation Ledger | [validation-ledger.md](validation-ledger.md) | 2026-06-13 |
 | Command Help Content | [command-help-content.md](command-help-content.md) | 2026-06-17 |
 

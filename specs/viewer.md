@@ -29,8 +29,8 @@ rules. (packages/@tapestry/viewer/pack.yaml:15-17)
 
 - The pack registers two commands, `tell` (alias `t`) and `reply` (alias `r`), both with
   `override: true`, replacing the equivalents shipped by `@tapestry/core`.
-  (packages/@tapestry/viewer/scripts/commands/tell.js:7-9;
-  packages/@tapestry/viewer/scripts/commands/reply.js:5-7)
+  (packages/@tapestry/viewer/scripts/commands/tell.ts:7-9;
+  packages/@tapestry/viewer/scripts/commands/reply.ts:5-7)
 
 - Before sending, `tell` checks three world-property guards: `notell` on the sender
   blocks the command with "You cannot send tells right now."; `nochannels` on the sender
@@ -38,45 +38,45 @@ rules. (packages/@tapestry/viewer/pack.yaml:15-17)
   with "[target.name] is not accepting tells right now." All three guard lines go through
   plain `actor.send`, not `sendPrivate`, so spectators can see them -- they are not DM
   content.
-  (packages/@tapestry/viewer/scripts/commands/tell.js:22-35)
+  (packages/@tapestry/viewer/scripts/commands/tell.ts:22-35)
 
 - The two DM-content writes in `tell` -- the confirmation to the sender and the message
   to the recipient -- both call `sendPrivate`, which suppresses broadcast to `/watch`
   spectators. This is the privacy seam.
-  (packages/@tapestry/viewer/scripts/commands/tell.js:37-38)
+  (packages/@tapestry/viewer/scripts/commands/tell.ts:37-38)
 
 - GMCP is sent to the recipient via `tapestry.gmcp.send` after the `sendPrivate` calls.
   Because GMCP goes directly to a specific client rather than through the broadcast tap,
   it is private regardless of whether `sendPrivate` or `send` was used for the text
   output.
-  (packages/@tapestry/viewer/scripts/commands/tell.js:39)
+  (packages/@tapestry/viewer/scripts/commands/tell.ts:39)
 
 - After a successful tell, two world properties are updated: `last_tell_from` on the
   target (set to the sender's entity ID) and `last_tell_to` on the sender (set to the
   target's player ID). These track the conversation for the `reply` shortcut.
-  (packages/@tapestry/viewer/scripts/commands/tell.js:41-42)
+  (packages/@tapestry/viewer/scripts/commands/tell.ts:41-42)
 
 - `reply` resolves the `last_tell_from` property on the actor to find the target; if no
   property exists, it returns "You have no one to reply to." If the player is no longer
   online (not found in `getOnlinePlayers()`), it returns "That player is no longer
   online." The reply target does not persist across sessions (the property is not
   restored on login -- the help text states it resets each session).
-  (packages/@tapestry/viewer/scripts/commands/reply.js:18-36;
+  (packages/@tapestry/viewer/scripts/commands/reply.ts:18-36;
   packages/@tapestry/viewer/help/reply.yaml:13-16)
 
 - `reply` checks `notell` on the actor before sending. It does NOT re-check `nochannels`
   or `notell` on the target at reply time; those checks are only in `tell`.
-  (packages/@tapestry/viewer/scripts/commands/reply.js:38-41)
+  (packages/@tapestry/viewer/scripts/commands/reply.ts:38-41)
 
 - The two DM-content writes in `reply` use `sendPrivate` with the same suppression
   policy as `tell`. Guard lines use plain `actor.send`.
-  (packages/@tapestry/viewer/scripts/commands/reply.js:43-44)
+  (packages/@tapestry/viewer/scripts/commands/reply.ts:43-44)
 
 - UNVERIFIED: The `sendPrivate` method is the engine's per-write broadcast suppression
   seam. The spec asserts it suppresses output to `/watch` spectators on a per-call
   basis. This behavior is described in source comments and help text but the engine
   implementation is not present in this repository for direct verification.
-  (packages/@tapestry/viewer/scripts/commands/tell.js:1-4;
+  (packages/@tapestry/viewer/scripts/commands/tell.ts:1-4;
   packages/@tapestry/viewer/pack.yaml:6-10)
 
 - The help documents for both commands carry `override: true`, matching the command

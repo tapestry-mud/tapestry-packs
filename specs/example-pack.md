@@ -32,67 +32,67 @@ to NPC entities) -- used to attach dialogue script references to vendor and ques
 
 - The warrior class is registered with id `warrior`, track `combat`, and tagline "Master of
   arms and armor". It is allowed for races with category `human` or `elf` and all three
-  genders. (packages/@tapestry/example-pack/scripts/classes/warrior.js:2-11)
+  genders. (packages/@tapestry/example-pack/scripts/classes/warrior.ts:2-11)
 
 - Warrior stat growth is `2d6+2` max_hp (boosted by constitution) and `1d4` max_movement
-  (boosted by dexterity). (packages/@tapestry/example-pack/scripts/classes/warrior.js:13-19)
+  (boosted by dexterity). (packages/@tapestry/example-pack/scripts/classes/warrior.ts:13-19)
 
 - The warrior ability path unlocks: dodge (L1), kick (L3), parry (L5), battle_stance (L8),
   bash (L12), second_attack (L18), enhanced_damage (L25). Five trains per level.
-  (packages/@tapestry/example-pack/scripts/classes/warrior.js:21-29)
+  (packages/@tapestry/example-pack/scripts/classes/warrior.ts:21-29)
 
 - The mage class is registered with id `mage`, track `magic`, and tagline "Student of arcane
   forces". It is allowed for races with category `human` or `elf` and all three genders.
-  (packages/@tapestry/example-pack/scripts/classes/mage.js:2-11)
+  (packages/@tapestry/example-pack/scripts/classes/mage.ts:2-11)
 
 - Mage stat growth is `1d6` max_hp (boosted by constitution) and `2d4+1` max_resource
-  (boosted by intelligence). (packages/@tapestry/example-pack/scripts/classes/mage.js:13-19)
+  (boosted by intelligence). (packages/@tapestry/example-pack/scripts/classes/mage.ts:13-19)
 
 - The mage ability path unlocks: cure_light (L1), fireball (L3), shield (L5), blindness
   (L10), poison (L15), second_cast (L20). Five trains per level.
-  (packages/@tapestry/example-pack/scripts/classes/mage.js:21-28)
+  (packages/@tapestry/example-pack/scripts/classes/mage.ts:21-28)
 
 ### Races
 
 - The human race is registered with id `human`, race_category `human`, and tagline
   "Adaptable and ambitious". All six primary stat caps are 25, with max_hp cap 18,
   max_resource cap 18, max_movement cap 16. Cast cost modifier: -10.
-  (packages/@tapestry/example-pack/scripts/races/human.js:2-22)
+  (packages/@tapestry/example-pack/scripts/races/human.ts:2-22)
 
 - The elf race is registered with id `elf`, race_category `elf`, and tagline "Graceful and
   attuned to magic". Elves have higher caps for intelligence (28), wisdom (27), and
   dexterity (28), but lower constitution (20) and max_hp cap (16) compared to humans.
   Max_resource cap is 22 and max_movement cap is 18. Cast cost modifier: -15.
-  (packages/@tapestry/example-pack/scripts/races/elf.js:1-21)
+  (packages/@tapestry/example-pack/scripts/races/elf.ts:1-21)
 
 ### Character Creation Flow
 
 - A flow is registered with id `character_creation`, triggered on `new_player_connect`. The
   wizard surface shows three labeled steps: Race, Gender, Class.
-  (packages/@tapestry/example-pack/scripts/flows/character_creation.js:24-32)
+  (packages/@tapestry/example-pack/scripts/flows/character_creation.ts:24-32)
 
 - Step order: welcome (info text), race (choice), gender (choice), class (choice). No
   `on_complete` handler; the engine seeds starting alignment automatically at flow
-  completion. (packages/@tapestry/example-pack/scripts/flows/character_creation.js:33-92)
+  completion. (packages/@tapestry/example-pack/scripts/flows/character_creation.ts:33-92)
 
 - The race step calls `tapestry.races.getAll()` and maps the live registry to options, so it
   reflects whatever races are loaded at runtime rather than a hardcoded list.
-  (packages/@tapestry/example-pack/scripts/flows/character_creation.js:44-56)
+  (packages/@tapestry/example-pack/scripts/flows/character_creation.ts:44-56)
 
 - The class step calls `tapestry.classes.getEligibleClasses({ race, gender })` after race and
   gender are set, filtering classes by `allowed_categories` and `allowed_genders`.
-  (packages/@tapestry/example-pack/scripts/flows/character_creation.js:73-88)
+  (packages/@tapestry/example-pack/scripts/flows/character_creation.ts:73-88)
 
 - Three gender options are defined as a module-level constant: male (he/him), female
   (she/her), and other (they/them). NPC address style is documented inline per option.
-  (packages/@tapestry/example-pack/scripts/flows/character_creation.js:3-22)
+  (packages/@tapestry/example-pack/scripts/flows/character_creation.ts:3-22)
 
 ### Hello Command
 
 - Registers a command with name `hello`, alias `hi`, category `social`, role `player`. An
   optional `target` text argument defaults to the string `'world'` when omitted. The actor
   receives "Hello, \<target\>!" and the room receives "\<actor\> says hello to \<target\>."
-  (packages/@tapestry/example-pack/scripts/commands/hello.js:3-17)
+  (packages/@tapestry/example-pack/scripts/commands/hello.ts:3-17)
 
 ### Mob Scripts
 
@@ -101,12 +101,12 @@ to NPC entities) -- used to attach dialogue script references to vendor and ques
   the looking player. `onAttack` fires a `say` naming the attacker (or "someone" if
   unresolved). `onDeath` sends a message directly to the room via `tapestry.world.sendToRoom`
   because the entity is already gone at death time and `mob.entityId` is unavailable.
-  (packages/@tapestry/example-pack/scripts/mobs/grizzled-scout.js:3-22)
+  (packages/@tapestry/example-pack/scripts/mobs/grizzled-scout.ts:3-22)
 
 - The guide script (`tapestry-example-pack:guide`) implements `onSay` keyword dispatch:
   greets on help/hello/hi; directs to the blacksmith ("just south") on weapon/equipment/
   blacksmith keywords; directs to the inn ("to the north") on inn/rest/sleep keywords.
-  (packages/@tapestry/example-pack/scripts/mobs/guide.js:1-25)
+  (packages/@tapestry/example-pack/scripts/mobs/guide.ts:1-25)
 
 ### Areas
 

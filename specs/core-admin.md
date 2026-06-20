@@ -24,8 +24,8 @@ setclass, settrainable), access control (grantrole, revokerole, wizlock), and ob
 ### Admin gate
 
 - Every command in this capability is registered with `admin: true`; non-admins cannot
-  invoke any of them. (packages/@tapestry/core/scripts/commands/admin-set.js:116-120;
-  packages/@tapestry/core/scripts/commands/admin-spawn.js:1-6;
+  invoke any of them. (packages/@tapestry/core/scripts/commands/admin-set.ts:116-120;
+  packages/@tapestry/core/scripts/commands/admin-spawn.ts:1-6;
   packages/@tapestry/core/help/admin.yaml:9)
 
 ### set -- attribute modification
@@ -34,45 +34,45 @@ setclass, settrainable), access control (grantrole, revokerole, wizlock), and ob
   subsystem ops that are not stored properties: player alignment, six core stats (str, int,
   wis, dex, con, luck), vital caps (hp, mana, mv), ability proficiency (prof), training cap
   (cap), gold, and NPC hp. These bypass the registry and call subsystem APIs directly.
-  (packages/@tapestry/core/scripts/commands/admin-set.js:52-114)
+  (packages/@tapestry/core/scripts/commands/admin-set.ts:52-114)
 - All non-retained combinations fall through to `tapestry.admin.set.dispatch`, which is the
   engine's registry-driven path for declared attributes and panels.
-  (packages/@tapestry/core/scripts/commands/admin-set.js:150-162)
+  (packages/@tapestry/core/scripts/commands/admin-set.ts:150-162)
 - Player target resolution uses exact name match (case-insensitive) against online players;
   NPC and item target resolution uses substring match against the world-wide list.
-  (packages/@tapestry/core/scripts/commands/admin-set.js:9-38)
+  (packages/@tapestry/core/scripts/commands/admin-set.ts:9-38)
 - Vital-cap ops (hp, mana, mv) enforce a minimum of 1; values below 1 are rejected.
-  (packages/@tapestry/core/scripts/commands/admin-set.js:69-71)
+  (packages/@tapestry/core/scripts/commands/admin-set.ts:69-71)
 - `set player gold` accepts 0 but rejects negative values; uses `tapestry.currency.setGold`
-  with the reason tag `admin:set`. (packages/@tapestry/core/scripts/commands/admin-set.js:97-104)
+  with the reason tag `admin:set`. (packages/@tapestry/core/scripts/commands/admin-set.ts:97-104)
 - `set player alignment` calls `tapestry.alignment.set` with reason `admin_set` and then
   echoes back the clamped value and bucket label.
-  (packages/@tapestry/core/scripts/commands/admin-set.js:53-61)
+  (packages/@tapestry/core/scripts/commands/admin-set.ts:53-61)
 - `set npc hp` sets both current and max hp via `tapestry.admin.setEntityHp`.
-  (packages/@tapestry/core/scripts/commands/admin-set.js:106-113)
+  (packages/@tapestry/core/scripts/commands/admin-set.ts:106-113)
 - `set player cap` accepts exactly four tier keywords: novice, apprentice, journeyman, master.
-  (packages/@tapestry/core/scripts/commands/admin-set.js:83-95)
+  (packages/@tapestry/core/scripts/commands/admin-set.ts:83-95)
 
 ### grant -- progression and currency awards
 
 - `grant` dispatches to `tapestry.admin.grant.dispatch` using a `[kind, type, target, ...rest]`
   args array; the three built-in registrations cover `player xp`, `player train`, and
-  `player gold`. (packages/@tapestry/core/scripts/commands/admin-grant.js:18-20)
+  `player gold`. (packages/@tapestry/core/scripts/commands/admin-grant.ts:18-20)
 - `grant player xp [target] [amount] [track]` awards XP via `tapestry.progression.grant`;
-  track defaults to `'combat'`. (packages/@tapestry/core/scripts/commands/admin-grant.js:24-42)
+  track defaults to `'combat'`. (packages/@tapestry/core/scripts/commands/admin-grant.ts:24-42)
 - `grant player train [target] [amount]` awards training sessions via
-  `tapestry.training.grantTrains`. (packages/@tapestry/core/scripts/commands/admin-grant.js:44-61)
+  `tapestry.training.grantTrains`. (packages/@tapestry/core/scripts/commands/admin-grant.ts:44-61)
 - `grant player gold [target] [amount]` adds (or subtracts, clamped at 0) gold via
   `tapestry.currency.addGold` with reason `admin:grant`.
-  (packages/@tapestry/core/scripts/commands/admin-grant.js:63-81)
+  (packages/@tapestry/core/scripts/commands/admin-grant.ts:63-81)
 
 ### spawn and loaditem -- entity creation
 
 - `spawn [templateId]` calls `tapestry.mobs.spawnMob(templateId, actor.roomId)` and drops
-  the mob into the admin's current room. (packages/@tapestry/core/scripts/commands/admin-spawn.js:11-18)
+  the mob into the admin's current room. (packages/@tapestry/core/scripts/commands/admin-spawn.ts:11-18)
 - `loaditem [templateId]` calls `tapestry.items.spawnToInventory(templateId, actor.entityId)`,
   placing the item directly into the admin's inventory.
-  (packages/@tapestry/core/scripts/commands/admin-loaditem.js:11-18)
+  (packages/@tapestry/core/scripts/commands/admin-loaditem.ts:11-18)
 - Both commands report "Unknown template" on failure; neither emits a world message.
 
 ### purge and restore -- room/vitals reset
@@ -80,10 +80,10 @@ setclass, settrainable), access control (grantrole, revokerole, wizlock), and ob
 - `purge [npc|items|all]` removes entities from the admin's current room via
   `tapestry.world.purgeEntities(actor.roomId, filter)`. The input keyword `items` is
   normalized to `'item'` before dispatch; default (no arg) is `'all'`.
-  (packages/@tapestry/core/scripts/commands/admin-purge.js:10-19)
+  (packages/@tapestry/core/scripts/commands/admin-purge.ts:10-19)
 - `restore [target|all]` calls `tapestry.stats.restoreVitals` and notifies the target with
   "You feel completely restored." `restore all` iterates all online players.
-  (packages/@tapestry/core/scripts/commands/admin-restore.js:10-27)
+  (packages/@tapestry/core/scripts/commands/admin-restore.ts:10-27)
 
 ### peace -- end room combat
 
@@ -91,26 +91,26 @@ setclass, settrainable), access control (grantrole, revokerole, wizlock), and ob
   `tapestry.combat.removeFromAllCombat` on any combatant, and broadcasts
   "Peace settles over the room." when at least one combatant was cleared. Reports
   "The room is already at peace." if none were in combat.
-  (packages/@tapestry/core/scripts/commands/admin-peace.js:11-26)
+  (packages/@tapestry/core/scripts/commands/admin-peace.ts:11-26)
 
 ### teleport, at, force -- movement and command injection
 
 - `teleport [player] [roomId]` (alias: `tp`) resolves the target by exact name among online
   players, validates the destination room via `tapestry.world.getRoomName`, and moves the
   player via `tapestry.world.teleportEntity`.
-  (packages/@tapestry/core/scripts/commands/admin-teleport.js:12-44)
+  (packages/@tapestry/core/scripts/commands/admin-teleport.ts:12-44)
 - `at [target] [command]` accepts a player name or literal room ID as target. It silently
   teleports the admin to the destination, executes the command as the admin via
   `tapestry.admin.executeAs`, then teleports the admin back home. The return teleport fires
   unconditionally even if the executed command itself moved the admin.
-  (packages/@tapestry/core/scripts/commands/admin-at.js:29-53)
+  (packages/@tapestry/core/scripts/commands/admin-at.ts:29-53)
 - `at` teleports are invisible to other room occupants; only mob-AI occupancy tracking and
-  the actor's own GMCP update fire. (packages/@tapestry/core/scripts/commands/admin-at.js:7-14)
+  the actor's own GMCP update fire. (packages/@tapestry/core/scripts/commands/admin-at.ts:7-14)
 - `force [target] [command]` can target online players or room-local NPCs. Admins cannot
   force another admin (checked via `tapestry.world.hasRole`). The forced target is notified
   with "X forces you to '...' " before the command output runs (matching ROM notify-before-execute
   order). NPC force uses `tapestry.mobs.command` rather than `executeAs`.
-  (packages/@tapestry/core/scripts/commands/admin-force.js:18-45)
+  (packages/@tapestry/core/scripts/commands/admin-force.ts:18-45)
 
 ### inspect -- deep entity/room/area view
 
@@ -118,50 +118,50 @@ setclass, settrainable), access control (grantrole, revokerole, wizlock), and ob
   only) and prints: name, class, race, level, six core stats, vitals, gold, hunger tier,
   per-track levels, per-ability proficiency, entity tags (unregistered tags marked), equipped
   items, inventory, all properties with registry type annotations, and alignment with last-5
-  history. (packages/@tapestry/core/scripts/commands/admin-inspect.js:7-137)
+  history. (packages/@tapestry/core/scripts/commands/admin-inspect.ts:7-137)
 - `inspect room [id]` displays room name, description, area, biome, terrain, non-biome flags,
   extra properties, exits, and current occupants. Omitting `id` inspects the admin's current
-  room. (packages/@tapestry/core/scripts/commands/admin-inspect.js:139-210)
+  room. (packages/@tapestry/core/scripts/commands/admin-inspect.ts:139-210)
 - `inspect area [id]` shows area name, short, description, theme, lore, level range, reset
   interval, and a three-state provenance label: `[authored]`, `[pack]`, or `[pack +edits]`.
-  (packages/@tapestry/core/scripts/commands/admin-inspect.js:212-234)
+  (packages/@tapestry/core/scripts/commands/admin-inspect.ts:212-234)
 - `inspect` cannot bypass visibility; hidden entities must be targeted by raw ID as a
-  workaround. (packages/@tapestry/core/scripts/commands/admin-inspect.js:3-4)
+  workaround. (packages/@tapestry/core/scripts/commands/admin-inspect.ts:3-4)
 - Unregistered properties appear with `(unregistered)` type annotation; unregistered tags are
   shown with the suffix ` (unregistered)`.
-  (packages/@tapestry/core/scripts/commands/admin-inspect.js:109-111; packages/@tapestry/core/scripts/commands/admin-inspect.js:83-86)
+  (packages/@tapestry/core/scripts/commands/admin-inspect.ts:109-111; packages/@tapestry/core/scripts/commands/admin-inspect.ts:83-86)
 
 ### whereis, mwhere, owhere -- entity location lookup
 
 - `whereis [keyword]` searches all entity types; `mwhere` filters to NPCs; `owhere` filters
   to `item` and `container` types. All three use `tapestry.world.findEntitiesByName` and
   display room name, room ID, and holder name for carried items.
-  (packages/@tapestry/core/scripts/commands/admin-whereis.js:5-76)
+  (packages/@tapestry/core/scripts/commands/admin-whereis.ts:5-76)
 - Results are capped at 100 with a "refine the keyword" prompt on overflow.
-  (packages/@tapestry/core/scripts/commands/admin-whereis.js:17-42)
+  (packages/@tapestry/core/scripts/commands/admin-whereis.ts:17-42)
 
 ### templates and abilities -- registry listing
 
 - `templates [keyword]` calls `tapestry.world.searchTemplates` and lists matching templates
   with kind, ID, display name, and live instance count. Keyword `'all'` lists everything.
-  Results are capped at 100. (packages/@tapestry/core/scripts/commands/admin-templates.js:5-30)
+  Results are capped at 100. (packages/@tapestry/core/scripts/commands/admin-templates.ts:5-30)
 - `abilities [keyword]` (alias: `slookup`) calls `tapestry.abilities.search` and lists
   matching abilities with ID, name, type, category, and pack label. Capped at 100.
-  (packages/@tapestry/core/scripts/commands/admin-abilities.js:4-31)
+  (packages/@tapestry/core/scripts/commands/admin-abilities.ts:4-31)
 
 ### tags -- live tag management
 
 - `tags list [entity]` shows tags, keywords, roles, and disposition on a room-visible entity.
-  (packages/@tapestry/core/scripts/commands/admin-tags.js:41-70)
+  (packages/@tapestry/core/scripts/commands/admin-tags.ts:41-70)
 - `tags search [tag]` lists up to 50 entities carrying the tag across the world.
-  (packages/@tapestry/core/scripts/commands/admin-tags.js:72-94)
+  (packages/@tapestry/core/scripts/commands/admin-tags.ts:72-94)
 - `tags add [entity] [tag]` adds a tag to a room-visible entity; refuses unregistered tags
   unless `--force` is supplied. Pack context is inferred from the entity's templateId prefix.
-  (packages/@tapestry/core/scripts/commands/admin-tags.js:96-133)
+  (packages/@tapestry/core/scripts/commands/admin-tags.ts:96-133)
 - `tags remove [entity] [tag]` removes a tag and reports whether the entity actually had it.
-  (packages/@tapestry/core/scripts/commands/admin-tags.js:135-156)
+  (packages/@tapestry/core/scripts/commands/admin-tags.ts:135-156)
 - `tags validate` scans all loaded entities and reports any that carry unregistered tags
-  (world-wide; limit 100 issues reported). (packages/@tapestry/core/scripts/commands/admin-tags.js:153-195)
+  (world-wide; limit 100 issues reported). (packages/@tapestry/core/scripts/commands/admin-tags.ts:153-195)
 - The `tags registry` subcommand was removed; the registry browser now lives under the
   top-level `registry` command (`registry tag`). See the registry section below.
 
@@ -170,67 +170,67 @@ setclass, settrainable), access control (grantrole, revokerole, wizlock), and ob
 - `registry` is a three-level browser over the engine's `tapestry.registry.*` interop. With
   no argument it renders a Level 0 summary - every kind with its registration count and a
   conflict flag as a width-fit chip grid (`tapestry.ui.panel`), property and tag flagged as
-  the namespaced model. (packages/@tapestry/core/scripts/commands/admin-registry.js:6-46;
-  packages/@tapestry/core/scripts/commands/admin-registry.js:65-110)
+  the namespaced model. (packages/@tapestry/core/scripts/commands/admin-registry.ts:6-46;
+  packages/@tapestry/core/scripts/commands/admin-registry.ts:65-110)
 - `registry <kind>` lists that kind's winners with shadow markers (Level 1); `registry
   <kind> <name>` shows the full ledger for one name - the winner's source location and, for
   an override, the shadowed loser it beat (Level 2).
-  (packages/@tapestry/core/scripts/commands/admin-registry.js:148-185;
-  packages/@tapestry/core/scripts/commands/admin-registry.js:226-285)
+  (packages/@tapestry/core/scripts/commands/admin-registry.ts:148-185;
+  packages/@tapestry/core/scripts/commands/admin-registry.ts:226-285)
 - `registry conflicts` is the cross-kind view of every name with more than one claimant;
   `registry <kind> <text>` filters a kind by name or owner; an unknown kind prints the valid
   kinds read from the summary, not a hardcoded list.
-  (packages/@tapestry/core/scripts/commands/admin-registry.js:18-46;
-  packages/@tapestry/core/scripts/commands/admin-registry.js:112-146)
+  (packages/@tapestry/core/scripts/commands/admin-registry.ts:18-46;
+  packages/@tapestry/core/scripts/commands/admin-registry.ts:112-146)
 - The honesty rule: policy kinds render shadow/override vocabulary; the namespaced kinds
   (property, tag) render ambiguity (a bare name declared by two or more packs). Level 2 for
   property surfaces value type, range, enum, and applies-to.
-  (packages/@tapestry/core/scripts/commands/admin-registry.js:171-184;
-  packages/@tapestry/core/scripts/commands/admin-registry.js:244-270)
+  (packages/@tapestry/core/scripts/commands/admin-registry.ts:171-184;
+  packages/@tapestry/core/scripts/commands/admin-registry.ts:244-270)
 - The command's column helper is named `registryPad` (local, pad-only) rather than a bare
   `padRight`, which collides with groups.js's same-named truncating global in the shared
-  pack realm. (packages/@tapestry/core/scripts/commands/admin-registry.js:288-292)
+  pack realm. (packages/@tapestry/core/scripts/commands/admin-registry.ts:288-292)
 
 ### learn and forget -- ability manipulation
 
 - `learn [entity] [abilityId] [proficiency]` grants an ability via `tapestry.abilities.learn`
   at the specified proficiency percentage. Target may be `self`, the admin's own name, or any
   online player by exact name. The ability must exist in the registry (`tapestry.abilities.getDefinition`);
-  proficiency must be >= 1. (packages/@tapestry/core/scripts/commands/admin-learn.js:1-49)
+  proficiency must be >= 1. (packages/@tapestry/core/scripts/commands/admin-learn.ts:1-49)
 - `forget [entity] [abilityId]` removes an ability via `tapestry.abilities.forget`. Same
   target resolution as `learn`; does not validate whether the entity held the ability.
-  (packages/@tapestry/core/scripts/commands/admin-forget.js:1-36)
+  (packages/@tapestry/core/scripts/commands/admin-forget.ts:1-36)
 
 ### setclass and settrainable -- class and training configuration
 
 - `setclass [player] [classId]` calls `tapestry.classes.setClass(target.id, classId)` for an
   online player; the description states this also grants level-1 abilities, which is expected
   to be a side effect inside the engine call.
-  (packages/@tapestry/core/scripts/commands/admin-setclass.js:30-32)
+  (packages/@tapestry/core/scripts/commands/admin-setclass.ts:30-32)
 - `settrainable [entity] [abilityId] [true|false]` toggles the trainable flag on an ability
   globally via `tapestry.training.setTrainable`. The `entity` argument is accepted and echoed
   in the confirmation but is not used to scope the call -- the flag is engine-wide.
-  (packages/@tapestry/core/scripts/commands/admin-settrainable.js:24-26)
+  (packages/@tapestry/core/scripts/commands/admin-settrainable.ts:24-26)
 
 ### grantrole, revokerole, wizlock -- access control
 
 - `grantrole [player] [role]` and `revokerole [player] [role]` call `tapestry.world.addRole`
   and `tapestry.world.removeRole` respectively; both require the target to be online and use
-  exact name match. (packages/@tapestry/core/scripts/commands/admin-grant-role.js:16-27;
-  packages/@tapestry/core/scripts/commands/admin-revoke-role.js:16-24)
+  exact name match. (packages/@tapestry/core/scripts/commands/admin-grant-role.ts:16-27;
+  packages/@tapestry/core/scripts/commands/admin-revoke-role.ts:16-24)
 - `grant` is already registered by admin-grant.js, so the role commands use the distinct
   names `grantrole` and `revokerole` to avoid boot-time collision.
-  (packages/@tapestry/core/scripts/commands/admin-grant-role.js:1-5)
+  (packages/@tapestry/core/scripts/commands/admin-grant-role.ts:1-5)
 - `wizlock` toggles server-wide admin-only login enforcement via `tapestry.admin.setWizlock`.
-  The state resets on reboot (runtime-only). (packages/@tapestry/core/scripts/commands/admin-wizlock.js:7-14)
+  The state resets on reboot (runtime-only). (packages/@tapestry/core/scripts/commands/admin-wizlock.ts:7-14)
 
 ### snoop -- player observation
 
 - `snoop [player]` mirrors an online player's output to the admin via `tapestry.watch.start`.
   `snoop off` (or `snoop stop`) ends the session via `tapestry.watch.stop`.
-  (packages/@tapestry/core/scripts/commands/snoop.js:12-18; packages/@tapestry/core/scripts/commands/snoop.js:44-52)
+  (packages/@tapestry/core/scripts/commands/snoop.ts:12-18; packages/@tapestry/core/scripts/commands/snoop.ts:44-52)
 - Admins cannot snoop themselves or another admin (role check via
-  `tapestry.world.getEntityRoles`). (packages/@tapestry/core/scripts/commands/snoop.js:34-46)
+  `tapestry.world.getEntityRoles`). (packages/@tapestry/core/scripts/commands/snoop.ts:34-46)
 
 ## Rejected and Reverted
 

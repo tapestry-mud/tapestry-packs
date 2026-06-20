@@ -17,16 +17,16 @@ regular commands.
 
 - All socials are loaded at startup from
   (packages/@tapestry/core/scripts/socials/socials.yaml) and iterated in
-  (packages/@tapestry/core/scripts/socials/init.js:1-7). A missing or unreadable YAML
+  (packages/@tapestry/core/scripts/socials/init.ts:1-7). A missing or unreadable YAML
   file throws an error and aborts registration.
 
 - Each entry in the YAML is registered as a command with `category: 'social'` and
   `description` set to the entry's `no_target` string.
-  (packages/@tapestry/core/scripts/socials/init.js:8-14)
+  (packages/@tapestry/core/scripts/socials/init.ts:8-14)
 
 - The optional `target` argument resolves against visible entities only (`type: 'visible'`,
   `required: false`). Typing a social alone is valid.
-  (packages/@tapestry/core/scripts/socials/init.js:12-14)
+  (packages/@tapestry/core/scripts/socials/init.ts:12-14)
 
 - Each social defines three message variants per the YAML schema:
   (packages/@tapestry/core/scripts/socials/socials.yaml:1-8)
@@ -40,27 +40,27 @@ regular commands.
   `$n` replaced by "You". The rest of the room receives `no_target_room` with all
   occurrences of `$n` replaced by the player's name and all occurrences of `$mself`
   replaced by the gender-reflexive pronoun.
-  (packages/@tapestry/core/scripts/socials/init.js:22-28)
+  (packages/@tapestry/core/scripts/socials/init.ts:22-28)
 
 - When the player targets themselves, the player sees the `self` string with `$n` -> "You"
   and `$mself` -> reflexive pronoun (single replacement each). The room sees `self_room`
   with global replacement of both tokens.
-  (packages/@tapestry/core/scripts/socials/init.js:31-38)
+  (packages/@tapestry/core/scripts/socials/init.ts:31-38)
 
 - When the player targets another entity, the player sees `targeted` with `$n` -> "You"
   and all `$N` occurrences replaced by the target's name. The room (excluding both actor
   and target) receives `targeted_room` with `$n` -> actor name and `$N` -> target name.
   The target entity receives `targeted_victim` with `$n` -> actor name.
-  (packages/@tapestry/core/scripts/socials/init.js:41-49)
+  (packages/@tapestry/core/scripts/socials/init.ts:41-49)
 
 - Placeholder tokens: `$n` (lowercase) is always the acting player's name (or "You" in
   first-person messages); `$N` (uppercase) is the target entity's name. `$mself` is a
   gender-reflexive pronoun derived from the player's `gender` world property.
-  (packages/@tapestry/core/scripts/socials/init.js:16-17; packages/@tapestry/core/scripts/socials/socials.yaml:5-8)
+  (packages/@tapestry/core/scripts/socials/init.ts:16-17; packages/@tapestry/core/scripts/socials/socials.yaml:5-8)
 
 - The gender-reflexive pronoun resolves as: `gender === 'male'` -> "himself",
   `gender === 'female'` -> "herself", any other value (including absent) -> "themselves".
-  (packages/@tapestry/core/scripts/socials/init.js:16-17)
+  (packages/@tapestry/core/scripts/socials/init.ts:16-17)
 
 - First-person (player-facing) messages substitute the `$n` token with a single literal
   `String.replace('$n', 'You')`, so only the first `$n` occurrence is replaced; this holds
@@ -68,10 +68,10 @@ regular commands.
   single literal replace for `$mself`. The third-person room and victim messages
   (`no_target_room`, `self_room`, `targeted_room`, `targeted_victim`) use global regex
   replacement (`/\$n/g`, `/\$N/g`, `/\$mself/g`). The split is deliberate: "You" appears once
-  in first-person text, while names can recur. (packages/@tapestry/core/scripts/socials/init.js:22;
-  packages/@tapestry/core/scripts/socials/init.js:32; packages/@tapestry/core/scripts/socials/init.js:41;
-  packages/@tapestry/core/scripts/socials/init.js:26; packages/@tapestry/core/scripts/socials/init.js:36;
-  packages/@tapestry/core/scripts/socials/init.js:45; packages/@tapestry/core/scripts/socials/init.js:49)
+  in first-person text, while names can recur. (packages/@tapestry/core/scripts/socials/init.ts:22;
+  packages/@tapestry/core/scripts/socials/init.ts:32; packages/@tapestry/core/scripts/socials/init.ts:41;
+  packages/@tapestry/core/scripts/socials/init.ts:26; packages/@tapestry/core/scripts/socials/init.ts:36;
+  packages/@tapestry/core/scripts/socials/init.ts:45; packages/@tapestry/core/scripts/socials/init.ts:49)
 
 - The help topic `social` (category "social", role "player") describes the system and
   lists available socials. Its keyword list includes: emote, action, gesture, expression,

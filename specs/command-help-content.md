@@ -46,16 +46,16 @@ engine. This spec records only the pack content those gates run against.
 - Command registrations no longer carry `description` or `category` fields. Those fields
   were removed from every registration; the registration keeps only runtime behavior
   (name, aliases, roles, args, gmcp, handler). The player-facing description now lives in
-  the command's help topic. (packages/@tapestry/core/scripts/commands/say.js:1-6)
+  the command's help topic. (packages/@tapestry/core/scripts/commands/say.ts:1-6)
 
 - The strip applies across packs, not just core: the same two fields were removed from
   command registrations in `@tapestry/builder`, `@tapestry/example-pack`,
   `@tapestry/survival`, `@tapestry/viewer`, `@tapestry/cooking`, and `@tapestry/tinkers`.
-  (packages/@tapestry/survival/scripts/commands/eat.js; packages/@tapestry/tinkers/scripts/commands/craft.js)
+  (packages/@tapestry/survival/scripts/commands/eat.ts; packages/@tapestry/tinkers/scripts/commands/craft.ts)
 
 - Social registration was stripped the same way. The init loop no longer sets a `category`
   or a `description` on each social command; those values now come from the per-social help
-  topics. (packages/@tapestry/core/scripts/socials/init.js)
+  topics. (packages/@tapestry/core/scripts/socials/init.ts)
 
 ### One help topic per command (coverage contract)
 
