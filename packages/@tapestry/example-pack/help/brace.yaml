@@ -1,0 +1,15 @@
+id: "brace"
+title: "Brace"
+category: "combat"
+role: "player"
+keywords: [brace, counter, block, swell]
+brief: "Brace yourself to counter a telegraphed swell attack."
+syntax:
+  - "brace"
+body: |
+  Brace is a battle counter. When a boss telegraphs a swell attack,
+  type brace during the window to attempt a counter. The swell clock
+  locks in your response and resolves it at the end of the window.
+
+  Only works during active combat when a swell window is open.
+see_also: [sidestep, combat]
