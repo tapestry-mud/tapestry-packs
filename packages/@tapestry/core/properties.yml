@@ -23,3 +23,116 @@ properties:
     description: "Player is silenced from emotes"
     type: bool
     applies_to: [player]
+
+  # Swell clock dials - declared in core so any pack can build a swell boss on the
+  # core-registered telegraph-rung validator and sidestep/brace counters. The seal accepts
+  # these on npc entities in core and in any pack that depends on core.
+  swell_window:
+    description: "Which info-valve rung opens during a swell window (e.g. telegraph-rung)"
+    type: string
+    applies_to: [npc]
+
+  swell_tell:
+    description: "Tell visibility level: full, shape, or hidden"
+    type: string
+    applies_to: [npc]
+
+  swell_baseline_gap_ticks:
+    description: "Chip-baseline ticks before the next swell begins"
+    type: int
+    applies_to: [npc]
+
+  swell_jitter_ticks:
+    description: "Random +/- tick variance on the baseline gap to prevent scripting"
+    type: int
+    applies_to: [npc]
+
+  swell_telegraph_ticks:
+    description: "Wind-up ticks before the swell window opens"
+    type: int
+    applies_to: [npc]
+
+  swell_window_ticks:
+    description: "Ticks the swell window stays open for a counter attempt"
+    type: int
+    applies_to: [npc]
+
+  swell_mode:
+    description: "Tempo mode applied during the open window (e.g. stretch, hold, wait)"
+    type: string
+    applies_to: [npc]
+
+  swell_line1_id:
+    description: "Internal ID of the first swell move line"
+    type: string
+    applies_to: [npc]
+
+  swell_line1_counter:
+    description: "Counter verb that resolves swell line 1"
+    type: string
+    applies_to: [npc]
+
+  swell_line1_tell_full:
+    description: "Full-tell narration shown to the player when swell line 1 telegraphs"
+    type: string
+    applies_to: [npc]
+
+  swell_line1_tell_shape:
+    description: "Shape-tell narration for swell line 1 (move visible, counter hidden)"
+    type: string
+    applies_to: [npc]
+
+  swell_line2_id:
+    description: "Internal ID of the second swell move line"
+    type: string
+    applies_to: [npc]
+
+  swell_line2_counter:
+    description: "Counter verb that resolves swell line 2"
+    type: string
+    applies_to: [npc]
+
+  swell_line2_tell_full:
+    description: "Full-tell narration shown to the player when swell line 2 telegraphs"
+    type: string
+    applies_to: [npc]
+
+  swell_line2_tell_shape:
+    description: "Shape-tell narration for swell line 2 (move visible, counter hidden)"
+    type: string
+    applies_to: [npc]
+
+  swell_tell_hidden:
+    description: "Narration shown when tell level is hidden and the swell fires"
+    type: string
+    applies_to: [npc]
+
+  swell_chunk_pct:
+    description: "Percent of boss max HP lost when the player counters the swell"
+    type: int
+    applies_to: [npc]
+
+  swell_whiff_pct:
+    description: "Percent of player max HP lost on a wrong counter (whiff)"
+    type: int
+    applies_to: [npc]
+
+  swell_weather_pct:
+    description: "Percent of player max HP lost when nothing is committed (weather)"
+    type: int
+    applies_to: [npc]
+
+  swell_narration_countered:
+    description: "Narration shown when the player counters the swell successfully"
+    type: string
+    applies_to: [npc]
+
+  swell_narration_whiffed:
+    description: "Narration shown when the player commits the wrong counter"
+    type: string
+    applies_to: [npc]
+
+  swell_narration_weathered:
+    description: "Narration shown when the player weathers the swell blow"
+    type: string
+    applies_to: [npc]
