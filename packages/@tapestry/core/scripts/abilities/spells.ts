@@ -209,6 +209,7 @@ tapestry.abilities.register({
 tapestry.commands.register({
     name: "cast",
     aliases: ["c"],
+    pace: 'battle',
     args: {
         spell_and_target: { type: 'text', required: true }
     },
