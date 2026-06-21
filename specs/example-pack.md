@@ -1,6 +1,6 @@
 ---
 capability: example-pack
-last-updated: 2026-06-13
+last-updated: 2026-06-21
 ---
 
 # example-pack
@@ -198,6 +198,13 @@ to NPC entities) -- used to attach dialogue script references to vendor and ques
   cure_light, fireball, shield, blindness, poison, second_cast.
   (packages/@tapestry/example-pack/areas/starter-town/mobs/mage-trainer.yaml)
 
+- The swell-warden (mob_level 8, base_disposition: hostile, behavior: stationary) is the
+  demo swell boss. It carries the `swell_*` dials (a 2-line Telegraph: a scything sweep
+  countered by `sidestep`, a downward crush countered by `brace`, full tell, stretch tempo)
+  and uses the `telegraph-rung` validator and the `sidestep` / `brace` counter verbs
+  provided by `@tapestry/core` 0.1.21 - example-pack no longer ships those itself.
+  (packages/@tapestry/example-pack/areas/starter-town/mobs/swell-warden.yaml:32)
+
 ### Smoke Test
 
 - A pack-level smoke test lives at
@@ -216,4 +223,4 @@ to NPC entities) -- used to attach dialogue script references to vendor and ques
 
 ## Change Log
 
-- None on record.
+- 2026-06-21 [swell-combat-graduation](changes/2026-06-21-swell-combat-graduation.md) - dropped the local swell validator/counters/tune/dials in favor of the core-provided versions; the swell-warden now builds on @tapestry/core 0.1.21

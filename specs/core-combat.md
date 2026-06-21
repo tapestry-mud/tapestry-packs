@@ -1,6 +1,6 @@
 ---
 capability: core-combat
-last-updated: 2026-06-13
+last-updated: 2026-06-21
 ---
 
 # core-combat
@@ -121,6 +121,30 @@ there is no standalone aggro behavior.
   recall room, and publishes a `player.death` event for pack extensions.
   (packages/@tapestry/core/scripts/combat/output.ts:131-185)
 
+### Swell combat content (boss slice 1)
+
+Core supplies the reusable content for the engine swell loop (engine v0.1.41), so
+any pack can build a swell boss as data.
+
+- The `telegraph-rung` window validator is registered through
+  `tapestry.combat.registerWindow`. It is deterministic and decides right-vs-wrong
+  only: an empty committed verb is weathered, a verb matching the locked required
+  counter is countered, anything else is whiffed.
+  (packages/@tapestry/core/scripts/combat/telegraph-rung.ts:5)
+
+- The `sidestep` and `brace` counter verbs are registered `pace: battle`, so the
+  swell clock routes them during an active swell.
+  (packages/@tapestry/core/scripts/commands/counters.ts:5)
+
+- The builder-gated `tune` command (`pace: free`, `builder` role) prints and live-
+  edits a swell boss's dials in memory for playtest; bare `tune` lists the dials
+  to hand-copy back into the mob YAML.
+  (packages/@tapestry/core/scripts/commands/tune.ts:26)
+
+- The full `swell_*` dial property set is declared on npc entities so the seal
+  accepts swell bosses in core and in any pack that depends on core.
+  (packages/@tapestry/core/properties.yml:30)
+
 ## Rejected and Reverted
 
 - `aggro` mob behavior (packages/@tapestry/core/scripts/mobs/behaviors.ts):
@@ -133,4 +157,4 @@ there is no standalone aggro behavior.
 
 ## Change Log
 
-- None on record.
+- 2026-06-21 [swell-combat-graduation](changes/2026-06-21-swell-combat-graduation.md) - the telegraph-rung validator, sidestep/brace counters, the tune dial editor, and the swell_* dial declarations graduated into core from example-pack

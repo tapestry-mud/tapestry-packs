@@ -12,7 +12,7 @@ agent or contributor answers "how does X behave?" from the relevant file alone.
 | biomes | [biomes.md](biomes.md) | 2026-06-13 |
 | cooking | [cooking.md](cooking.md) | 2026-06-20 |
 | socials | [socials.md](socials.md) | 2026-06-13 |
-| example-pack | [example-pack.md](example-pack.md) | 2026-06-13 |
+| example-pack | [example-pack.md](example-pack.md) | 2026-06-21 |
 | survival | [survival.md](survival.md) | 2026-06-20 |
 | tinkers | [tinkers.md](tinkers.md) | 2026-06-20 |
 | builder | [builder.md](builder.md) | 2026-06-20 |
@@ -21,7 +21,7 @@ agent or contributor answers "how does X behave?" from the relevant file alone.
 | core-admin | [core-admin.md](core-admin.md) | 2026-06-19 |
 | core-communication | [core-communication.md](core-communication.md) | 2026-06-13 |
 | core-navigation | [core-navigation.md](core-navigation.md) | 2026-06-18 |
-| core-combat | [core-combat.md](core-combat.md) | 2026-06-13 |
+| core-combat | [core-combat.md](core-combat.md) | 2026-06-21 |
 | core-abilities | [core-abilities.md](core-abilities.md) | 2026-06-13 |
 | core-inventory | [core-inventory.md](core-inventory.md) | 2026-06-13 |
 | core-economy | [core-economy.md](core-economy.md) | 2026-06-13 |
