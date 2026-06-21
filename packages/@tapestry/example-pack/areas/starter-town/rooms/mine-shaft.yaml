@@ -10,6 +10,10 @@ exits:
   up: "tapestry-example-pack:mine-entrance"
 properties:
   terrain: underground
+spawns:
+  - mob: "tapestry-example-pack:swell-warden"
+    count: 1
+    tags: [persistent]
 fixtures:
   - "tapestry-example-pack:rusty-dagger"
   - "tapestry-example-pack:iron-chain"

@@ -1,0 +1,63 @@
+id: "tapestry-example-pack:swell-warden"
+name: "the swell warden"
+type: "npc"
+tags: []
+base_disposition: hostile
+keywords: [warden, guardian, swell, creature]
+behavior: stationary
+stats:
+  strength: 16
+  dexterity: 12
+  constitution: 18
+  intelligence: 10
+  wisdom: 8
+  luck: 6
+  max_hp: 200
+  max_resource: 0
+  max_movement: 40
+battle_chance: 0.8
+battle_interval: 3
+properties:
+  mob_level: 8
+  regen_hp: 2
+  regen_movement: 2
+  corpse_decay: 900
+  description: "A massive stone-limbed guardian, etched with runes that pulse faintly in the dark. It does not speak. It simply waits."
+  ac:
+    slash: 7
+    pierce: 6
+    bash: 8
+    exotic: 4
+  xp_value: 350
+  swell_window: "telegraph-rung"
+  swell_tell: "full"
+  swell_baseline_gap_ticks: 60
+  swell_jitter_ticks: 20
+  swell_telegraph_ticks: 20
+  swell_window_ticks: 60
+  swell_mode: "stretch"
+  swell_line1_id: "sweep"
+  swell_line1_counter: "sidestep"
+  swell_line1_tell_full: "The warden winds up a wide, scything SWEEP -- sidestep it!"
+  swell_line1_tell_shape: "The warden winds up a wide, scything SWEEP."
+  swell_line2_id: "crush"
+  swell_line2_counter: "brace"
+  swell_line2_tell_full: "The warden rears back for a downward CRUSH -- brace for it!"
+  swell_line2_tell_shape: "The warden rears back for a downward CRUSH."
+  swell_tell_hidden: "The warden gathers something you cannot make out."
+  swell_chunk_pct: 15
+  swell_whiff_pct: 10
+  swell_weather_pct: 8
+  swell_narration_countered: "You read it clean. The counter lands and the warden reels."
+  swell_narration_whiffed: "Wrong read. The blow crashes through your guard."
+  swell_narration_weathered: "You hesitate a beat too long and the blow lands full."
+loot:
+  guaranteed:
+    - item: "tapestry-example-pack:warden-shard"
+      count: 1
+  pool:
+    - item: "tapestry-example-pack:iron-chain"
+      weight: 60
+    - item: "tapestry-example-pack:coin-pouch"
+      weight: 40
+  pool_rolls: 1
