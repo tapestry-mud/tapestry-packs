@@ -1,5 +1,5 @@
 name: "@tapestry/example-pack"
-version: "0.1.12"
+version: "0.1.13"
 type: world
 display_name: "Example Pack"
 description: "A starter demo pack: warrior and mage classes, human and elf races, starter town, and character creation. Copy-paste starting point for pack authors."
@@ -8,7 +8,7 @@ license: "AGPL-3.0"
 engine: ">=0.1.7"
 validation: strict
 dependencies:
-  "@tapestry/core": "0.1.20"
+  "@tapestry/core": "0.1.21"
   "@tapestry/biomes": "0.1.2"
   "@tapestry/cooking": "0.1.5"
 active: true
