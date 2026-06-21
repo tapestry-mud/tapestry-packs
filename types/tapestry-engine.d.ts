@@ -20,6 +20,8 @@ declare module "@tapestry/engine" {
     override?: boolean;
     args?: Record<string, any>;
     visibleTo?: (player: any) => boolean;
+    /** Which combat clock the command obeys. Default 'free' (immediate). 'battle' routes to the swell clock. */
+    pace?: 'free' | 'battle';
     handler: (actor: any, resolved: any) => void;
     [key: string]: any;
   }
