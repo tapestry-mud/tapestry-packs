@@ -127,6 +127,8 @@ declare module "@tapestry/engine" {
     removeFromAllCombat(...args: any[]): any;
     savingThrow(...args: any[]): any;
     setPrimaryTarget(...args: any[]): any;
+    /** Register a deterministic window validator through the seal. The engine invokes it at swell resolve. */
+    registerWindow(name: string, validator: (ctx: any) => { outcome: 'COUNTERED' | 'WHIFFED' | 'WEATHERED'; narrationKey: string; quality?: string }): void;
     [key: string]: any;
   };
 
