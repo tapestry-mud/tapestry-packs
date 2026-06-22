@@ -21,6 +21,7 @@ import { DIR_OFFSETS, rollRoomFacts, materializeRoom } from "./room-gen.js";
 import { hashCoord, splitmix64, pick } from "./prng.js";
 import { getAreaState, getRoomArea, getRoomPath, setRoomArea, setRoomPath } from "./area-state.js";
 import { getRunState } from "./run-state.js";
+import { takeCached, prefetchNeighbors } from "./prefetch.js";
 
 // ---------------------------------------------------------------------------
 // oppositeDir - returns the cardinal opposite of a direction.
@@ -136,11 +137,17 @@ function resolveStub(roomId: string, direction: string): boolean {
         }
 
         // ------------------------------------------------------------------
-        // e. Cache miss: roll room facts now (pure, no side effects).
-        //    P6 will add: check the session cache FIRST, use cached facts if present.
+        // e. Check the session cache first (P6).
+        //    Cache hit: use cached facts (and cached prose, if already resolved).
+        //    Cache miss: roll room facts now (pure, no side effects).
+        //    Either path yields identical facts (hashCoord determinism guarantees it).
+        //    takeCached removes the entry: this is the commit-on-travel consume.
+        //    Untraveled neighbors stay in the cache until walked into or evicted.
         // ------------------------------------------------------------------
 
-        const facts = rollRoomFacts(areaState.areaSeed, neighborPath, areaState.roster);
+        const cached = takeCached(neighborPath);
+        const facts = cached ? cached.facts : rollRoomFacts(areaState.areaSeed, neighborPath, areaState.roster);
+        const cachedProse: string | null = cached ? cached.prose : null;
 
         // ------------------------------------------------------------------
         // f. Fetch the run state for this area's solo run.
@@ -182,9 +189,31 @@ function resolveStub(roomId: string, direction: string): boolean {
             function (_prose: string) {
                 // Progressive arrival: prose resolved (LLM or placeholder).
                 // The room description was already written inside materializeRoom.
-                // Nothing more to do here in slice-1 (P6 may trigger prefetch here).
+                //
+                // P6: trigger background prefetch of the NEW room's candidate
+                // neighbors now that the room is committed. This warms them for
+                // the next move so prose is likely ready on arrival.
+                // prefetchNeighbors is pure-only: no world writes, no materializeRoom,
+                // no RunState access. Safe to call from inside the prose callback.
+                prefetchNeighbors(
+                    areaState.areaSeed,
+                    neighborPath,
+                    areaState.roster,
+                    areaState.biomePalette
+                );
             }
         );
+
+        // ------------------------------------------------------------------
+        // P6: If the cached entry already had prose, pass it to the room as
+        // the final description now (the LLM resolved during prefetch dwell time).
+        // materializeRoom already wrote the placeholder; overwrite with cached prose
+        // only if it is present and non-empty (progressive arrival: instant upgrade).
+        // ------------------------------------------------------------------
+
+        if (cachedProse) {
+            tapestry.authoring.setRoomDescription(neighborId, cachedProse);
+        }
 
         // ------------------------------------------------------------------
         // i. Register the neighbor in area-state so future resolver calls work.
