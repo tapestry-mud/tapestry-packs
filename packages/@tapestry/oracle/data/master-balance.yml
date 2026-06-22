@@ -1,0 +1,104 @@
+# Master balance table for @tapestry/oracle.
+# weapon[level].damage  - weighted list ("dice to pick the dice"); weightedPick selects the notation, then rollDice rolls it.
+# armor[level]          - { slots, ac } where ac is a flat bonus applied to all damage types.
+# mob[level]            - { hp, damage, flee_threshold } -- hp and damage are dice notation strings.
+# boss[rank]            - { hp, damage, swell_baseline_gap_ticks, swell_jitter_ticks,
+#                           swell_telegraph_ticks, swell_window_ticks, swell_chunk_pct,
+#                           swell_whiff_pct, swell_weather_pct }
+#                         hp is a fixed integer (frozen at roster creation); damage is dice notation.
+#                         The swell tick dials scale by rank so higher-rank bosses hit harder and faster.
+#
+# All dice notation follows rollDice format: NdM or NdM+K or NdM-K.
+
+weapon:
+  1:
+    damage:
+      - { w: 60, value: "2d6" }
+      - { w: 30, value: "1d12" }
+      - { w: 10, value: "2d8" }
+  2:
+    damage:
+      - { w: 55, value: "2d8" }
+      - { w: 30, value: "1d16" }
+      - { w: 15, value: "3d6" }
+  3:
+    damage:
+      - { w: 50, value: "3d8" }
+      - { w: 30, value: "2d12" }
+      - { w: 20, value: "4d6" }
+  4:
+    damage:
+      - { w: 50, value: "4d8" }
+      - { w: 30, value: "2d16" }
+      - { w: 20, value: "3d12" }
+  5:
+    damage:
+      - { w: 50, value: "4d10" }
+      - { w: 30, value: "3d12" }
+      - { w: 20, value: "5d8" }
+
+armor:
+  1: { slots: [head, hands, feet], ac: -1 }
+  2: { slots: [head, hands, feet, body], ac: -2 }
+  3: { slots: [head, hands, feet, body], ac: -3 }
+  4: { slots: [head, hands, feet, body, wrist], ac: -4 }
+  5: { slots: [head, hands, feet, body, wrist, waist], ac: -5 }
+
+mob:
+  1: { hp: "6d10",  damage: "1d8",  flee_threshold: 0.2 }
+  2: { hp: "8d10",  damage: "1d10", flee_threshold: 0.2 }
+  3: { hp: "10d10", damage: "2d8",  flee_threshold: 0.2 }
+  4: { hp: "12d10", damage: "2d10", flee_threshold: 0.15 }
+  5: { hp: "14d10", damage: "3d8",  flee_threshold: 0.15 }
+
+boss:
+  1:
+    hp: 200
+    damage: "2d10"
+    swell_baseline_gap_ticks: 80
+    swell_jitter_ticks: 20
+    swell_telegraph_ticks: 20
+    swell_window_ticks: 60
+    swell_chunk_pct: 12
+    swell_whiff_pct: 8
+    swell_weather_pct: 6
+  2:
+    hp: 350
+    damage: "2d12"
+    swell_baseline_gap_ticks: 70
+    swell_jitter_ticks: 20
+    swell_telegraph_ticks: 18
+    swell_window_ticks: 55
+    swell_chunk_pct: 13
+    swell_whiff_pct: 9
+    swell_weather_pct: 7
+  3:
+    hp: 500
+    damage: "3d10"
+    swell_baseline_gap_ticks: 65
+    swell_jitter_ticks: 18
+    swell_telegraph_ticks: 18
+    swell_window_ticks: 50
+    swell_chunk_pct: 14
+    swell_whiff_pct: 10
+    swell_weather_pct: 7
+  4:
+    hp: 750
+    damage: "3d12"
+    swell_baseline_gap_ticks: 60
+    swell_jitter_ticks: 16
+    swell_telegraph_ticks: 16
+    swell_window_ticks: 48
+    swell_chunk_pct: 15
+    swell_whiff_pct: 10
+    swell_weather_pct: 8
+  5:
+    hp: 1000
+    damage: "3d10"
+    swell_baseline_gap_ticks: 55
+    swell_jitter_ticks: 15
+    swell_telegraph_ticks: 15
+    swell_window_ticks: 45
+    swell_chunk_pct: 15
+    swell_whiff_pct: 10
+    swell_weather_pct: 8

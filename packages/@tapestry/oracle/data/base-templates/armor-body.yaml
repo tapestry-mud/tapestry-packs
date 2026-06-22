@@ -1,0 +1,16 @@
+# Behavior-only armor base: body slot.
+# No fixed name or ac values -- oracle override blob supplies those.
+id: "tapestry-oracle:armor-body"
+name: "a piece of armor"
+type: "item"
+tags: []
+keywords: [armor, body]
+properties:
+  slot: body
+  weight: 5
+  rarity: common
+  ac:
+    slash: 0
+    pierce: 0
+    bash: 0
+    exotic: 0

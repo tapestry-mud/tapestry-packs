@@ -1,0 +1,61 @@
+# Behavior-only swell boss base template.
+# No fixed identity or per-rank stats -- the oracle's roster row (oracle.yaml boss section) overrides
+# hp, damage, and the tempo dials that scale by rank. This template carries:
+#   - base_disposition: hostile + behavior: stationary (bosses hold ground)
+#   - swell dial DEFAULTS from core properties.yml: window mode, tell level, line IDs/counters/narration
+# The roster's generated boss overrides: swell_baseline_gap_ticks, swell_jitter_ticks,
+# swell_telegraph_ticks, swell_window_ticks, swell_chunk_pct, swell_whiff_pct, swell_weather_pct.
+# Placeholder strings (line1/line2/narration) are replaced by LLM-dressed text at roster creation.
+id: "tapestry-oracle:swell-boss"
+name: "a guardian"
+type: "npc"
+tags: []
+base_disposition: hostile
+keywords: [boss, guardian]
+behavior: stationary
+stats:
+  strength: 18
+  dexterity: 12
+  constitution: 20
+  intelligence: 10
+  wisdom: 8
+  luck: 6
+  max_hp: 1000
+  max_resource: 0
+  max_movement: 40
+battle_chance: 0.9
+battle_interval: 3
+properties:
+  mob_level: 5
+  regen_hp: 2
+  regen_movement: 2
+  corpse_decay: 900
+  description: "A powerful guardian stands here."
+  ac:
+    slash: 6
+    pierce: 5
+    bash: 7
+    exotic: 4
+  xp_value: 300
+  swell_window: "telegraph-rung"
+  swell_tell: "full"
+  swell_baseline_gap_ticks: 60
+  swell_jitter_ticks: 20
+  swell_telegraph_ticks: 20
+  swell_window_ticks: 60
+  swell_mode: "stretch"
+  swell_line1_id: "strike"
+  swell_line1_counter: "sidestep"
+  swell_line1_tell_full: "The guardian winds up a heavy STRIKE -- sidestep it!"
+  swell_line1_tell_shape: "The guardian winds up for something heavy."
+  swell_line2_id: "slam"
+  swell_line2_counter: "brace"
+  swell_line2_tell_full: "The guardian rears back for a crushing SLAM -- brace for it!"
+  swell_line2_tell_shape: "The guardian rears back for something crushing."
+  swell_tell_hidden: "The guardian gathers some dark energy."
+  swell_chunk_pct: 15
+  swell_whiff_pct: 10
+  swell_weather_pct: 8
+  swell_narration_countered: "Clean read. Your counter lands and the guardian staggers."
+  swell_narration_whiffed: "Wrong move. The blow crashes through your guard."
+  swell_narration_weathered: "Too slow. The blow lands full force."

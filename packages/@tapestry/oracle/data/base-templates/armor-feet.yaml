@@ -1,0 +1,16 @@
+# Behavior-only armor base: feet slot.
+# No fixed name or ac values -- oracle override blob supplies those.
+id: "tapestry-oracle:armor-feet"
+name: "a pair of boots"
+type: "item"
+tags: []
+keywords: [armor, boots, feet]
+properties:
+  slot: feet
+  weight: 2
+  rarity: common
+  ac:
+    slash: 0
+    pierce: 0
+    bash: 0
+    exotic: 0

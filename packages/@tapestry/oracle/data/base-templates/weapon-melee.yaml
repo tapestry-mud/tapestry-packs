@@ -1,0 +1,16 @@
+# Behavior-only weapon base: melee weapon.
+# No fixed name or damage_dice values -- oracle override blob supplies those.
+id: "tapestry-oracle:weapon-melee"
+name: "a weapon"
+type: "item"
+tags: []
+keywords: [weapon, melee]
+properties:
+  slot: wield
+  weight: 4
+  rarity: common
+  damage_dice: "1d6"
+  hit_bonus: 0
+  attack_speed: 1
+  combat_name: "slash"
+  damage_type: "slash"

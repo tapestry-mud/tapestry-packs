@@ -1,0 +1,16 @@
+# Behavior-only armor base: hands slot.
+# No fixed name or ac values -- oracle override blob supplies those.
+id: "tapestry-oracle:armor-hands"
+name: "a pair of gloves"
+type: "item"
+tags: []
+keywords: [armor, gloves, hands]
+properties:
+  slot: hands
+  weight: 1
+  rarity: common
+  ac:
+    slash: 0
+    pierce: 0
+    bash: 0
+    exotic: 0

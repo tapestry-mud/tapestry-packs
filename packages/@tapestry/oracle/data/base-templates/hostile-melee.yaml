@@ -1,0 +1,36 @@
+# Behavior-only base template: hostile melee mob.
+# No id, name, stats, or fixed identity -- the oracle's override blob supplies all of those.
+# This template wires the aggro/disposition/AI behavior only.
+# Used as: spawn.base = "hostile-melee" in a generated room sidecar.
+id: "tapestry-oracle:hostile-melee"
+name: "a creature"
+type: "npc"
+tags: []
+base_disposition: hostile
+keywords: [creature]
+behavior: wander
+stats:
+  strength: 10
+  dexterity: 10
+  constitution: 10
+  intelligence: 4
+  wisdom: 4
+  luck: 6
+  max_hp: 20
+  max_resource: 0
+  max_movement: 80
+properties:
+  mob_level: 1
+  regen_hp: 1
+  regen_movement: 5
+  wander_interval: 45
+  wander_chance: 0.4
+  wander_boundary: "area"
+  flee_threshold: 0.2
+  corpse_decay: 300
+  description: "A creature lurks here."
+  ac:
+    slash: 1
+    pierce: 1
+    bash: 1
+    exotic: 0
