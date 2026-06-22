@@ -1,0 +1,6 @@
+properties:
+  oracle_seed:
+    description: >
+      The per-player seed for this player's current solo run. Persists across logout/login.
+    type: int
+    applies_to: [player]

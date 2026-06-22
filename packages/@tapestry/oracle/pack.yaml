@@ -1,0 +1,20 @@
+name: "@tapestry/oracle"
+version: "0.1.0"
+type: module
+display_name: "Tapestry Oracle"
+description: >
+  The solo-RPG generator. Rolls a coherent area from tables, materializes it lazily as the
+  player explores, dresses it with the LLM as flavor over dice-owned facts, and freezes every
+  step into sidecars. Dice own facts; the LLM owns dressing and is never load-bearing.
+author: "Tapestry"
+license: "AGPL-3.0"
+engine: ">=0.1.41"
+validation: strict
+dependencies:
+  "@tapestry/core": "^0.1.22"
+active: true
+load_order: 20
+content:
+  scripts: "dist/scripts/**/*.js"
+  scripts_format: esm
+  help: "help/**/*.yaml"
