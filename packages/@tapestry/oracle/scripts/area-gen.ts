@@ -289,6 +289,12 @@ export function createSoloArea(
             tapestry.schedule.cancel(handle);
             delete pending[playerId];
             tapestry.world.teleportEntity(playerId, gen.entryRoomId);
+            // teleportEntity does NOT auto-render the room (unlike a move command),
+            // so the player would land silently. Dispatch a look as the player to
+            // render the entry room (name/desc/exits/occupants + GMCP), exactly as
+            // if they had typed it. executeAs re-gates as the target; look is unprivileged.
+            tapestry.world.send(playerId, "The pattern settles into place around you.");
+            tapestry.admin.executeAs(playerId, "look");
             return;
         }
         tapestry.world.send(playerId, FLAVOR[gen.idx % FLAVOR.length]);
