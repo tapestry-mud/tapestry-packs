@@ -22,6 +22,7 @@ import { splitmix64 } from "./prng.js";
 import { rollRoster, dressRoster, rollBiomePalette } from "./roster.js";
 import { getPrompt, placeholder } from "./prompts.js";
 import { runKey, setRunState } from "./run-state.js";
+import { setAreaState, setRoomArea, setRoomPath } from "./area-state.js";
 
 // ---------------------------------------------------------------------------
 // Configurable constants
@@ -168,6 +169,27 @@ export function createSoloArea(
 
     const stateKey = runKey(actor.entityId, areaSlug);
     setRunState(stateKey, { roomsSinceLastBoss: 0 });
+
+    // -----------------------------------------------------------------------
+    // Step 6b: Back-populate area-state so the stub resolver can reach the
+    // roster + biome palette + run state without a playerId parameter.
+    // -----------------------------------------------------------------------
+
+    setAreaState(areaSlug, {
+        areaId: areaSlug,
+        areaSeed,
+        biomePalette,
+        theme: name || primaryBiome + " wilds",
+        levelRange,
+        targetNamespace,
+        areaSlug,
+        runStateKey: stateKey,
+        roster,
+    });
+
+    // Register the entry room's area ownership + coordinate path.
+    setRoomArea(entryRoomId, areaSlug);
+    setRoomPath(entryRoomId, "0,0");
 
     // -----------------------------------------------------------------------
     // Step 7: Teleport the player into the entry room.
