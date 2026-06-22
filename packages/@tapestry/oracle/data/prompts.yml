@@ -12,6 +12,8 @@
 # Keep all prose strict 7-bit ASCII. No em dashes, smart quotes, or unicode.
 # Templates are task lines only - not full prompts. Context is engine-supplied.
 # Steer length by instruction in the template, not by truncation in code.
+#
+# Tuned in-shell against llama3.1:8b via oracle-boot/tune-prompt.mjs.
 
 # ---------------------------------------------------------------------------
 # Area-level dressing (used by P3 - area creation)
@@ -24,16 +26,17 @@ area_theme:
     Write in plain ASCII. No em dashes.
   template: >
     Name this {biome} area for a character of level {level_min} to {level_max}.
-    The name hint is: {name_hint}. Reply with 2 to 4 words, evocative, no
-    title-case sentence.
+    The name hint is: {name_hint}. Reply with 2 to 4 evocative words only - no
+    surrounding quotes, no trailing period.
 
 area_short:
   system: >
     You are the Oracle, a keeper of ancient lore for a text adventure. You write
     terse, atmospheric one-liners that set mood in an instant. Plain ASCII, no
-    em dashes, under 80 characters.
+    em dashes.
   template: >
-    Write one atmospheric line for a {biome} area called {theme}. Under 80 chars.
+    Write one atmospheric line, under 80 characters, for a {biome} area called
+    {theme}. Reply with the line only, no surrounding quotes.
 
 area_long:
   system: >
@@ -42,7 +45,8 @@ area_long:
     Plain ASCII, no em dashes.
   template: >
     Describe a {biome} area called {theme} for a character of level {level_min}
-    to {level_max}. Write 2 to 3 sentences, second person, present tense.
+    to {level_max}. Write 2 to 3 sentences, second person, present tense. Reply
+    with the description only, no surrounding quotes.
 
 # ---------------------------------------------------------------------------
 # Room prose (used by P4 - per-room generation)
@@ -55,7 +59,10 @@ room_prose:
     Write with sensory detail. Plain ASCII, no em dashes.
   template: >
     Describe a room in a {biome} area called {theme}. The mood is: {mood}.
-    Write 1 to 2 vivid sentences, present tense, second person.
+    Write 1 to 2 vivid sentences, present tense, second person. You may refer to
+    a direction naturally (for example, to the east a river runs fast through the
+    trees), but never output a literal "Exits:" list or bracketed directions.
+    Reply with the description only, no surrounding quotes.
 
 # ---------------------------------------------------------------------------
 # Exit naming (used by P4 - stub exits)
@@ -67,8 +74,9 @@ exit_name:
     write short directional labels that hint at what lies ahead. Plain ASCII,
     no em dashes.
   template: >
-    Name a {direction} exit in a {biome} area. Example: "path into dark pines".
-    Reply with 3 to 6 words only.
+    Name a {direction} exit in a {biome} area, like a short signpost (for
+    example, path into dark pines). Reply with 3 to 6 words only - lowercase, no
+    surrounding quotes, no trailing period.
 
 # ---------------------------------------------------------------------------
 # Roster dressing - mob (used by P3 - roster creation)
@@ -79,8 +87,8 @@ mob_name:
     You are the Oracle, a keeper of ancient lore for a text adventure. You
     name creatures with menace and atmosphere. Plain ASCII, no em dashes.
   template: >
-    Name a level {level} {biome} creature. Reply with 2 to 4 words, evocative
-    and menacing.
+    Name a level {level} {biome} creature. Reply with 2 to 4 evocative, menacing
+    words only - no surrounding quotes, no trailing period.
 
 mob_desc:
   system: >
@@ -88,8 +96,9 @@ mob_desc:
     describe creatures in one vivid phrase, like a warning scratched into old
     stone. Plain ASCII, no em dashes.
   template: >
-    Describe the creature called {name} found in a {biome} area. One phrase,
-    5 to 12 words.
+    Describe the creature called {name} found in a {biome} area in one vivid
+    phrase of 5 to 12 words. Reply with the phrase only, no surrounding quotes,
+    no trailing period.
 
 # ---------------------------------------------------------------------------
 # Roster dressing - boss (used by P3 - roster creation)
@@ -101,8 +110,9 @@ boss_name:
     creatures have titles that feel earned and feared. Use "the" followed by
     an evocative title. Plain ASCII, no em dashes.
   template: >
-    Name a rank {rank} boss creature in a {biome} area. Use "the" followed by
-    a title. Reply with 3 to 6 words.
+    Name a rank {rank} boss creature in a {biome} area. Use the word the
+    followed by a fearsome title. Reply with 3 to 6 words only - no surrounding
+    quotes, no trailing period.
 
 # ---------------------------------------------------------------------------
 # Roster dressing - loot (used by P3 - roster creation)
@@ -114,4 +124,6 @@ loot_name:
     name equipment with the worn, found quality of things salvaged from ruin.
     Plain ASCII, no em dashes.
   template: >
-    Name a {slot} armor piece found in a {biome} area. Reply with 3 to 6 words.
+    Name a {slot} armor piece found in a {biome} area, with a worn, salvaged
+    feel. Reply with 3 to 6 words only - no surrounding quotes, no trailing
+    period.
