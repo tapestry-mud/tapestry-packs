@@ -1,0 +1,21 @@
+id: "solo"
+title: "Solo"
+category: "builder"
+role: "builder"
+brief: "Generate a solo oracle area and enter it."
+body: |
+  Solo rolls a new oracle area from tables and drops you into the entry room.
+  Stub exits lead to unbuilt rooms that mint as you explore.
+  Dice own all facts; the LLM (if configured) adds name and prose dressing only.
+
+  Usage: solo
+
+  You will be prompted for:
+    Name       - The area theme hint (blank for random).
+    Min level  - Minimum mob level (blank for random, default 1-3).
+    Max level  - Maximum mob level (blank for random, default min+4).
+
+  The generated area is written into the @scratch/oracle-run pack.
+  Requires builder or admin role.
+keywords: [solo, oracle, generate, area, explore]
+see_also: []

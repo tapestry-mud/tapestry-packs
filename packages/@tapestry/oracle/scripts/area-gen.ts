@@ -9,10 +9,9 @@
 // biome_palette is rolled from the area seed alone (decision 2: `solo <name>` steers
 // LLM prose ONLY, never the rolled palette). The name is passed as the LLM theme hint.
 //
-// Entry room is a SHELL only. It has stub exits and area/room prose via recommend
-// (placeholder fallback), but no ambient mob spawns and no boss-clock evaluation.
-// Those require materializeRoom (P4) which imports run-state.ts and room-gen.ts.
-// P7 wires the entry-room beat: materializeRoom(entryRoomId, ...) once P4/P5/P6 exist.
+// Entry room is fully materialized: materializeRoom creates the room, sets stub exits,
+// spawns ambient mobs, and evaluates the boss clock. The entry room is count 0 so
+// bossClockFires threshold is 0% (entry room is structurally boss-free), counter becomes 1.
 //
 // The area is fully PLAYABLE immediately (facts written, stub exits render, player
 // is teleported in). LLM prose may arrive slightly after teleport.
@@ -20,9 +19,10 @@
 import * as tapestry from "@tapestry/engine";
 import { splitmix64 } from "./prng.js";
 import { rollRoster, dressRoster, rollBiomePalette } from "./roster.js";
-import { getPrompt, placeholder } from "./prompts.js";
+import { getPrompt } from "./prompts.js";
 import { runKey, setRunState } from "./run-state.js";
 import { setAreaState, setRoomArea, setRoomPath } from "./area-state.js";
+import { rollRoomFacts, materializeRoom } from "./room-gen.js";
 
 // ---------------------------------------------------------------------------
 // Configurable constants
@@ -30,14 +30,6 @@ import { setAreaState, setRoomArea, setRoomPath } from "./area-state.js";
 
 /** Possible number of rooms in the generated area (rolled from seed). */
 const SIZE_TARGET_OPTIONS = [8, 10, 12, 15, 20];
-
-/** Default exit directions for the entry room. Rolled from seed. */
-const ALL_DIRECTIONS = ["north", "south", "east", "west"];
-
-/** Minimum exits on the entry room. */
-const ENTRY_EXIT_MIN = 2;
-/** Maximum exits on the entry room. */
-const ENTRY_EXIT_MAX = 4;
 
 // ---------------------------------------------------------------------------
 // createSoloArea
@@ -74,8 +66,8 @@ export function createSoloArea(
     const biomePalette = rollBiomePalette(rng);
     const primaryBiome = biomePalette[0];
 
-    // size_target: how many rooms this area targets.
-    const sizeTarget = SIZE_TARGET_OPTIONS[Math.floor(rng() * SIZE_TARGET_OPTIONS.length)];
+    // size_target: how many rooms this area targets (reserved for future room-count gating).
+    const _sizeTarget = SIZE_TARGET_OPTIONS[Math.floor(rng() * SIZE_TARGET_OPTIONS.length)];
 
     // Unique bare area id. Use a deterministic slug from seed + timestamp segment.
     const areaSlug = targetNamespace + "-" + (areaSeed >>> 0).toString(16);
@@ -130,45 +122,37 @@ export function createSoloArea(
     );
 
     // -----------------------------------------------------------------------
-    // Step 5: Create the entry room (SHELL - no mob spawns, no boss-clock).
+    // Step 5: Roll entry-room facts + materialize (P7 wiring).
     //
-    // Room id: targetNamespace:areaSlug-entry
-    // The targetNamespace prefix is how createRoom finds which pack to write into.
-    // Stub exits are set for rolled directions (E3: setStubExit).
+    // materializeRoom creates the room, sets stub exits, spawns ambient mobs,
+    // and evaluates the boss clock. runState must be constructed BEFORE this
+    // call (entry room is count 0 so bossClockFires threshold = 0%, counter
+    // becomes 1 after the call).
     // -----------------------------------------------------------------------
 
     const entryRoomId = targetNamespace + ":" + areaSlug + "-entry";
-    const entryRoomName = "Entrance to " + nameHint;
-    const entryRoomDesc = placeholder("room", { biome: primaryBiome, exits: [] });
-
-    const roomCreated = tapestry.authoring.createRoom(
-        areaSlug,
-        entryRoomId,
-        entryRoomName,
-        entryRoomDesc
-    );
-
-    if (!roomCreated) {
-        actor.send("Could not create entry room. Area was created but may be incomplete.\r\n");
-        return;
-    }
-
-    // Roll exit directions from the seed (dice own this fact).
-    const exitRng = splitmix64(areaSeed + 1);
-    const exitDirs = rollExitDirections(exitRng);
-
-    for (let i = 0; i < exitDirs.length; i++) {
-        const dir = exitDirs[i];
-        const exitLabel = placeholder("exit", { biome: primaryBiome, direction: dir });
-        tapestry.authoring.setStubExit(entryRoomId, dir, exitLabel);
-    }
+    const entryRoomPath = "0,0";
 
     // -----------------------------------------------------------------------
     // Step 6: Construct and store the RunState cell.
+    // Must happen before materializeRoom so the boss-clock reads correct state.
     // -----------------------------------------------------------------------
 
     const stateKey = runKey(actor.entityId, areaSlug);
-    setRunState(stateKey, { roomsSinceLastBoss: 0 });
+    const entryRunState = { roomsSinceLastBoss: 0 };
+    setRunState(stateKey, entryRunState);
+
+    // Roll facts and materialize the entry room.
+    const entryFacts = rollRoomFacts(areaSeed, entryRoomPath, roster);
+    materializeRoom(
+        entryRoomId,
+        areaSlug,
+        entryFacts,
+        roster,
+        entryRunState,
+        primaryBiome,
+        nameHint
+    );
 
     // -----------------------------------------------------------------------
     // Step 6b: Back-populate area-state so the stub resolver can reach the
@@ -264,49 +248,10 @@ export function createSoloArea(
             }
         );
 
-        // Dress entry room prose.
-        const roomPr = getPrompt("room_prose");
-        tapestry.authoring.recommend(
-            {
-                field: "description",
-                roomId: entryRoomId,
-                template: roomPr.template,
-                system: roomPr.system,
-                vars: { biome: primaryBiome, theme: nameHint, mood: "the start of the path" },
-            },
-            (roomResult: string | null) => {
-                if (roomResult) {
-                    tapestry.authoring.setRoomDescription(entryRoomId, roomResult);
-                }
-            }
-        );
     }
 
     // Dress the roster async (best-effort).
     dressRoster(roster, primaryBiome);
-
-    // P7 wires the entry-room beat here: materializeRoom(entryRoomId, ...) once P4/P5/P6 exist.
-    // P3 intentionally does NOT call materializeRoom - ambient mobs and boss-clock are P4's job.
-}
-
-// ---------------------------------------------------------------------------
-// rollExitDirections - roll how many exits + which directions for the entry room.
-// Dice own the directions (rolled from seed), pure function of the rng.
-// ---------------------------------------------------------------------------
-
-function rollExitDirections(rng: () => number): string[] {
-    const spread = ENTRY_EXIT_MAX - ENTRY_EXIT_MIN;
-    const count = ENTRY_EXIT_MIN + Math.floor(rng() * (spread + 1));
-
-    // Shuffle directions, pick the first `count`.
-    const dirs = ALL_DIRECTIONS.slice();
-    for (let i = dirs.length - 1; i > 0; i--) {
-        const j = Math.floor(rng() * (i + 1));
-        const tmp = dirs[i];
-        dirs[i] = dirs[j];
-        dirs[j] = tmp;
-    }
-    return dirs.slice(0, count);
 }
 
 // ---------------------------------------------------------------------------

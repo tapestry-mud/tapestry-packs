@@ -20,3 +20,4 @@ content:
   scripts: "dist/scripts/**/*.js"
   scripts_format: esm
   help: "help/**/*.yaml"
+# slice-1 complete
