@@ -1,0 +1,101 @@
+# Prompt templates for @tapestry/oracle.
+#
+# Each key has two fields:
+#   system   - voice/role string passed to the LLM as the system prompt.
+#   template - a single task line with {var} slots. The engine (seam E2) substitutes vars
+#              and prepends projected room context before calling the LLM. Templates must
+#              stay editable data; never hard-code prompts in scripts.
+#
+# {var} slots are substituted by the caller (P3/P4) via the vars: map passed to
+# authoring.recommend(options, callback). Engine-side substitution happens there.
+#
+# Keep all prose strict 7-bit ASCII. No em dashes, smart quotes, or unicode.
+# Templates are task lines only - not full prompts. Context is engine-supplied.
+
+# ---------------------------------------------------------------------------
+# Area-level dressing (used by P3 - area creation)
+# ---------------------------------------------------------------------------
+
+area_theme:
+  system: >
+    You are a creative writer for a text-based RPG. Name areas with vivid,
+    evocative titles in 3-6 words. Use plain ASCII. No em dashes.
+  template: >
+    Name this {biome} area at character level {level_min} to {level_max} in 3-6 words.
+    Hint: {name_hint}.
+
+area_short:
+  system: >
+    You are a creative writer for a text-based RPG. Write terse one-line area
+    summaries that set mood instantly. Plain ASCII, no em dashes, under 80 chars.
+  template: >
+    Write a one-line summary for a {biome} area called {theme}. Under 80 chars.
+
+area_long:
+  system: >
+    You are a creative writer for a text-based RPG. Write area overviews in
+    2-3 sentences. Set the mood and terrain. Plain ASCII, no em dashes.
+  template: >
+    Describe a {biome} area called {theme} in 2-3 sentences. Character level {level_min}-{level_max}.
+
+# ---------------------------------------------------------------------------
+# Room prose (used by P4 - per-room generation)
+# ---------------------------------------------------------------------------
+
+room_prose:
+  system: >
+    You are a creative writer for a text-based RPG. Write evocative room
+    descriptions in 1-3 sentences. Address the player as "you". Plain ASCII, no em dashes.
+  template: >
+    Describe a room in a {biome} area called {theme}. Mood: {mood}. 1-3 sentences.
+
+# ---------------------------------------------------------------------------
+# Exit naming (used by P4 - stub exits)
+# ---------------------------------------------------------------------------
+
+exit_name:
+  system: >
+    You are a creative writer for a text-based RPG. Write short directional
+    labels (3-6 words) for exits. Plain ASCII, no em dashes.
+  template: >
+    Name a {direction} exit in a {biome} area. Example: "path into dark pines". 3-6 words.
+
+# ---------------------------------------------------------------------------
+# Roster dressing - mob (used by P3 - roster creation)
+# ---------------------------------------------------------------------------
+
+mob_name:
+  system: >
+    You are a creative writer for a text-based RPG. Name creatures in 2-4 words.
+    Evocative but menacing. Plain ASCII, no em dashes.
+  template: >
+    Name a level {level} {biome} creature in 2-4 words.
+
+mob_desc:
+  system: >
+    You are a creative writer for a text-based RPG. Write a short creature
+    description in one vivid phrase (5-12 words). Plain ASCII, no em dashes.
+  template: >
+    Describe a creature called {name} in a {biome} area in one phrase, 5-12 words.
+
+# ---------------------------------------------------------------------------
+# Roster dressing - boss (used by P3 - roster creation)
+# ---------------------------------------------------------------------------
+
+boss_name:
+  system: >
+    You are a creative writer for a text-based RPG. Name boss creatures with
+    "the" + an evocative title (3-6 words). Example: "the Hollow Stag". Plain ASCII.
+  template: >
+    Name a rank {rank} boss in a {biome} area. Use "the" + title. 3-6 words.
+
+# ---------------------------------------------------------------------------
+# Roster dressing - loot (used by P3 - roster creation)
+# ---------------------------------------------------------------------------
+
+loot_name:
+  system: >
+    You are a creative writer for a text-based RPG. Name equipment items in
+    3-6 words. Worn, found, or salvaged from the terrain. Plain ASCII, no em dashes.
+  template: >
+    Name a {slot} armor item found in a {biome} area in 3-6 words.
