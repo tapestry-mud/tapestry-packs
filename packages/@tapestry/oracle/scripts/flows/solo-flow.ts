@@ -104,6 +104,9 @@ tapestry.flows.register({
             return { success: false, message: "Area generation failed: " + detail };
         }
 
-        return { success: true, message: "The oracle stirs..." };
+        // suppress_look: the flow engine auto-looks the player's CURRENT room on
+        // completion, which would flash the pre-solo room before the generation wait.
+        // We render the new entry room ourselves after the deferred teleport.
+        return { success: true, message: "The oracle stirs...", suppress_look: true };
     },
 });
