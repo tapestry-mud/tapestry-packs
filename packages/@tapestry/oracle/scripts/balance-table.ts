@@ -9,6 +9,33 @@ function getBalance(): any {
     return _balance;
 }
 
+// Resolve a table row by level, CLAMPING to the table's defined range so a level band
+// can exceed the (sparse) table without crashing: levels above the top row reuse the top
+// row, below the bottom reuse the bottom. The table is the live tuning knob and may be
+// sparse while balancing; this keeps generation crash-proof until rows are filled in.
+// Returns null only when the table has no numeric rows at all (a real misconfig).
+function resolveRow(table: any, level: number): any {
+    if (!table) {
+        return null;
+    }
+    const keys = Object.keys(table)
+        .map((k) => parseInt(k, 10))
+        .filter((n) => !isNaN(n));
+    if (keys.length === 0) {
+        return null;
+    }
+    let lo = keys[0];
+    let hi = keys[0];
+    for (let i = 1; i < keys.length; i++) {
+        if (keys[i] < lo) { lo = keys[i]; }
+        if (keys[i] > hi) { hi = keys[i]; }
+    }
+    let lvl = level;
+    if (lvl < lo) { lvl = lo; }
+    if (lvl > hi) { lvl = hi; }
+    return table[lvl] ?? table[String(lvl)];
+}
+
 export type StatKind = "weapon" | "armor" | "mob" | "boss";
 
 /**
@@ -33,9 +60,9 @@ export function statsFor(kind: StatKind, level: number, rng: () => number): Reco
     if (!table) {
         throw new Error(`oracle/balance-table: unknown kind '${kind}'`);
     }
-    const row = table[level] ?? table[String(level)];
+    const row = resolveRow(table, level);
     if (!row) {
-        throw new Error(`oracle/balance-table: no entry for ${kind} level ${level}`);
+        throw new Error(`oracle/balance-table: kind '${kind}' has no rows`);
     }
 
     if (kind === "weapon") {
@@ -84,7 +111,7 @@ export function mobHpFormula(level: number): string {
     const balance = getBalance();
     const table = balance["mob"];
     if (!table) { return "1d10"; }
-    const row = table[level] ?? table[String(level)];
+    const row = resolveRow(table, level);
     if (!row || !row.hp) { return "1d10"; }
     return String(row.hp);
 }
