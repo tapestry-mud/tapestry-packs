@@ -35,7 +35,7 @@ export function statsFor(kind: StatKind, level: number, rng: () => number): Reco
     if (!table) {
         throw new Error(`oracle/balance-table: unknown kind '${kind}'`);
     }
-    const row = table[String(level)];
+    const row = table[level] ?? table[String(level)];
     if (!row) {
         throw new Error(`oracle/balance-table: no entry for ${kind} level ${level}`);
     }

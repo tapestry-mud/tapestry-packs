@@ -94,7 +94,7 @@ boss:
     swell_weather_pct: 8
   5:
     hp: 1000
-    damage: "3d10"
+    damage: "4d10"
     swell_baseline_gap_ticks: 55
     swell_jitter_ticks: 15
     swell_telegraph_ticks: 15
