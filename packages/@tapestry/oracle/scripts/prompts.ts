@@ -104,17 +104,12 @@ function buildRoomPlaceholder(facts: PlaceholderFacts): string {
     const biome = sanitize(facts.biome ?? "open");
     const mood = sanitize(facts.mood ?? "");
 
+    // Exits are NOT appended here: the engine renders the exit list separately.
     let desc: string;
     if (mood) {
-        desc = "A stretch of " + biome + " terrain. " + capitalize(mood) + ".";
+        desc = "You stand in " + biome + " terrain. " + capitalize(mood) + ".";
     } else {
-        desc = "A stretch of " + biome + " terrain.";
-    }
-
-    const exits = facts.exits;
-    if (exits && exits.length > 0) {
-        const exitList = exits.map((e) => sanitize(e)).join(", ");
-        desc = desc + " Exits: " + exitList + ".";
+        desc = "You stand in a stretch of " + biome + " terrain.";
     }
 
     return desc;
@@ -128,16 +123,16 @@ function buildRoomPlaceholder(facts: PlaceholderFacts): string {
 // ---------------------------------------------------------------------------
 
 function buildNamePlaceholder(facts: PlaceholderFacts): string {
-    const biome = sanitize(facts.biome ?? "unknown");
+    const biome = sanitize(facts.biome ?? "wilds");
 
     if (facts.rank !== undefined && facts.rank > 0) {
         // Boss name placeholder.
-        return "the " + biome + " boss";
+        return "the " + biome + " lurker";
     }
 
     const level = facts.level ?? 1;
     const tierLabel = levelTier(level);
-    return tierLabel + " " + biome + " creature";
+    return tierLabel + " " + biome + " hunter";
 }
 
 // ---------------------------------------------------------------------------
@@ -150,7 +145,7 @@ function buildNamePlaceholder(facts: PlaceholderFacts): string {
 function buildExitPlaceholder(facts: PlaceholderFacts): string {
     const direction = sanitize(facts.direction ?? "forward");
     const biome = facts.biome ? sanitize(facts.biome) + " " : "";
-    return biome + "path leading " + direction;
+    return biome + "trail heading " + direction;
 }
 
 // ---------------------------------------------------------------------------

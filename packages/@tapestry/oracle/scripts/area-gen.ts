@@ -13,8 +13,8 @@
 // spawns ambient mobs, and evaluates the boss clock. The entry room is count 0 so
 // bossClockFires threshold is 0% (entry room is structurally boss-free), counter becomes 1.
 //
-// The area is fully PLAYABLE immediately (facts written, stub exits render, player
-// is teleported in). LLM prose may arrive slightly after teleport.
+// The entry room is dressed before the player lands: the wait loop fires flavor messages
+// while onProseReady is pending, then teleports when prose resolves (or after MAX_TICKS).
 
 import * as tapestry from "@tapestry/engine";
 import { splitmix64 } from "./prng.js";
@@ -30,6 +30,69 @@ import { rollRoomFacts, materializeRoom } from "./room-gen.js";
 
 /** Possible number of rooms in the generated area (rolled from seed). */
 const SIZE_TARGET_OPTIONS = [8, 10, 12, 15, 20];
+
+/** Ticks between flavor messages. Tick = 100ms -> 15 ticks = ~1.5s. */
+const FLAVOR_INTERVAL = 15;
+
+/** Safety: teleport even if prose never lands (~20s). */
+const MAX_TICKS = 200;
+
+// ---------------------------------------------------------------------------
+// Flavor messages shown while the entry room is being dressed.
+// Sent in rotating order via idx. Each is rendered with "..." appended.
+// ---------------------------------------------------------------------------
+
+const FLAVOR: string[] = [
+    "Weaving the Pattern...",
+    "Consulting the Dice...",
+    "Tracing Ancient Paths...",
+    "Reading Forgotten Omens...",
+    "Binding Threads of Fate...",
+    "Calling Upon Old Magic...",
+    "Turning the Wheel...",
+    "Shaping the Realm...",
+    "Drawing Strange Portents...",
+    "Whispering to the Void...",
+    "Summoning Possibilities...",
+    "Scribing New Legends...",
+    "Seeking Hidden Truths...",
+    "Awakening Sleeping Powers...",
+    "Testing the Bounds of Reality...",
+    "Bargaining with Destiny...",
+    "Rearranging the Tapestry...",
+    "Disturbing Ancient Things...",
+    "Uncovering Lost Secrets...",
+    "Drawing Back the Veil...",
+    "Weaving New Threads...",
+    "Knotting Loose Ends...",
+    "Following the Pattern...",
+    "Spinning Fresh Threads...",
+    "Untangling Possibilities...",
+    "Tightening the Weave...",
+    "Coloring the Tapestry...",
+    "Finding Missing Threads...",
+    "Repairing the Loom...",
+    "Threading New Destinies...",
+    "Pulling at Fate's Edges...",
+    "Expanding the Pattern...",
+    "Stitching Together Legends...",
+    "Mending Ancient Tears...",
+    "Tracing the Great Design...",
+];
+
+// ---------------------------------------------------------------------------
+// Pending generation state: keyed by playerId.
+// Set in createSoloArea; consumed and deleted by the wait loop.
+// ---------------------------------------------------------------------------
+
+interface PendingGen {
+    entryRoomId: string;
+    ready: boolean;
+    ticks: number;
+    idx: number;
+}
+
+const pending: Record<string, PendingGen> = {};
 
 // ---------------------------------------------------------------------------
 // createSoloArea
@@ -142,18 +205,6 @@ export function createSoloArea(
     const entryRunState = { roomsSinceLastBoss: 0 };
     setRunState(stateKey, entryRunState);
 
-    // Roll facts and materialize the entry room.
-    const entryFacts = rollRoomFacts(areaSeed, entryRoomPath, roster);
-    materializeRoom(
-        entryRoomId,
-        areaSlug,
-        entryFacts,
-        roster,
-        entryRunState,
-        primaryBiome,
-        nameHint
-    );
-
     // -----------------------------------------------------------------------
     // Step 6b: Back-populate area-state so the stub resolver can reach the
     // roster + biome palette + run state without a playerId parameter.
@@ -176,14 +227,78 @@ export function createSoloArea(
     setRoomPath(entryRoomId, "0,0");
 
     // -----------------------------------------------------------------------
-    // Step 7: Teleport the player into the entry room.
-    // The player lands on facts NOW. LLM dressing arrives async.
+    // Step 7: Roll facts and materialize the entry room with an onProseReady
+    // callback. The callback marks the pending entry as ready, and the wait
+    // loop (started below) teleports the player when it fires.
+    //
+    // When LLM is OFF, onProseReady fires synchronously (still in this call
+    // stack), so ready is true before the loop's first tick - the player lands
+    // almost immediately. When LLM is ON, the callback fires after the LLM
+    // resolves and the loop delivers the teleport on the next tick.
     // -----------------------------------------------------------------------
 
-    tapestry.world.teleportEntity(actor.entityId, entryRoomId);
+    const playerId = actor.entityId;
+
+    // Register the pending entry BEFORE materializeRoom so the synchronous
+    // (LLM-off) onProseReady callback finds the entry and can mark it ready.
+    pending[playerId] = {
+        entryRoomId,
+        ready: false,
+        ticks: 0,
+        idx: 0,
+    };
+
+    const entryFacts = rollRoomFacts(areaSeed, entryRoomPath, roster, primaryBiome);
+    materializeRoom(
+        entryRoomId,
+        areaSlug,
+        entryFacts,
+        roster,
+        entryRunState,
+        primaryBiome,
+        nameHint,
+        function (_prose: string) {
+            // onProseReady: entry room prose has resolved (LLM or placeholder).
+            // Mark the pending entry ready so the wait loop teleports on next tick.
+            if (pending[playerId]) {
+                pending[playerId].ready = true;
+            }
+        }
+    );
 
     // -----------------------------------------------------------------------
-    // Async dressing (best-effort, runs AFTER teleport).
+    // Step 8: Start the wait loop. Fires every FLAVOR_INTERVAL ticks.
+    // Sends rotating flavor messages until the entry room is ready (or MAX_TICKS).
+    // Then cancels itself and teleports the player.
+    //
+    // handle is captured by the step closure (assigned before step first runs
+    // on the next tick, so self-cancel in step() works correctly).
+    // All callbacks run on the single game-loop thread - no races on `pending`.
+    // -----------------------------------------------------------------------
+
+    let handle: string;
+
+    const step = function () {
+        const gen = pending[playerId];
+        if (!gen) {
+            tapestry.schedule.cancel(handle);
+            return;
+        }
+        gen.ticks += FLAVOR_INTERVAL;
+        if (gen.ready || gen.ticks >= MAX_TICKS) {
+            tapestry.schedule.cancel(handle);
+            delete pending[playerId];
+            tapestry.world.teleportEntity(playerId, gen.entryRoomId);
+            return;
+        }
+        tapestry.world.send(playerId, FLAVOR[gen.idx % FLAVOR.length]);
+        gen.idx += 1;
+    };
+
+    handle = tapestry.schedule.every(FLAVOR_INTERVAL, step);
+
+    // -----------------------------------------------------------------------
+    // Async dressing (best-effort, runs AFTER the wait loop is running).
     // Recommend the area theme, entry room prose. Placeholder already stands.
     // -----------------------------------------------------------------------
 

@@ -145,8 +145,28 @@ function resolveStub(roomId: string, direction: string): boolean {
         //    Untraveled neighbors stay in the cache until walked into or evicted.
         // ------------------------------------------------------------------
 
+        // ------------------------------------------------------------------
+        // e1. Derive the per-room biome deterministically from position.
+        //     Must happen before takeCached/rollRoomFacts so biome is available
+        //     for rollRoomFacts' biome parameter. Uses pick() seeded from hashCoord
+        //     so revisits are stable.
+        // ------------------------------------------------------------------
+
+        const biomeRng = splitmix64(hashCoord(areaState.areaSeed, neighborPath));
+        const biome = pick(areaState.biomePalette, biomeRng);
+        const theme = areaState.theme;
+
+        // ------------------------------------------------------------------
+        // e2. Check the session cache first (P6).
+        //    Cache hit: use cached facts (and cached prose, if already resolved).
+        //    Cache miss: roll room facts now (pure, no side effects).
+        //    Either path yields identical facts (hashCoord determinism guarantees it).
+        //    takeCached removes the entry: this is the commit-on-travel consume.
+        //    Untraveled neighbors stay in the cache until walked into or evicted.
+        // ------------------------------------------------------------------
+
         const cached = takeCached(neighborPath);
-        const facts = cached ? cached.facts : rollRoomFacts(areaState.areaSeed, neighborPath, areaState.roster);
+        const facts = cached ? cached.facts : rollRoomFacts(areaState.areaSeed, neighborPath, areaState.roster, biome);
         const cachedProse: string | null = cached ? cached.prose : null;
 
         // ------------------------------------------------------------------
@@ -161,15 +181,6 @@ function resolveStub(roomId: string, direction: string): boolean {
         }
 
         // ------------------------------------------------------------------
-        // g. Derive the per-room biome deterministically from position.
-        //    Uses pick() seeded from hashCoord so revisits are stable.
-        // ------------------------------------------------------------------
-
-        const biomeRng = splitmix64(hashCoord(areaState.areaSeed, neighborPath));
-        const biome = pick(areaState.biomePalette, biomeRng);
-        const theme = areaState.theme;
-
-        // ------------------------------------------------------------------
         // h. Materializethe room (committing mint: createRoom + spawns + boss clock).
         //    This is the ONLY call site. Called once per first arrival.
         //    onProseReady: progressive arrival - player lands on facts, prose follows.
@@ -177,6 +188,11 @@ function resolveStub(roomId: string, direction: string): boolean {
         //    materializeRoom signature (room-gen.ts):
         //      materializeRoom(roomId, areaId, facts, roster, runState, biome, theme, onProseReady?)
         // ------------------------------------------------------------------
+
+        // alreadyFired tracks whether onProseReady fired synchronously inside
+        // materializeRoom (LLM off) or will fire later (LLM on, async).
+        // The settle notice goes out only on the async path.
+        let alreadyFired = false;
 
         materializeRoom(
             neighborId,
@@ -187,9 +203,12 @@ function resolveStub(roomId: string, direction: string): boolean {
             biome,
             theme,
             function (_prose: string) {
-                // Progressive arrival: prose resolved (LLM or placeholder).
-                // The room description was already written inside materializeRoom.
-                //
+                alreadyFired = true;
+                if (!wasSyncFired) {
+                    // Prose arrived from the LLM after the player had already moved in.
+                    // Emit a lore notice so the change is not silent.
+                    tapestry.world.sendToRoom(neighborId, "The details of this place settle into focus.");
+                }
                 // P6: trigger background prefetch of the NEW room's candidate
                 // neighbors now that the room is committed. This warms them for
                 // the next move so prose is likely ready on arrival.
@@ -203,6 +222,10 @@ function resolveStub(roomId: string, direction: string): boolean {
                 );
             }
         );
+
+        // wasSyncFired is true when LLM is off (callback already ran during materializeRoom).
+        // false means the callback will fire later; the notice will be sent then.
+        const wasSyncFired = alreadyFired;
 
         // ------------------------------------------------------------------
         // P6: If the cached entry already had prose, pass it to the room as
