@@ -133,8 +133,11 @@ any pack can build a swell boss as data.
   (packages/@tapestry/core/scripts/combat/telegraph-rung.ts:5)
 
 - The `sidestep` and `brace` counter verbs are registered `pace: battle`, so the
-  swell clock routes them during an active swell.
-  (packages/@tapestry/core/scripts/commands/counters.ts:5)
+  swell clock routes them during an active swell. Invoked off-window (no active
+  swell) the handler sends a read - "No opening yet - read the swell." when a
+  swell boss is engaged, otherwise "There is nothing to counter right now." -
+  rather than silently no-opping.
+  (packages/@tapestry/core/scripts/commands/counters.ts:21)
 
 - The builder-gated `tune` command (`pace: free`, `builder` role) prints and live-
   edits a swell boss's dials in memory for playtest; bare `tune` lists the dials
