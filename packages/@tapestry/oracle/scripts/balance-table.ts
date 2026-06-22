@@ -77,3 +77,16 @@ export function statsFor(kind: StatKind, level: number, rng: () => number): Reco
 
     throw new Error(`oracle/balance-table: unhandled kind '${kind}'`);
 }
+
+/**
+ * Return the raw (unrolled) hp formula string for a mob level.
+ * Used by rollRoster to store hp_formula on mob types for per-instance rolling in P4.
+ */
+export function mobHpFormula(level: number): string {
+    const balance = getBalance();
+    const table = balance["mob"];
+    if (!table) { return "1d10"; }
+    const row = table[level] ?? table[String(level)];
+    if (!row || !row.hp) { return "1d10"; }
+    return String(row.hp);
+}
