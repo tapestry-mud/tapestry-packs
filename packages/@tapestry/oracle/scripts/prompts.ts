@@ -26,14 +26,14 @@ export interface PlaceholderFacts {
 
 // ---------------------------------------------------------------------------
 // Prompts cache
+//
+// Eagerly loaded at module init time so data.loadYaml runs while CurrentPackDir
+// is still set (the engine clears it after boot; lazy init at runtime = null return).
 // ---------------------------------------------------------------------------
 
-let _prompts: Record<string, PromptEntry> | null = null;
+const _prompts: Record<string, PromptEntry> = data.loadYaml("data/prompts.yml") as Record<string, PromptEntry>;
 
 function getPrompts(): Record<string, PromptEntry> {
-    if (!_prompts) {
-        _prompts = data.loadYaml("data/prompts.yml") as Record<string, PromptEntry>;
-    }
     return _prompts;
 }
 
