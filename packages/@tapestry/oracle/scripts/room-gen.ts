@@ -305,13 +305,13 @@ export function materializeRoom(
             template: spec.base,
             roomId,
             override: {
-                from_type: spec.override.from_type,
+                fromType: spec.override.from_type,
                 name: spec.override.name,
                 desc: spec.override.desc,
-                max_hp: spec.override.max_hp,
+                maxHp: spec.override.max_hp,
                 damage: spec.override.damage,
                 items: spec.override.items,
-                no_reroll: spec.override.no_reroll,
+                noReroll: spec.override.no_reroll,
             },
         });
     }
@@ -369,11 +369,11 @@ export function materializeRoom(
             template: boss.base,
             roomId,
             override: {
-                from_type: boss.ref,
+                fromType: boss.ref,
                 name: boss.name || placeholder("name", { biome, rank: boss.level }),
-                max_hp: boss.hp,
+                maxHp: boss.hp,
                 damage: boss.damage,
-                no_reroll: true,
+                noReroll: true,
             },
         });
         // Reset the clock.

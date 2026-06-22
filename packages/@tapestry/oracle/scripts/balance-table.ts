@@ -1,13 +1,11 @@
 import { data } from "@tapestry/engine";
 import { rollDice, weightedPick } from "./prng.js";
 
-// Cached reference -- loaded once on first call, reused thereafter.
-let _balance: any = null;
+// Eagerly loaded at module init time so data.loadYaml runs while CurrentPackDir
+// is still set (the engine clears it after boot; lazy init at runtime = null return).
+const _balance: any = data.loadYaml("data/master-balance.yml");
 
 function getBalance(): any {
-    if (!_balance) {
-        _balance = data.loadYaml("data/master-balance.yml");
-    }
     return _balance;
 }
 

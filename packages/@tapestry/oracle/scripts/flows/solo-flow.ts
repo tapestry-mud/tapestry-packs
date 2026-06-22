@@ -97,7 +97,7 @@ tapestry.flows.register({
 
         const nameValue = (rawName && rawName.trim() !== "") ? rawName.trim() : null;
 
-        createSoloArea(entity, nameValue, minLevel, maxLevel, "oracle-run");
+        createSoloArea(entity, nameValue, minLevel, maxLevel, "scratch-oracle-run");
 
         return { success: true, message: "Generating area..." };
     },
