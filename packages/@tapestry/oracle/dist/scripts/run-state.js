@@ -1,0 +1,24 @@
+// run-state.ts - Per-run in-memory state cell for a solo oracle run.
+//
+// The RunState holds path-dependent counters that advance as the player walks.
+// It has exactly ONE construction site (createSoloArea in area-gen.ts) and ONE
+// writer (materializeRoom in P4's room-gen.ts). Prefetch never reads or mutates it.
+//
+// The key format is `${playerId}:${areaId}` - derivable anywhere both are known.
+// Use runKey(playerId, areaId) for consistency.
+//
+// P6 (prefetch.ts) will also export getRunState/setRunState from here - they are
+// defined here rather than in prefetch.ts because P3 (area-gen.ts) is the sole
+// constructor and imports this module, while P4 (room-gen.ts) is the sole writer.
+// Keeping the store here avoids a circular import between area-gen and prefetch.
+// In-memory keyed store. Not persisted (slice-1 scope).
+const _store = new Map();
+export function runKey(playerId, areaId) {
+    return playerId + ":" + areaId;
+}
+export function getRunState(key) {
+    return _store.get(key);
+}
+export function setRunState(key, state) {
+    _store.set(key, state);
+}
