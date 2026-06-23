@@ -3,28 +3,30 @@
 // createSoloArea is the sole entry point called by P7's solo flow.
 // It follows spec section 3 "At area creation" exactly.
 //
-// Dice own FACTS: seed, level_range, size_target, roster stats, exit directions.
-// LLM owns DRESSING: place palette (from area name), theme/short/description names,
-// descs - non-load-bearing, placeholder on fail.
+// CREATION FLOW (P-E rework):
+//   1. Roll area seed + create area + set seed/level_range/reset_interval via authoring.
+//   2. Call fillTables (LLM burst) - front-loaded at creation, NOT per-room.
+//   3. In onReady: freeze every returned table to disk via writeOracleTable.
+//   4. Mint the entry room from frozen tables + teleport player in.
+//   5. Zero per-room LLM calls remain in the hot path.
 //
-// place_palette is requested from the LLM using the area name as {theme}. On LLM
-// success the returned places become the biomePalette for this run. On LLM off or
-// failure, fallbackPlacePalette() provides generic place words (hall/passage/etc).
-// The name is passed as the LLM theme hint for dressing prose too.
+// Dice own FACTS: seed, level_range, size_target, exit directions.
+// LLM owns DRESSING: place palette, mob/item names, prose fragments.
+// All LLM work happens in fillTables before the player lands.
 //
 // Entry room is fully materialized: materializeRoom creates the room, sets stub exits,
 // spawns ambient mobs, and evaluates the boss clock. The entry room is count 0 so
 // bossClockFires threshold is 0% (entry room is structurally boss-free), counter becomes 1.
 //
-// The entry room is dressed before the player lands: the wait loop fires flavor messages
-// while onProseReady is pending, then teleports when prose resolves (or after MAX_TICKS).
+// The player waits behind a flavor-message loop until fillTables calls onReady
+// (or MAX_TICKS elapses). Then teleports to the fully-built entry room.
 import * as tapestry from "@tapestry/engine";
 import { splitmix64 } from "./prng.js";
-import { rollRoster, dressRoster, fallbackPlacePalette } from "./roster.js";
-import { getPrompt } from "./prompts.js";
+import { rollBiomePalette } from "./roster.js";
 import { runKey, setRunState } from "./run-state.js";
 import { setAreaState, setRoomArea, setRoomPath } from "./area-state.js";
 import { rollRoomFacts, materializeRoom } from "./room-gen.js";
+import { fillTables } from "./oracle-tables.js";
 // ---------------------------------------------------------------------------
 // Configurable constants
 // ---------------------------------------------------------------------------
@@ -32,10 +34,10 @@ import { rollRoomFacts, materializeRoom } from "./room-gen.js";
 const SIZE_TARGET_OPTIONS = [8, 10, 12, 15, 20];
 /** Ticks between flavor messages. Tick = 100ms -> 15 ticks = ~1.5s. */
 const FLAVOR_INTERVAL = 15;
-/** Safety: teleport even if prose never lands (~20s). */
+/** Safety: teleport even if tables never land (~20s). */
 const MAX_TICKS = 200;
 // ---------------------------------------------------------------------------
-// Flavor messages shown while the entry room is being dressed.
+// Flavor messages shown while tables are being filled.
 // Sent in rotating order via idx. Each is rendered with "..." appended.
 // ---------------------------------------------------------------------------
 const FLAVOR = [
@@ -77,284 +79,173 @@ const FLAVOR = [
 ];
 const pending = {};
 // ---------------------------------------------------------------------------
-// parsePalette
-//
-// Parses a comma-separated LLM response into a string[] of place words.
-// Returns [] on null/empty input (caller falls back to fallbackPlacePalette).
-// Trims each entry, strips surrounding quotes, lowercases, drops empties,
-// caps to 8. All entries are ASCII-sanitized (non-printable stripped).
-// ---------------------------------------------------------------------------
-function parsePalette(raw) {
-    if (!raw || raw.trim() === "") {
-        return [];
-    }
-    const parts = raw.split(",");
-    const result = [];
-    for (let i = 0; i < parts.length && result.length < 8; i++) {
-        let entry = parts[i].trim();
-        // Strip surrounding single or double quotes.
-        entry = entry.replace(/^["']|["']$/g, "");
-        // Lowercase.
-        entry = entry.toLowerCase();
-        // Strip non-printable-ASCII (keep 0x20-0x7E, drop DEL 0x7F).
-        entry = entry.replace(/[^\x20-\x7E]/g, "").trim();
-        if (entry.length > 0) {
-            result.push(entry);
-        }
-    }
-    return result;
-}
-// ---------------------------------------------------------------------------
 // createSoloArea
 //
-// actor: the command actor (entityId, roomId, send)
-// name: user-supplied area name hint (null/blank = roll a generic hint). LLM-only.
-// minLevel, maxLevel: from the flow's guards
-// targetNamespace: the scratch pack namespace prefix (default "oracle-run").
-//                  P7 supplies "@scratch/oracle-run"'s namespace; this is the prefix
-//                  on the room id, e.g. "oracle-run:..." so createRoom can find the pack.
+// actor:            the command actor (entityId, roomId, send)
+// idea:             user-supplied area name/idea hint (null/blank = "wilderness").
+// minLevel:         lower end of the level range.
+// maxLevel:         upper end of the level range.
+// targetNamespace:  the scratch pack namespace prefix (default "oracle-run").
+//                   P7 supplies "@scratch/oracle-run"'s namespace; this is the prefix
+//                   on the room id, e.g. "oracle-run:..." so createRoom can find the pack.
 // ---------------------------------------------------------------------------
-export function createSoloArea(actor, name, minLevel, maxLevel, targetNamespace = "oracle-run") {
+export function createSoloArea(actor, idea, minLevel, maxLevel, targetNamespace = "oracle-run") {
     // -----------------------------------------------------------------------
-    // Step 1: Roll the descriptor (dice own all facts).
+    // Step 1: Roll the area seed (single unseeded roll - everything else is
+    //         deterministic from it). Create the area authoring record.
     // -----------------------------------------------------------------------
-    // The area seed is rolled from the current timestamp + player id hash (unseeded
-    // entropy at creation time). This is the ONE unseeded roll - after this, everything
-    // is deterministic from the seed.
     const now = Date.now();
     const playerIdHash = simpleHash(String(actor.entityId));
     const areaSeed = (now ^ playerIdHash) >>> 0;
     const rng = splitmix64(areaSeed);
     // size_target: how many rooms this area targets (reserved for future room-count gating).
     const _sizeTarget = SIZE_TARGET_OPTIONS[Math.floor(rng() * SIZE_TARGET_OPTIONS.length)];
-    // Unique bare area id. Use a deterministic slug from seed + timestamp segment.
+    // Unique bare area id. Deterministic slug from seed.
     const areaSlug = targetNamespace + "-" + (areaSeed >>> 0).toString(16);
-    // -----------------------------------------------------------------------
-    // Step 2: Stamp oracle_seed on the player.
-    // -----------------------------------------------------------------------
-    tapestry.world.setProperty(actor.entityId, "oracle_seed", areaSeed);
-    // -----------------------------------------------------------------------
-    // Step 3: Roll the roster (dice own all mob/boss/loot facts).
-    // -----------------------------------------------------------------------
+    const nameHint = (idea && idea.trim() !== "") ? idea.trim() : "the wilds";
     const levelRange = [minLevel, maxLevel];
-    const roster = rollRoster(areaSeed, levelRange);
-    // -----------------------------------------------------------------------
-    // Step 4: Create the area - FACTS first, then async dressing.
-    //
-    // createArea(bareAreaId, name) creates the area and writes area.yaml.
-    // setAreaAttribute sets reset_interval: 0 (repop-off guard E4) + level_range.
-    // Placeholder dressing makes the area complete + playable instantly.
-    // LLM dressing arrives async and is best-effort (placeholder stands on null).
-    //
-    // Note: oracle.yaml (seed, biome_palette, roster types) is conceptually the
-    // oracle sidecar documented in the spec. In slice 1 this data lives in-memory
-    // (run-state + module state). A persistent oracle.yaml writer (for freeze-and-share
-    // replay across reboots) is a deferred slice-2 concern that requires a pack-data
-    // write seam (no such engine API exists today). Within a session, the run-state
-    // cell and the roster held in the solo flow's closure are sufficient for P4-P6.
-    // -----------------------------------------------------------------------
-    // nameHint is used for placeholder area naming before LLM dressing arrives.
-    // primaryBiome comes from the place palette once known; use a temp placeholder.
-    const nameHint = name || "the wilds";
     const created = tapestry.authoring.createArea(areaSlug, nameHint);
     if (!created) {
         actor.send("Could not create oracle area. Try again.\r\n");
         return;
     }
-    // Set level_range + reset_interval: 0 (no repop).
+    // Persist seed to area.yaml (T5 seam) - used on reload/share.
+    tapestry.authoring.setAreaAttribute(areaSlug, "seed", String(areaSeed));
     tapestry.authoring.setAreaAttribute(areaSlug, "level_range", minLevel + "," + maxLevel);
     tapestry.authoring.setAreaAttribute(areaSlug, "reset_interval", "0");
-    // Set placeholder theme/short/description immediately so the area is complete.
+    // Placeholder dressing - makes the area immediately valid + playable.
     tapestry.authoring.setAreaTheme(areaSlug, nameHint);
     tapestry.authoring.setAreaShort(areaSlug, "An area, level " + minLevel + "-" + maxLevel + ".");
     tapestry.authoring.setAreaDescription(areaSlug, "The " + nameHint + " stretches before you. Levels " + minLevel + " to " + maxLevel + ".");
     // -----------------------------------------------------------------------
-    // Build the area once the place palette is known. Wraps Steps 5-8 and all
-    // async dressing. Takes the palette as a parameter; primaryBiome is derived
-    // from palette[0] at the top of build().
+    // Step 2: Roll biome palette (name-independent, seed-driven).
+    //         This is separate from the places table: biomes control terrain
+    //         tags, places control prose palette word choice.
     // -----------------------------------------------------------------------
+    const biomePalette = rollBiomePalette(rng);
     const playerId = actor.entityId;
-    function build(biomePalette) {
-        const primaryBiome = biomePalette[0];
+    // -----------------------------------------------------------------------
+    // Step 3: Start the flavor-wait loop immediately so the player sees
+    //         activity while fillTables is resolving.
+    //
+    //         The loop fires every FLAVOR_INTERVAL ticks. When ready=true
+    //         (set by onReady below) or ticks >= MAX_TICKS, it teleports.
+    //
+    //         handle is captured by step's closure (assigned before step
+    //         first runs, so self-cancel in step() works correctly).
+    //         All callbacks run on the single game-loop thread - no races.
+    // -----------------------------------------------------------------------
+    // Register the pending entry BEFORE fillTables so the synchronous
+    // (LLM-off) onReady callback finds the entry and can mark it ready.
+    pending[playerId] = {
+        entryRoomId: targetNamespace + ":" + areaSlug + "-entry",
+        ready: false,
+        ticks: 0,
+        idx: 0,
+    };
+    let handle;
+    const step = function () {
+        const gen = pending[playerId];
+        if (!gen) {
+            tapestry.schedule.cancel(handle);
+            return;
+        }
+        gen.ticks += FLAVOR_INTERVAL;
+        if (gen.ready || gen.ticks >= MAX_TICKS) {
+            tapestry.schedule.cancel(handle);
+            delete pending[playerId];
+            tapestry.world.teleportEntity(playerId, gen.entryRoomId);
+            // teleportEntity does NOT auto-render the room - dispatch look as the player.
+            tapestry.world.send(playerId, "The pattern settles into place around you.");
+            tapestry.admin.executeAs(playerId, "look");
+            return;
+        }
+        tapestry.world.send(playerId, FLAVOR[gen.idx % FLAVOR.length]);
+        gen.idx += 1;
+    };
+    handle = tapestry.schedule.every(FLAVOR_INTERVAL, step);
+    // -----------------------------------------------------------------------
+    // Step 4: Front-loaded LLM burst. fillTables fires all LLM calls
+    //         (places, mobs, boss, items, prose) respecting the in-flight limit.
+    //         onReady is called exactly once when all tables have resolved.
+    // -----------------------------------------------------------------------
+    const ideaStr = nameHint;
+    fillTables(ideaStr, levelRange, function (tables) {
         // -------------------------------------------------------------------
-        // Step 5: Roll entry-room facts + materialize (P7 wiring).
-        //
-        // materializeRoom creates the room, sets stub exits, spawns ambient mobs,
-        // and evaluates the boss clock. runState must be constructed BEFORE this
-        // call (entry room is count 0 so bossClockFires threshold = 0%, counter
-        // becomes 1 after the call).
+        // Step 5: Freeze every returned table to disk (T4 seam).
+        //         Tables are now live in the engine registry AND written to
+        //         the area sidecar so they survive reboot/share (T6).
         // -------------------------------------------------------------------
-        const entryRoomId = targetNamespace + ":" + areaSlug + "-entry";
-        const entryRoomPath = "0,0";
-        // -------------------------------------------------------------------
-        // Step 6: Construct and store the RunState cell.
-        // Must happen before materializeRoom so the boss-clock reads correct state.
-        // -------------------------------------------------------------------
-        const stateKey = runKey(actor.entityId, areaSlug);
-        const entryRunState = { roomsSinceLastBoss: 0 };
-        setRunState(stateKey, entryRunState);
-        // -------------------------------------------------------------------
-        // Step 6b: Back-populate area-state so the stub resolver can reach the
-        // roster + biome palette + run state without a playerId parameter.
-        // -------------------------------------------------------------------
-        setAreaState(areaSlug, {
-            areaId: areaSlug,
-            areaSeed,
-            biomePalette,
-            theme: nameHint,
-            levelRange,
-            targetNamespace,
-            areaSlug,
-            runStateKey: stateKey,
-            roster,
-        });
-        // Register the entry room's area ownership + coordinate path.
-        setRoomArea(entryRoomId, areaSlug);
-        setRoomPath(entryRoomId, "0,0");
-        // -------------------------------------------------------------------
-        // Step 7: Roll facts and materialize the entry room with an onProseReady
-        // callback. The callback marks the pending entry as ready, and the wait
-        // loop (started below) teleports the player when it fires.
-        //
-        // When LLM is OFF, onProseReady fires synchronously (still in this call
-        // stack), so ready is true before the loop's first tick - the player lands
-        // almost immediately. When LLM is ON, the callback fires after the LLM
-        // resolves and the loop delivers the teleport on the next tick.
-        // -------------------------------------------------------------------
-        // Register the pending entry BEFORE materializeRoom so the synchronous
-        // (LLM-off) onProseReady callback finds the entry and can mark it ready.
-        pending[playerId] = {
-            entryRoomId,
-            ready: false,
-            ticks: 0,
-            idx: 0,
-        };
-        const entryFacts = rollRoomFacts(areaSeed, entryRoomPath, roster, primaryBiome);
-        materializeRoom(entryRoomId, areaSlug, entryFacts, roster, entryRunState, primaryBiome, nameHint, function (_prose) {
-            // onProseReady: entry room prose has resolved (LLM or placeholder).
-            // Mark the pending entry ready so the wait loop teleports on next tick.
-            if (pending[playerId]) {
-                pending[playerId].ready = true;
-            }
-        });
-        // -------------------------------------------------------------------
-        // Step 8: Start the wait loop. Fires every FLAVOR_INTERVAL ticks.
-        // Sends rotating flavor messages until the entry room is ready (or MAX_TICKS).
-        // Then cancels itself and teleports the player.
-        //
-        // handle is captured by the step closure (assigned before step first runs
-        // on the next tick, so self-cancel in step() works correctly).
-        // All callbacks run on the single game-loop thread - no races on `pending`.
-        // -------------------------------------------------------------------
-        let handle;
-        const step = function () {
-            const gen = pending[playerId];
-            if (!gen) {
-                tapestry.schedule.cancel(handle);
-                return;
-            }
-            gen.ticks += FLAVOR_INTERVAL;
-            if (gen.ready || gen.ticks >= MAX_TICKS) {
-                tapestry.schedule.cancel(handle);
-                delete pending[playerId];
-                tapestry.world.teleportEntity(playerId, gen.entryRoomId);
-                // teleportEntity does NOT auto-render the room (unlike a move command),
-                // so the player would land silently. Dispatch a look as the player to
-                // render the entry room (name/desc/exits/occupants + GMCP), exactly as
-                // if they had typed it. executeAs re-gates as the target; look is unprivileged.
-                tapestry.world.send(playerId, "The pattern settles into place around you.");
-                tapestry.admin.executeAs(playerId, "look");
-                return;
-            }
-            tapestry.world.send(playerId, FLAVOR[gen.idx % FLAVOR.length]);
-            gen.idx += 1;
-        };
-        handle = tapestry.schedule.every(FLAVOR_INTERVAL, step);
-        // -------------------------------------------------------------------
-        // Async dressing (best-effort, runs AFTER the wait loop is running).
-        // Recommend the area theme, entry room prose. Placeholder already stands.
-        // -------------------------------------------------------------------
-        const canRecommend = tapestry.authoring.recommendEnabled &&
-            tapestry.authoring.recommendEnabled();
-        if (canRecommend) {
-            // Dress area theme.
-            const areaPr = getPrompt("area_theme");
-            tapestry.authoring.recommend({
-                field: "theme",
-                template: areaPr.template,
-                system: areaPr.system,
-                vars: {
-                    biome: primaryBiome,
-                    level_min: String(minLevel),
-                    level_max: String(maxLevel),
-                    name_hint: nameHint,
-                },
-            }, (themeResult) => {
-                const theme = themeResult || nameHint;
-                tapestry.authoring.setAreaTheme(areaSlug, theme);
-                // Area short after theme resolves.
-                const shortPr = getPrompt("area_short");
-                tapestry.authoring.recommend({
-                    field: "short",
-                    template: shortPr.template,
-                    system: shortPr.system,
-                    vars: { biome: primaryBiome, theme },
-                }, (shortResult) => {
-                    if (shortResult) {
-                        tapestry.authoring.setAreaShort(areaSlug, shortResult);
-                    }
-                });
-                // Area long desc.
-                const longPr = getPrompt("area_long");
-                tapestry.authoring.recommend({
-                    field: "description",
-                    template: longPr.template,
-                    system: longPr.system,
-                    vars: {
-                        biome: primaryBiome,
-                        theme,
-                        level_min: String(minLevel),
-                        level_max: String(maxLevel),
-                    },
-                }, (longResult) => {
-                    if (longResult) {
-                        tapestry.authoring.setAreaDescription(areaSlug, longResult);
-                    }
-                });
+        for (let i = 0; i < tables.length; i++) {
+            const t = tables[i];
+            tapestry.authoring.writeOracleTable({
+                areaId: areaSlug,
+                kind: t.kind,
+                entries: t.entries,
             });
         }
-        // Dress the roster async (best-effort). Pass nameHint as theme so mob/loot
-        // prompts get a coherent {theme} context from the start (the area theme LLM
-        // call is concurrent; nameHint is the best we have synchronously).
-        dressRoster(roster, primaryBiome, nameHint);
-    }
-    // -----------------------------------------------------------------------
-    // Choose the palette source, then call build().
-    //
-    // LLM on: request place_palette from the LLM using the area name.
-    //   parsePalette parses the comma-separated response.
-    //   Non-empty result -> use it. Empty/null -> fallbackPlacePalette().
-    // LLM off: build() with fallbackPlacePalette() immediately.
-    //
-    // The on_complete message ("The oracle stirs...") already rendered to the player
-    // before createSoloArea was called, covering the ~1-2s palette round-trip.
-    // -----------------------------------------------------------------------
-    const themeForPalette = name || "wilderness";
-    if (tapestry.authoring.recommendEnabled && tapestry.authoring.recommendEnabled()) {
-        const palettePr = getPrompt("place_palette");
-        tapestry.authoring.recommend({
-            field: "place_palette",
-            template: palettePr.template,
-            system: palettePr.system,
-            vars: { theme: themeForPalette },
-        }, function (result) {
-            const palette = parsePalette(result);
-            build(palette.length > 0 ? palette : fallbackPlacePalette());
-        });
-    }
-    else {
-        build(fallbackPlacePalette());
-    }
+        // -------------------------------------------------------------------
+        // Step 6: Build the entry room from the now-frozen tables.
+        // -------------------------------------------------------------------
+        buildEntryRoom(actor, areaSlug, areaSeed, levelRange, biomePalette, nameHint, targetNamespace);
+        // -------------------------------------------------------------------
+        // Step 7: Mark ready - the wait loop will teleport on its next tick.
+        // -------------------------------------------------------------------
+        if (pending[playerId]) {
+            pending[playerId].ready = true;
+        }
+    });
+}
+// ---------------------------------------------------------------------------
+// buildEntryRoom
+//
+// Rolls + materializes the entry room from the frozen tables.
+// The entry room id is fixed: targetNamespace + ":" + areaSlug + "-entry".
+// Registers all area-state + room-state needed by the stub resolver.
+// ---------------------------------------------------------------------------
+function buildEntryRoom(actor, areaSlug, areaSeed, levelRange, biomePalette, nameHint, targetNamespace) {
+    const entryRoomId = targetNamespace + ":" + areaSlug + "-entry";
+    const entryRoomPath = "0,0";
+    const primaryBiome = biomePalette[0] || "wilds";
+    // -------------------------------------------------------------------
+    // Construct and store the RunState cell.
+    // Must happen before materializeRoom so the boss-clock reads correct state.
+    // -------------------------------------------------------------------
+    const stateKey = runKey(actor.entityId, areaSlug);
+    const entryRunState = { roomsSinceLastBoss: 0 };
+    setRunState(stateKey, entryRunState);
+    // -------------------------------------------------------------------
+    // Back-populate area-state so the stub resolver can reach the
+    // biome palette + run state + seed without a playerId parameter.
+    // The roster field is kept for compatibility but is no longer used
+    // in the hot path (frozen tables replace it). Pass a null-safe stub.
+    // -------------------------------------------------------------------
+    setAreaState(areaSlug, {
+        areaId: areaSlug,
+        areaSeed,
+        biomePalette,
+        theme: nameHint,
+        levelRange,
+        targetNamespace,
+        areaSlug,
+        runStateKey: stateKey,
+        // Roster is no longer used in P-E (frozen tables replace it).
+        // Pass a minimal stub so the AreaState type is satisfied.
+        roster: { mobs: [], boss: null, loot: [] },
+    });
+    // Register the entry room's area ownership + coordinate path.
+    setRoomArea(entryRoomId, areaSlug);
+    setRoomPath(entryRoomId, entryRoomPath);
+    // -------------------------------------------------------------------
+    // Roll room facts (pure, no engine calls) + materialize.
+    // materializeRoom now uses composeProse (P-D) instead of recommend.
+    // The Roster parameter is still accepted by materializeRoom's signature
+    // but the new version of materializeRoom reads frozen tables instead.
+    // We pass the nulled roster stub for signature compatibility until P-G
+    // canonically removes it.
+    // -------------------------------------------------------------------
+    const entryFacts = rollRoomFacts(areaSeed, entryRoomPath, { mobs: [], boss: null, loot: [] }, primaryBiome);
+    materializeRoom(entryRoomId, areaSlug, areaSeed, entryFacts, entryRunState, primaryBiome, nameHint);
 }
 // ---------------------------------------------------------------------------
 // simpleHash - deterministic hash of a string into a 32-bit unsigned integer.

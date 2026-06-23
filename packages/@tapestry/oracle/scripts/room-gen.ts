@@ -3,11 +3,16 @@
 // THE HARD LINE (spec section 5):
 //   rollRoomFacts  - PURE, side-effect-free. Zero engine writes, zero runState access.
 //                    Same (areaSeed, roomPath, roster) -> byte-identical RoomFacts every time.
-//                    Only function prefetch (P6) may call.
 //   materializeRoom - The committing mint. ONLY place that writes the world + advances
 //                     the boss clock. Called solely on real committed arrival (P5).
 //   bossClockFires  - Pure given (roomsSinceLastBoss, rng), but rng input is seeded from
 //                     the room, so it only ever runs inside materializeRoom.
+//
+// P-E REWORK: materializeRoom no longer calls authoring.recommend for room prose.
+//   Prose is composed deterministically from the frozen prose table via composeProse (P-D).
+//   Ambient spawns come from frozen tables via mintMobInstance / mintItemInstance.
+//   Boss spawn uses mintBossInstance from frozen tables.
+//   Zero LLM calls remain in this file.
 //
 // roomPath convention: signed grid coords string "x,y" (integers, no spaces).
 // Entry room is "0,0". North of "0,0" is "0,1". East is "1,0". etc.
@@ -18,10 +23,12 @@
 // is min(N * slope, 1.0). Room 0 = 0% (structurally boss-free). Resets cold on spawn.
 
 import * as tapestry from "@tapestry/engine";
-import { hashCoord, splitmix64, rollDice, pick } from "./prng.js";
-import { getPrompt, placeholder } from "./prompts.js";
+import { hashCoord, splitmix64 } from "./prng.js";
+import { placeholder } from "./prompts.js";
 import { type Roster } from "./roster.js";
 import { type RunState } from "./run-state.js";
+import { composeProse } from "./prose-compose.js";
+import { mintMobInstance, mintBossInstance, mintItemInstance, rngFor } from "./resolver.js";
 
 // ---------------------------------------------------------------------------
 // Tuning constants
@@ -90,14 +97,13 @@ export interface RoomFacts {
      * Each entry: { direction: string, label: string }.
      */
     exits: Array<{ direction: string; label: string }>;
-    /** Ambient mob placements with per-instance frozen overrides (hp rolled here). */
-    ambientSpawns: AmbientSpawnSpec[];
-    /** Variables for the room prose recommend call. */
+    /** Ambient mob count to roll at materialize time (not pre-rolled, since
+     *  mintMobInstance reads frozen tables not roster). */
+    ambientCount: number;
+    /** Variables for prose composition (biome, mood). */
     proseVars: {
         biome: string;
-        theme: string;
         mood: string;
-        exits: string[];
     };
 }
 
@@ -107,9 +113,12 @@ export interface RoomFacts {
 // PURE. Zero engine calls. Zero runState access. No Date. No Math.random.
 // Derives the room seed from (areaSeed, roomPath) and rolls all room facts.
 // Same inputs -> byte-identical output, regardless of direction approached or backtrack.
+//
+// Note: roster parameter is kept for signature compatibility but is no longer
+// consulted here - ambient mob types come from frozen tables at materialize time.
 // ---------------------------------------------------------------------------
 
-export function rollRoomFacts(areaSeed: number, roomPath: string, roster: Roster, biome: string = "wilds"): RoomFacts {
+export function rollRoomFacts(areaSeed: number, roomPath: string, _roster: Roster, biome: string = "wilds"): RoomFacts {
     const roomSeed = hashCoord(areaSeed, roomPath);
     const rng = splitmix64(roomSeed);
 
@@ -144,7 +153,6 @@ export function rollRoomFacts(areaSeed: number, roomPath: string, roster: Roster
     }
 
     // Roll exit labels (placeholder-based, deterministic from rng - no engine calls).
-    // biome is passed in from the caller (real area biome, not derived from roster namespace).
     const exits: Array<{ direction: string; label: string }> = [];
     for (let i = 0; i < chosenDirs.length; i++) {
         const dir = chosenDirs[i];
@@ -153,52 +161,15 @@ export function rollRoomFacts(areaSeed: number, roomPath: string, roster: Roster
     }
 
     // -------------------------------------------------------------------------
-    // Roll ambient spawn specs.
-    // Count: 0..MAX_AMBIENT_MOBS, each a mob type drawn from roster.mobs.
-    // Per-instance hp is rolled from the type's hp_formula here and frozen.
+    // Roll ambient spawn count (0..MAX_AMBIENT_MOBS).
+    // Individual mob types are determined at materialize time from frozen tables.
     // -------------------------------------------------------------------------
 
-    const ambientSpawns: AmbientSpawnSpec[] = [];
-
-    if (roster.mobs.length > 0) {
-        const spawnCountMax = Math.min(MAX_AMBIENT_MOBS, roster.mobs.length);
-        const spawnCount = Math.floor(rng() * (spawnCountMax + 1));
-
-        for (let i = 0; i < spawnCount; i++) {
-            const mobType = pick(roster.mobs, rng);
-
-            // Roll this instance's hp from the type's formula (dice own the facts).
-            // This is the ONLY place hp is rolled for ambient instances.
-            const instanceHp = rollDice(mobType.hp_formula, rng);
-
-            // Roll loot for this instance (frozen now). Dropped to the room on death.
-            const items: string[] = [];
-            if (roster.loot.length > 0 && rng() < LOOT_DROP_CHANCE) {
-                const lootType = pick(roster.loot, rng);
-                items.push(lootType.base);
-            }
-
-            const override: SpawnOverride = {
-                from_type: mobType.ref,
-                name: mobType.name || placeholder("name", { biome, level: mobType.level }),
-                desc: mobType.desc || "",
-                max_hp: instanceHp,
-                damage: mobType.damage,
-                items: items,
-                no_reroll: true,
-            };
-
-            ambientSpawns.push({
-                base: mobType.base,
-                override,
-            });
-        }
-    }
+    const ambientCount = Math.floor(rng() * (MAX_AMBIENT_MOBS + 1));
 
     // -------------------------------------------------------------------------
-    // Roll prompt variables for room prose.
-    // No engine call here - just the variable bag passed to materializeRoom
-    // for the authoring.recommend call.
+    // Roll prompt variables for room prose composition.
+    // biome is passed in from the caller (real area biome).
     // -------------------------------------------------------------------------
 
     const moodOptions = [
@@ -213,15 +184,13 @@ export function rollRoomFacts(areaSeed: number, roomPath: string, roster: Roster
 
     const proseVars = {
         biome: biome,
-        theme: "",
         mood,
-        exits: exits.map(function (e) { return e.direction; }),
     };
 
     return {
         roomSeed,
         exits,
-        ambientSpawns,
+        ambientCount,
         proseVars,
     };
 }
@@ -260,34 +229,43 @@ export function bossClockFires(roomsSinceLastBoss: number, rng: () => number): b
 // THE COMMITTING MINT. The ONLY place that writes the world + advances the boss clock.
 // Called solely on real committed arrival (P5 will call this).
 //
+// P-E REWORK: No LLM calls. Prose comes from composeProse (frozen table roll).
+//   Ambient spawns come from mintMobInstance + mintItemInstance (frozen tables).
+//   Boss spawn uses mintBossInstance (frozen table).
+//
 // Steps:
-//   1. createRoom with facts (name placeholder if no LLM).
+//   1. Compose prose from frozen table + create the room.
 //   2. setStubExit for each rolled exit.
-//   3. spawnMob for each ambient spawn with its frozen override.
-//   4. authoring.recommend for room prose (placeholder on null/disabled).
-//   5. Evaluate boss clock; if fires, spawn the roster boss + reset clock.
-//      Otherwise advance clock by 1.
+//   3. Spawn ambient mobs (mintMobInstance from frozen <areaId>:mobs).
+//   4. Evaluate boss clock; if fires, spawn boss (mintBossInstance from frozen <areaId>:boss).
 //
-// onProseReady: called when prose resolves (LLM or placeholder). Progressive
-// arrival: the player is already on facts before this fires.
+// biome / theme: real area values passed by the caller (P5 has them from the run context).
+// areaSeed: needed for composeProse + rngFor calls (deterministic from coord).
 //
-// biome / theme: real area values passed by P5 (not stored in RoomFacts to
-// keep rollRoomFacts roster-only; P5 has them from the run context).
+// Note: onProseReady is removed (prose is now synchronous - no LLM wait).
 // ---------------------------------------------------------------------------
 
 export function materializeRoom(
     roomId: string,
     areaId: string,
+    areaSeed: number,
     facts: RoomFacts,
-    roster: Roster,
     runState: RunState,
     biome: string,
-    theme: string,
-    onProseReady?: (prose: string) => void
+    theme: string
 ): void {
     // -------------------------------------------------------------------------
-    // 1. Build room name + placeholder description, then createRoom.
+    // 1. Compose prose deterministically from frozen table + create the room.
+    //    composeProse reads the frozen <areaId>:prose table and picks fragments
+    //    using a coord-seeded rng. Falls back to "A plain space." if no table.
     // -------------------------------------------------------------------------
+
+    // Extract coord string from roomId to use as composeProse coord.
+    // Room ids follow: namespace:areaSlug-x_y  (e.g. "oracle-run:slug-0_0")
+    // We use the facts.roomSeed as a coord key for composeProse.
+    const coordKey = String(facts.roomSeed);
+
+    const prose = composeProse(areaId, areaSeed, coordKey, biome);
 
     const exitDirNames = facts.exits.map(function (e) { return e.direction; });
 
@@ -295,13 +273,7 @@ export function materializeRoom(
         ? theme + " - " + titleCase(biome)
         : titleCase(biome);
 
-    const initialDesc = placeholder("room", {
-        biome,
-        mood: facts.proseVars.mood,
-        exits: exitDirNames,
-    });
-
-    tapestry.authoring.createRoom(areaId, roomId, roomName, initialDesc);
+    tapestry.authoring.createRoom(areaId, roomId, roomName, prose);
 
     // -------------------------------------------------------------------------
     // 2. setStubExit for each rolled exit direction.
@@ -313,87 +285,56 @@ export function materializeRoom(
     }
 
     // -------------------------------------------------------------------------
-    // 3. spawnMob for each ambient spawn with frozen override.
-    //    mobs.spawnMob(options) - 2-arg options-object form per brief.
+    // 3. Spawn ambient mobs from frozen tables.
+    //    mintMobInstance reads the frozen <areaId>:mobs table and rolls stats.
+    //    If the table is not yet frozen (empty), no mobs spawn (graceful).
     // -------------------------------------------------------------------------
 
-    for (let i = 0; i < facts.ambientSpawns.length; i++) {
-        const spec = facts.ambientSpawns[i];
-        tapestry.mobs.spawnMob({
-            template: spec.base,
-            roomId,
-            override: {
-                fromType: spec.override.from_type,
-                name: spec.override.name,
-                desc: spec.override.desc,
-                maxHp: spec.override.max_hp,
-                damage: spec.override.damage,
-                items: spec.override.items,
-                noReroll: spec.override.no_reroll,
-            },
-        });
-    }
+    // Spawn ambient mobs: use level=1 as a default band start.
+    // A P-G pass will thread AreaState.levelRange here so mobs scale correctly.
+    // mintMobInstance + mintItemInstance read frozen tables; no LLM call.
+    const spawnRng = rngFor(areaSeed, coordKey + ":spawn");
 
-    // -------------------------------------------------------------------------
-    // 4. authoring.recommend for room prose. Progressive arrival: placeholder
-    //    already written above; prose replaces it when it resolves.
-    // -------------------------------------------------------------------------
-
-    const canRecommend = tapestry.authoring.recommendEnabled &&
-        tapestry.authoring.recommendEnabled();
-
-    if (canRecommend) {
-        const roomPr = getPrompt("room_prose");
-        tapestry.authoring.recommend(
-            {
-                field: "description",
+    for (let i = 0; i < facts.ambientCount; i++) {
+        const level = 1; // P-G will thread levelRange from AreaState
+        const override = mintMobInstance(areaId, level, spawnRng);
+        if (override) {
+            tapestry.mobs.spawnMob({
+                template: "tapestry-oracle:hostile-melee",
                 roomId,
-                template: roomPr.template,
-                system: roomPr.system,
-                vars: {
-                    biome,
-                    theme: theme || biome + " wilds",
-                    mood: facts.proseVars.mood,
-                },
-            },
-            function (result: string | null) {
-                const prose = result
-                    ? result
-                    : placeholder("room", { biome, mood: facts.proseVars.mood, exits: exitDirNames });
-                if (result) {
-                    tapestry.authoring.setRoomDescription(roomId, prose);
-                }
-                if (onProseReady) { onProseReady(prose); }
-            }
-        );
-    } else {
-        // LLM off: placeholder already set; fire onProseReady synchronously.
-        if (onProseReady) { onProseReady(initialDesc); }
+                override,
+            });
+        }
+
+        // Loot drop: attach item to mob inventory so it drops on death.
+        // mintItemInstance calculates the override; loot attachment via the
+        // spawnMob items[] array requires P-G to thread the item base id.
+        // Advance the rng regardless (keep the rng stream deterministic).
+        if (spawnRng() < LOOT_DROP_CHANCE) {
+            const _itemOverride = mintItemInstance(areaId, level, spawnRng);
+            // TODO P-G: attach _itemOverride to mob via spawnMob items[] once
+            // the base template id is threaded through here correctly.
+            void _itemOverride;
+        }
     }
 
     // -------------------------------------------------------------------------
-    // 5. Boss clock: seeded from the room (same-room first-arrival is determined).
-    //    rng is derived from the room seed so the roll is deterministic per room.
+    // 4. Boss clock: seeded from the room (same-room first-arrival is determined).
     //    The THRESHOLD comes from runState.roomsSinceLastBoss (path-dependent).
     // -------------------------------------------------------------------------
 
     const bossRng = splitmix64(facts.roomSeed + 1);
 
     if (bossClockFires(runState.roomsSinceLastBoss, bossRng)) {
-        // Spawn the roster boss with frozen override.
-        // Base template carries the swell dials (they live in the template, not the override).
-        const boss = roster.boss;
-        tapestry.mobs.spawnMob({
-            template: boss.base,
-            roomId,
-            override: {
-                fromType: boss.ref,
-                name: boss.name || placeholder("name", { biome, rank: boss.level }),
-                maxHp: boss.hp,
-                damage: boss.damage,
-                noReroll: true,
-            },
-        });
+        const bossRngForMint = rngFor(areaSeed, coordKey + ":boss");
+        const bossOverride = mintBossInstance(areaId, 1, bossRngForMint);
+        if (bossOverride) {
+            tapestry.mobs.spawnMob({
+                template: "tapestry-oracle:swell-boss",
+                roomId,
+                override: bossOverride,
+            });
+        }
         // Reset the clock.
         runState.roomsSinceLastBoss = 0;
     } else {

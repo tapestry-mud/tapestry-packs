@@ -11,8 +11,15 @@
 // MINT-ON-DEMAND ONLY (spec section 5 hard line):
 //   materializeRoom is the committing mint and advances the boss clock.
 //   It is called ONCE per first arrival. On backtrack (room already exists), skip.
-//   rollRoomFacts is pure; this is the "cache miss -> roll now" seam that P6 will
-//   extend by checking its session cache BEFORE calling rollRoomFacts.
+//   rollRoomFacts is pure; this seam rolls facts on-demand for any new neighbor.
+//
+// P-E REWORK:
+//   - prefetchNeighbors removed (no per-room LLM left to hide latency for).
+//   - takeCached / peekCached removed (session cache dead - no async prose to pre-warm).
+//   - areaSeed now read from in-memory AreaState (fast path) with fallback to
+//     tapestry.area.get(areaId).seed (T5 engine seam, for reloaded/shared areas).
+//   - Per-area minted-type sets maintained in-memory so shouldReuse can gate
+//     on whether types have already been introduced.
 //
 // ASCII; no em dashes; braces on all control flow.
 import * as tapestry from "@tapestry/engine";
@@ -20,7 +27,43 @@ import { DIR_OFFSETS, rollRoomFacts, materializeRoom } from "./room-gen.js";
 import { hashCoord, splitmix64, pick } from "./prng.js";
 import { getAreaState, getRoomArea, getRoomPath, setRoomArea, setRoomPath } from "./area-state.js";
 import { getRunState } from "./run-state.js";
-import { takeCached, prefetchNeighbors } from "./prefetch.js";
+// ---------------------------------------------------------------------------
+// Per-area in-memory minted type sets.
+// Tracks which mob type ids have been minted so shouldReuse can gate on count.
+// Session-scoped (resets on reboot, per tuning decision 2).
+// ---------------------------------------------------------------------------
+const _mintedMobTypes = new Map();
+function getMintedSet(areaId) {
+    let s = _mintedMobTypes.get(areaId);
+    if (!s) {
+        s = new Set();
+        _mintedMobTypes.set(areaId, s);
+    }
+    return s;
+}
+// ---------------------------------------------------------------------------
+// resolveAreaSeed
+//
+// Returns the area seed for the given areaId.
+// Fast path: AreaState.areaSeed (same-session in-memory).
+// Fallback: tapestry.area.get(areaId).seed (T5 engine seam, for reloaded areas).
+// Returns 0 if neither is available (graceful - determinism degraded but not fatal).
+// ---------------------------------------------------------------------------
+function resolveAreaSeed(areaId) {
+    const areaState = getAreaState(areaId);
+    if (areaState) {
+        return areaState.areaSeed;
+    }
+    // T5 fallback: read persisted seed from area.yaml via engine seam.
+    const area = tapestry.area && tapestry.area.get(areaId);
+    if (area && area.seed) {
+        const parsed = parseInt(String(area.seed), 10);
+        if (!isNaN(parsed)) {
+            return parsed;
+        }
+    }
+    return 0;
+}
 // ---------------------------------------------------------------------------
 // oppositeDir - returns the cardinal opposite of a direction.
 // ---------------------------------------------------------------------------
@@ -102,7 +145,6 @@ function resolveStub(roomId, direction) {
         // c. Derive the neighbor room id.
         //    Scheme: namespace:areaSlug-x_y  (comma replaced with underscore)
         //    e.g. "oracle-run:oracle-run-abc123-0_1"
-        //    P6 and P7 reuse this same scheme.
         // ------------------------------------------------------------------
         const pathKey = neighborX + "_" + neighborY;
         const neighborId = areaState.targetNamespace + ":" + areaState.areaSlug + "-" + pathKey;
@@ -120,7 +162,6 @@ function resolveStub(roomId, direction) {
         }
         if (neighborExists) {
             // Room already minted (backtrack or revisit). Just ensure exits are wired.
-            // setRoomExit is idempotent; re-wiring a real exit is a no-op or harmless.
             tapestry.authoring.setRoomExit(roomId, direction, neighborId);
             if (retDir) {
                 tapestry.authoring.setRoomExit(neighborId, retDir, roomId);
@@ -128,35 +169,23 @@ function resolveStub(roomId, direction) {
             return true;
         }
         // ------------------------------------------------------------------
-        // e. Check the session cache first (P6).
-        //    Cache hit: use cached facts (and cached prose, if already resolved).
-        //    Cache miss: roll room facts now (pure, no side effects).
-        //    Either path yields identical facts (hashCoord determinism guarantees it).
-        //    takeCached removes the entry: this is the commit-on-travel consume.
-        //    Untraveled neighbors stay in the cache until walked into or evicted.
+        // e. Resolve the area seed (fast path: in-memory; fallback: T5 seam).
         // ------------------------------------------------------------------
+        const areaSeed = resolveAreaSeed(areaId);
         // ------------------------------------------------------------------
-        // e1. Derive the per-room biome deterministically from position.
-        //     Must happen before takeCached/rollRoomFacts so biome is available
-        //     for rollRoomFacts' biome parameter. Uses pick() seeded from hashCoord
-        //     so revisits are stable.
+        // f. Derive per-neighbor biome deterministically from position.
         // ------------------------------------------------------------------
-        const biomeRng = splitmix64(hashCoord(areaState.areaSeed, neighborPath));
+        const biomeRng = splitmix64(hashCoord(areaSeed, neighborPath));
         const biome = pick(areaState.biomePalette, biomeRng);
         const theme = areaState.theme;
         // ------------------------------------------------------------------
-        // e2. Check the session cache first (P6).
-        //    Cache hit: use cached facts (and cached prose, if already resolved).
-        //    Cache miss: roll room facts now (pure, no side effects).
-        //    Either path yields identical facts (hashCoord determinism guarantees it).
-        //    takeCached removes the entry: this is the commit-on-travel consume.
-        //    Untraveled neighbors stay in the cache until walked into or evicted.
+        // g. Roll room facts (pure, no side effects).
+        //    Roster is no longer used in rollRoomFacts (P-E) but the signature
+        //    still accepts it. Pass the null stub from area-state.
         // ------------------------------------------------------------------
-        const cached = takeCached(neighborPath);
-        const facts = cached ? cached.facts : rollRoomFacts(areaState.areaSeed, neighborPath, areaState.roster, biome);
-        const cachedProse = cached ? cached.prose : null;
+        const facts = rollRoomFacts(areaSeed, neighborPath, areaState.roster, biome);
         // ------------------------------------------------------------------
-        // f. Fetch the run state for this area's solo run.
+        // h. Fetch the run state for this area's solo run.
         //    runStateKey was stored in AreaState at creation (area-gen.ts step 6b).
         // ------------------------------------------------------------------
         const runState = getRunState(areaState.runStateKey);
@@ -165,54 +194,21 @@ function resolveStub(roomId, direction) {
             return false;
         }
         // ------------------------------------------------------------------
-        // h. Materializethe room (committing mint: createRoom + spawns + boss clock).
+        // i. Materialize the room (committing mint).
         //    This is the ONLY call site. Called once per first arrival.
-        //    onProseReady: progressive arrival - player lands on facts, prose follows.
-        //
-        //    materializeRoom signature (room-gen.ts):
-        //      materializeRoom(roomId, areaId, facts, roster, runState, biome, theme, onProseReady?)
+        //    materializeRoom (P-E) is now synchronous: prose from composeProse,
+        //    spawns from frozen tables, no LLM. No async callback needed.
         // ------------------------------------------------------------------
-        // alreadyFired tracks whether onProseReady fired synchronously inside
-        // materializeRoom (LLM off) or will fire later (LLM on, async).
-        // The settle notice goes out only on the async path.
-        let alreadyFired = false;
-        materializeRoom(neighborId, areaId, facts, areaState.roster, runState, biome, theme, function (_prose) {
-            alreadyFired = true;
-            if (!wasSyncFired) {
-                // Prose arrived from the LLM after the player had already moved in.
-                // Emit a lore notice so the change is not silent.
-                tapestry.world.sendToRoom(neighborId, "The details of this place settle into focus.");
-            }
-            // P6: trigger background prefetch of the NEW room's candidate
-            // neighbors now that the room is committed. This warms them for
-            // the next move so prose is likely ready on arrival.
-            // prefetchNeighbors is pure-only: no world writes, no materializeRoom,
-            // no RunState access. Safe to call from inside the prose callback.
-            prefetchNeighbors(areaState.areaSeed, neighborPath, areaState.roster, areaState.biomePalette);
-        });
-        // wasSyncFired is true when LLM is off (callback already ran during materializeRoom).
-        // false means the callback will fire later; the notice will be sent then.
-        const wasSyncFired = alreadyFired;
+        materializeRoom(neighborId, areaId, areaSeed, facts, runState, biome, theme);
         // ------------------------------------------------------------------
-        // P6: If the cached entry already had prose, pass it to the room as
-        // the final description now (the LLM resolved during prefetch dwell time).
-        // materializeRoom already wrote the placeholder; overwrite with cached prose
-        // only if it is present and non-empty (progressive arrival: instant upgrade).
-        // ------------------------------------------------------------------
-        if (cachedProse) {
-            tapestry.authoring.setRoomDescription(neighborId, cachedProse);
-        }
-        // ------------------------------------------------------------------
-        // i. Register the neighbor in area-state so future resolver calls work.
+        // j. Register the neighbor in area-state so future resolver calls work.
         // ------------------------------------------------------------------
         setRoomArea(neighborId, areaId);
         setRoomPath(neighborId, neighborPath);
         // ------------------------------------------------------------------
-        // j. Wire the two-way exits.
+        // k. Wire the two-way exits.
         //    - Turn the current stub into a real exit pointing to neighborId.
         //    - Wire the return exit on the neighbor back to the current room.
-        //    World.MoveEntity re-reads the current room's exit after TryResolve;
-        //    setRoomExit(roomId, direction, neighborId) makes it a real exit.
         // ------------------------------------------------------------------
         tapestry.authoring.setRoomExit(roomId, direction, neighborId);
         if (retDir) {
