@@ -86,6 +86,14 @@ export function rollBiomePalette(rng: () => number): string[] {
     return BIOME_PALETTES[idx].slice();
 }
 
+/**
+ * Fallback place palette used when the LLM is off or the place_palette call fails.
+ * Theme-neutral place words that read better than terrain labels when no LLM is present.
+ */
+export function fallbackPlacePalette(): string[] {
+    return ["hall", "passage", "chamber", "corner", "threshold", "alcove"];
+}
+
 // Gear slot bases for loot. Base id is the namespace:local form.
 const GEAR_BASES: Array<{ base: string; slot: string }> = [
     { base: "tapestry-oracle:armor-head", slot: "head" },
@@ -179,13 +187,15 @@ export function rollRoster(areaSeed: number, levelRange: [number, number]): Rost
 // onDone: optional callback fired when all fields have resolved.
 // ---------------------------------------------------------------------------
 
-export function dressRoster(roster: Roster, biome: string, onDone?: () => void): void {
+export function dressRoster(roster: Roster, biome: string, theme?: string, onDone?: () => void): void {
     if (!tapestry.authoring.recommendEnabled || !tapestry.authoring.recommendEnabled()) {
         // LLM off - fill all names with placeholders synchronously.
         applyRosterPlaceholders(roster, biome);
         if (onDone) { onDone(); }
         return;
     }
+
+    const themeLabel = theme || biome + " wilds";
 
     // Count how many async calls are in flight so we can fire onDone once.
     let pending = roster.mobs.length * 2 + 1 + roster.loot.length;
@@ -205,7 +215,7 @@ export function dressRoster(roster: Roster, biome: string, onDone?: () => void):
                 field: "name",
                 template: namePr.template,
                 system: namePr.system,
-                vars: { level: String(mob.level), biome },
+                vars: { level: String(mob.level), biome, theme: themeLabel },
             },
             (result: string | null) => {
                 mob.name = result
@@ -223,7 +233,7 @@ export function dressRoster(roster: Roster, biome: string, onDone?: () => void):
                 field: "description",
                 template: descPr.template,
                 system: descPr.system,
-                vars: { name: nameAtStart || placeholder("name", { biome, level: mob.level }), biome },
+                vars: { name: nameAtStart || placeholder("name", { biome, level: mob.level }), biome, theme: themeLabel },
             },
             (result: string | null) => {
                 mob.desc = result ? result : "";
@@ -261,7 +271,7 @@ export function dressRoster(roster: Roster, biome: string, onDone?: () => void):
                 field: "name",
                 template: lootPr.template,
                 system: lootPr.system,
-                vars: { slot: item.slot, biome },
+                vars: { slot: item.slot, biome, theme: themeLabel },
             },
             (result: string | null) => {
                 // Gear must NOT get a "creature" placeholder - use a slot/biome name.

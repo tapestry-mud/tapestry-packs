@@ -227,6 +227,20 @@ export function rollRoomFacts(areaSeed: number, roomPath: string, roster: Roster
 }
 
 // ---------------------------------------------------------------------------
+// titleCase
+//
+// Capitalizes each word in s. Words are split on spaces and hyphens; hyphens
+// are preserved in the output. ASCII only - no unicode needed.
+// e.g. "walk-in freezer" -> "Walk-In Freezer"
+// ---------------------------------------------------------------------------
+
+function titleCase(s: string): string {
+    return s.replace(/([a-zA-Z]+)/g, function (word) {
+        return word.charAt(0).toUpperCase() + word.slice(1);
+    });
+}
+
+// ---------------------------------------------------------------------------
 // bossClockFires
 //
 // Pure given (roomsSinceLastBoss, rng). Ramp-and-reset pity timer.
@@ -278,8 +292,8 @@ export function materializeRoom(
     const exitDirNames = facts.exits.map(function (e) { return e.direction; });
 
     const roomName = theme
-        ? theme + " - " + biome + " passage"
-        : biome + " passage";
+        ? theme + " - " + titleCase(biome)
+        : titleCase(biome);
 
     const initialDesc = placeholder("room", {
         biome,

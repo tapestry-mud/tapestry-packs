@@ -16,6 +16,21 @@
 # Tuned in-shell against llama3.1:8b via oracle-boot/tune-prompt.mjs.
 
 # ---------------------------------------------------------------------------
+# Place palette - LLM-built list of distinct places within the area theme.
+# Called at solo creation; replaces the seed-rolled terrain biome palette.
+# ---------------------------------------------------------------------------
+
+place_palette:
+  system: >
+    You are the Oracle, a keeper of ancient lore for a text adventure. You list
+    the distinct places one would find within a location. Plain ASCII, no em
+    dashes.
+  template: >
+    List 6 to 8 distinct places you would find in a {theme}. Each is one or
+    two words. Reply as a comma-separated list only - lowercase, no numbering,
+    no surrounding quotes, no trailing period.
+
+# ---------------------------------------------------------------------------
 # Area-level dressing (used by P3 - area creation)
 # ---------------------------------------------------------------------------
 
@@ -58,10 +73,9 @@ room_prose:
     describe rooms as the player experiences them, second person, present tense.
     Write with sensory detail. Plain ASCII, no em dashes.
   template: >
-    Describe a room in a {biome} area called {theme}. The mood is: {mood}.
-    Write 1 to 2 vivid sentences, present tense, second person. You may refer to
-    a direction naturally (for example, to the east a river runs fast through the
-    trees), but never output a literal "Exits:" list or bracketed directions.
+    Describe the {biome} within {theme}. The mood is: {mood}. Write 1 to 2
+    vivid sentences, present tense, second person. You may refer to a direction
+    naturally but never output a literal Exits list or bracketed directions.
     Reply with the description only, no surrounding quotes.
 
 # ---------------------------------------------------------------------------
@@ -74,9 +88,9 @@ exit_name:
     write short directional labels that hint at what lies ahead. Plain ASCII,
     no em dashes.
   template: >
-    Name a {direction} exit in a {biome} area, like a short signpost (for
-    example, path into dark pines). Reply with 3 to 6 words only - lowercase, no
-    surrounding quotes, no trailing period.
+    Name a {direction} exit leading deeper into {theme}, like a short signpost.
+    Reply with 3 to 6 words only - lowercase, no surrounding quotes, no trailing
+    period.
 
 # ---------------------------------------------------------------------------
 # Roster dressing - mob (used by P3 - roster creation)
@@ -87,8 +101,9 @@ mob_name:
     You are the Oracle, a keeper of ancient lore for a text adventure. You
     name creatures with menace and atmosphere. Plain ASCII, no em dashes.
   template: >
-    Name a level {level} {biome} creature. Reply with 2 to 4 evocative, menacing
-    words only - no surrounding quotes, no trailing period.
+    Name a level {level} creature that lurks in the {biome} of {theme}. Reply
+    with 2 to 4 evocative, menacing words only - no surrounding quotes, no
+    trailing period.
 
 mob_desc:
   system: >
@@ -96,9 +111,9 @@ mob_desc:
     describe creatures in one vivid phrase, like a warning scratched into old
     stone. Plain ASCII, no em dashes.
   template: >
-    Describe the creature called {name} found in a {biome} area in one vivid
-    phrase of 5 to 12 words. Reply with the phrase only, no surrounding quotes,
-    no trailing period.
+    Describe the creature called {name} found in the {biome} of {theme} in one
+    vivid phrase of 5 to 12 words. Reply with the phrase only, no surrounding
+    quotes, no trailing period.
 
 # ---------------------------------------------------------------------------
 # Roster dressing - boss (used by P3 - roster creation)
@@ -124,6 +139,6 @@ loot_name:
     name equipment with the worn, found quality of things salvaged from ruin.
     Plain ASCII, no em dashes.
   template: >
-    Name a {slot} armor piece found in a {biome} area, with a worn, salvaged
-    feel. Reply with 3 to 6 words only - no surrounding quotes, no trailing
-    period.
+    Name a piece of gear (a {slot} item) found in the {biome} of {theme}, worn
+    and salvaged. Reply with 3 to 6 words only - no surrounding quotes, no
+    trailing period.
