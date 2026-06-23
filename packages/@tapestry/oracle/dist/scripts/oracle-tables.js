@@ -16,113 +16,80 @@
 //     fill_prose_atmosphere (fired after mobs/boss/items complete, also in pairs)
 //
 // bakedTables loads a hand-authored baked set from data/baked/<setId>/ (P-F).
-
 import * as tapestry from "@tapestry/engine";
 import { getPrompt } from "./prompts.js";
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-export interface OracleEntry {
-    w: number;
-    id: string;
-    name: string;
-    desc: string;
-    balance_ref?: string;
-    rarity?: string;
-}
-
-export interface OracleTableData {
-    kind: string;
-    entries: OracleEntry[];
-}
-
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-
-const RARITY_WEIGHTS: Record<string, number> = { common: 60, uncommon: 30, rare: 8, epic: 2 };
-
+const RARITY_WEIGHTS = { common: 60, uncommon: 30, rare: 8, epic: 2 };
 // ---------------------------------------------------------------------------
 // Pure parsing helpers (exported for golden tests)
 // ---------------------------------------------------------------------------
-
 /**
  * Slugify a name: lowercase, replace non-alnum runs with "-", strip leading/trailing
  * dashes, cap at 40 chars. Returns "item" if the result is empty.
  */
-export function slug(name: string): string {
+export function slug(name) {
     return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "item";
 }
-
 /**
  * Parse a comma-separated LLM list into a string[], trimming each entry and capping at 8.
  * Returns [] on null/empty input.
  */
-export function parseList(raw: string | null): string[] {
-    if (!raw) { return []; }
+export function parseList(raw) {
+    if (!raw) {
+        return [];
+    }
     return raw.split(",").map((s) => s.trim()).filter((s) => s.length > 0).slice(0, 8);
 }
-
 /**
  * Parse "name | desc[ | rarity | kind]" lines into OracleEntry[].
  * For items (isItem=true): weight by rarity; 4th field (weapon|armor) sets balance_ref.
  * For non-items: weight=50; balance_ref=defaultBalanceRef.
  * Lines missing a name or desc are skipped.
  */
-export function parsePipeLines(raw: string | null, defaultBalanceRef: string, isItem: boolean): OracleEntry[] {
-    if (!raw) { return []; }
-    const out: OracleEntry[] = [];
+export function parsePipeLines(raw, defaultBalanceRef, isItem) {
+    if (!raw) {
+        return [];
+    }
+    const out = [];
     for (const line of raw.split("\n")) {
         const parts = line.split("|").map((p) => p.trim());
-        if (parts.length < 2 || parts[0].length === 0) { continue; }
+        if (parts.length < 2 || parts[0].length === 0) {
+            continue;
+        }
         const name = parts[0];
         const desc = parts[1];
         const rarity = isItem ? normalizeRarity(parts[2]) : undefined;
         const balanceRef = isItem ? normalizeItemKind(parts[3]) : defaultBalanceRef;
-        const w = isItem ? (RARITY_WEIGHTS[rarity!] || 60) : 50;
-        const entry: OracleEntry = { w, id: slug(name), name, desc, balance_ref: balanceRef };
-        if (rarity) { entry.rarity = rarity; }
+        const w = isItem ? (RARITY_WEIGHTS[rarity] || 60) : 50;
+        const entry = { w, id: slug(name), name, desc, balance_ref: balanceRef };
+        if (rarity) {
+            entry.rarity = rarity;
+        }
         out.push(entry);
     }
     return out;
 }
-
 // ---------------------------------------------------------------------------
 // Private helpers
 // ---------------------------------------------------------------------------
-
-function normalizeRarity(s: string | undefined): string {
+function normalizeRarity(s) {
     const r = (s || "").toLowerCase().trim();
     return RARITY_WEIGHTS[r] !== undefined ? r : "common";
 }
-
 /**
  * Normalize "weapon" or "armor" from the LLM kind field.
  * Anything that is not "armor" defaults to "weapon".
  * This is what lets statsFor("armor",...) be reached for armor loot.
  */
-function normalizeItemKind(s: string | undefined): string {
+function normalizeItemKind(s) {
     return (s || "").toLowerCase().trim() === "armor" ? "armor" : "weapon";
 }
-
-// ---------------------------------------------------------------------------
-// recommend call wrapper
-// ---------------------------------------------------------------------------
-
-type Recommend = (opts: any, cb: (result: string | null) => void) => void;
-
-function call(
-    recommend: Recommend,
-    promptKey: string,
-    vars: Record<string, string>,
-    cb: (r: string | null) => void
-): void {
+function call(recommend, promptKey, vars, cb) {
     const pr = getPrompt(promptKey);
     recommend({ field: promptKey, template: pr.template, system: pr.system, vars }, cb);
 }
-
 // ---------------------------------------------------------------------------
 // fillTables
 //
@@ -134,20 +101,14 @@ function call(
 //   - mobs, boss, items fire as pairs (first 2, then the 3rd when any completes).
 //   - prose openers/details/atmosphere fire after all 3 above complete, in pairs.
 // ---------------------------------------------------------------------------
-
-export function fillTables(
-    idea: string,
-    levelRange: [number, number],
-    onReady: (tables: OracleTableData[]) => void
-): void {
-    const recommend: Recommend = (tapestry as any).authoring.recommend;
-    const tables: OracleTableData[] = [];
-    const vars: Record<string, string> = {
+export function fillTables(idea, levelRange, onReady) {
+    const recommend = tapestry.authoring.recommend;
+    const tables = [];
+    const vars = {
         idea,
         level_min: String(levelRange[0]),
         level_max: String(levelRange[1]),
     };
-
     // Step 1: fill places first - prose fills key off the place list.
     call(recommend, "fill_places", vars, (placesRaw) => {
         const places = parseList(placesRaw);
@@ -156,7 +117,6 @@ export function fillTables(
             kind: "places",
             entries: placeList.map((p, i) => ({ w: 10, id: slug(p), name: p, desc: "" })),
         });
-
         // Step 2: mobs, boss, items in a batch of 3.
         // Fire them in pairs to stay under the in-flight limit.
         let pending = 3;
@@ -166,13 +126,14 @@ export function fillTables(
                 fillProse(recommend, idea, placeList, tables, onReady);
             }
         };
-
         // Pair 1: mobs + boss (2 in-flight).
         // fill_items is chained inside the mobs callback so it fires only after
         // mobs resolves (freeing one slot), keeping in-flight <= 2 at all times.
         let itemsFired = false;
         const fireItems = () => {
-            if (itemsFired) { return; }
+            if (itemsFired) {
+                return;
+            }
             itemsFired = true;
             call(recommend, "fill_items", vars, (raw) => {
                 const entries = parsePipeLines(raw, "weapon", true);
@@ -196,7 +157,6 @@ export function fillTables(
         });
     });
 }
-
 // ---------------------------------------------------------------------------
 // fillProse (private)
 //
@@ -204,15 +164,8 @@ export function fillTables(
 // All prose fragments go into a single "prose" table with entries tagged by
 // sub-kind via the entry name field ("opener", "detail", "atmosphere").
 // ---------------------------------------------------------------------------
-
-function fillProse(
-    recommend: Recommend,
-    idea: string,
-    places: string[],
-    tables: OracleTableData[],
-    onReady: (t: OracleTableData[]) => void
-): void {
-    const proseEntries: OracleEntry[] = [];
+function fillProse(recommend, idea, places, tables, onReady) {
+    const proseEntries = [];
     // Phase 1: fill fragments for the primary place; used loosely for all rooms.
     const keyPlace = places[0] || "chamber";
     let pending = 3;
@@ -220,20 +173,23 @@ function fillProse(
         pending -= 1;
         if (pending === 0) {
             if (proseEntries.length === 0) {
-                for (const e of fallbackProse()) { proseEntries.push(e); }
+                for (const e of fallbackProse()) {
+                    proseEntries.push(e);
+                }
             }
             tables.push({ kind: "prose", entries: proseEntries });
             onReady(tables);
         }
     };
-    const proseVars: Record<string, string> = { idea, place: keyPlace };
-
+    const proseVars = { idea, place: keyPlace };
     // Pair 1: openers + details (2 in-flight).
     // fill_prose_atmosphere is chained inside the openers callback so it fires only
     // after openers resolves, keeping in-flight <= 2 at all times.
     let atmosphereFired = false;
     const fireAtmosphere = () => {
-        if (atmosphereFired) { return; }
+        if (atmosphereFired) {
+            return;
+        }
         atmosphereFired = true;
         call(recommend, "fill_prose_atmosphere", proseVars, (raw) => { pushLines(proseEntries, raw, "atmosphere"); done(); });
     };
@@ -250,50 +206,48 @@ function fillProse(
         fireAtmosphere();
     });
 }
-
-function pushLines(out: OracleEntry[], raw: string | null, kind: string): void {
-    if (!raw) { return; }
+function pushLines(out, raw, kind) {
+    if (!raw) {
+        return;
+    }
     let i = 0;
     for (const line of raw.split("\n")) {
         const t = line.trim();
-        if (t.length === 0) { continue; }
+        if (t.length === 0) {
+            continue;
+        }
         out.push({ w: 10, id: kind + "-" + i, name: kind, desc: t });
         i++;
     }
 }
-
 // ---------------------------------------------------------------------------
 // bakedTables
 //
 // Load a hand-authored baked set from data/baked/<setId>/tables.yml.
 // Returns [] if the file is missing (P-F is responsible for populating these).
 // ---------------------------------------------------------------------------
-
-export function bakedTables(setId: string): OracleTableData[] {
+export function bakedTables(setId) {
     const path = "data/baked/" + setId + "/tables.yml";
-    const raw: any = (tapestry as any).data.loadYaml(path);
-    if (!raw || !Array.isArray(raw.tables)) { return []; }
-    return raw.tables as OracleTableData[];
+    const raw = tapestry.data.loadYaml(path);
+    if (!raw || !Array.isArray(raw.tables)) {
+        return [];
+    }
+    return raw.tables;
 }
-
 // ---------------------------------------------------------------------------
 // Deterministic fallbacks (LLM unavailable / empty output)
 // Keep the lane playable with no LLM.
 // ---------------------------------------------------------------------------
-
-function fallbackMobs(): OracleEntry[] {
+function fallbackMobs() {
     return [{ w: 60, id: "wanderer", name: "wanderer", desc: "A wary local.", balance_ref: "mob" }];
 }
-
-function fallbackBoss(): OracleEntry[] {
+function fallbackBoss() {
     return [{ w: 100, id: "warden", name: "the warden", desc: "It guards this place.", balance_ref: "boss" }];
 }
-
-function fallbackItems(): OracleEntry[] {
+function fallbackItems() {
     return [{ w: 60, id: "tool", name: "worn tool", desc: "Still useful.", balance_ref: "weapon", rarity: "common" }];
 }
-
-function fallbackProse(): OracleEntry[] {
+function fallbackProse() {
     return [
         { w: 10, id: "opener-0", name: "opener", desc: "A plain space." },
         { w: 10, id: "detail-0", name: "detail", desc: "Dust in the corners." },
