@@ -37,7 +37,7 @@ import { getRunState } from "./run-state.js";
 
 const _mintedMobTypes = new Map<string, Set<string>>();
 
-function getMintedSet(areaId: string): Set<string> {
+export function getMintedSet(areaId: string): Set<string> {
     let s = _mintedMobTypes.get(areaId);
     if (!s) {
         s = new Set<string>();
@@ -67,6 +67,13 @@ function resolveAreaSeed(areaId: string): number {
         if (!isNaN(parsed)) {
             return parsed;
         }
+        // Seed field present but not parseable as integer - determinism degraded.
+        // (tapestry.system is not declared in the type stubs; cast to any for the warn call.)
+        (tapestry as any).system?.warn("[oracle] resolveAreaSeed: area '" + areaId + "' has non-integer seed '" + area.seed + "'; falling back to 0. Determinism degraded.");
+    } else {
+        // No in-memory state and no persisted seed. The area may have been reloaded
+        // without T6 AuthoredOracleLoader. Room generation will be non-deterministic.
+        (tapestry as any).system?.warn("[oracle] resolveAreaSeed: no seed found for area '" + areaId + "'; falling back to 0. Determinism degraded.");
     }
     return 0;
 }
@@ -229,7 +236,8 @@ function resolveStub(roomId: string, direction: string): boolean {
             facts,
             runState,
             biome,
-            theme
+            theme,
+            getMintedSet(areaId)
         );
 
         // ------------------------------------------------------------------

@@ -19,7 +19,6 @@
 // Tables are eagerly loaded at module init time (P-F) - the engine clears
 // CurrentPackDir after boot, so any lazy load inside a runtime callback returns null.
 import * as tapestry from "@tapestry/engine";
-import { data } from "@tapestry/engine";
 import { getPrompt } from "./prompts.js";
 // ---------------------------------------------------------------------------
 // Constants
@@ -239,7 +238,7 @@ const BAKED = (() => {
     for (const setId of BAKED_SET_IDS) {
         const tables = [];
         for (const kind of BAKED_KINDS) {
-            const raw = data.loadYaml("data/baked/" + setId + "/" + kind + ".yaml");
+            const raw = tapestry.data.loadYaml("data/baked/" + setId + "/" + kind + ".yaml");
             if (raw && raw.oracle_table) {
                 tables.push({ kind: raw.oracle_table.kind, entries: raw.oracle_table.entries });
             }

@@ -1,4 +1,4 @@
-// flows/solo-flow.ts - Three-step wizard for solo area generation.
+// flows/solo-flow.ts - Five-step wizard for solo area generation (v2).
 //
 // Registers the oracle_solo flow. The solo command triggers this flow.
 // Steps stash answers into entity properties; on_complete reads them,
@@ -8,6 +8,10 @@
 //   - Blank -> random band: min = 1 + floor(random * 3), max = min + 4.
 //   - Non-blank non-integer -> error.
 //   - min >= 0, max <= SERVER_MAX_LEVEL, min <= max -> error on violation.
+//
+// destination_pack:
+//   - Blank -> use a deterministic scratch pack named "scratch-oracle-run"
+//   - Non-blank -> use as the targetNamespace for the new area.
 
 import * as tapestry from "@tapestry/engine";
 import { createSoloArea } from "../area-gen.js";
@@ -25,15 +29,23 @@ tapestry.flows.register({
             id: "name",
             type: "text",
             prompt: "Area name (blank for random):",
-            on_input: function(entity, value) {
+            on_input: function(entity: any, value: string) {
                 entity.setProperty("__solo_name", value);
+            },
+        },
+        {
+            id: "idea",
+            type: "text",
+            prompt: "Describe the idea (e.g. a sunken ship):",
+            on_input: function(entity: any, value: string) {
+                entity.setProperty("__solo_idea", value);
             },
         },
         {
             id: "min_level",
             type: "text",
             prompt: "Min level (blank for random):",
-            on_input: function(entity, value) {
+            on_input: function(entity: any, value: string) {
                 entity.setProperty("__solo_min_level", value);
             },
         },
@@ -41,15 +53,25 @@ tapestry.flows.register({
             id: "max_level",
             type: "text",
             prompt: "Max level (blank for random):",
-            on_input: function(entity, value) {
+            on_input: function(entity: any, value: string) {
                 entity.setProperty("__solo_max_level", value);
             },
         },
+        {
+            id: "destination_pack",
+            type: "text",
+            prompt: "Destination pack (blank to create one):",
+            on_input: function(entity: any, value: string) {
+                entity.setProperty("__solo_dest_pack", value);
+            },
+        },
     ],
-    on_complete: function(entity) {
+    on_complete: function(entity: any) {
         const rawName = entity.getProperty("__solo_name") || "";
+        const rawIdea = entity.getProperty("__solo_idea") || "";
         const rawMin = entity.getProperty("__solo_min_level") || "";
         const rawMax = entity.getProperty("__solo_max_level") || "";
+        const rawDest = entity.getProperty("__solo_dest_pack") || "";
 
         // Parse min level.
         let minLevel: number;
@@ -96,9 +118,14 @@ tapestry.flows.register({
         }
 
         const nameValue = (rawName && rawName.trim() !== "") ? rawName.trim() : null;
+        const ideaValue = (rawIdea && rawIdea.trim() !== "") ? rawIdea.trim() : null;
+        const destValue = (rawDest && rawDest.trim() !== "") ? rawDest.trim() : null;
+
+        // Blank destination -> create a fresh scratch pack named for this run.
+        const destPack = destValue || "scratch-oracle-run";
 
         try {
-            createSoloArea(entity, nameValue, minLevel, maxLevel, "scratch-oracle-run");
+            createSoloArea(entity, ideaValue, nameValue, minLevel, maxLevel, destPack);
         } catch (err) {
             const detail = (err && (err as any).message) ? (err as any).message : String(err);
             return { success: false, message: "Area generation failed: " + detail };

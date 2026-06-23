@@ -27,6 +27,7 @@ import { runKey, setRunState } from "./run-state.js";
 import { setAreaState, setRoomArea, setRoomPath } from "./area-state.js";
 import { rollRoomFacts, materializeRoom } from "./room-gen.js";
 import { fillTables, bakedTables } from "./oracle-tables.js";
+import { getMintedSet } from "./stub-resolver.js";
 // ---------------------------------------------------------------------------
 // Configurable constants
 // ---------------------------------------------------------------------------
@@ -89,7 +90,7 @@ const pending = {};
 //                   P7 supplies "@scratch/oracle-run"'s namespace; this is the prefix
 //                   on the room id, e.g. "oracle-run:..." so createRoom can find the pack.
 // ---------------------------------------------------------------------------
-export function createSoloArea(actor, idea, minLevel, maxLevel, targetNamespace = "oracle-run") {
+export function createSoloArea(actor, idea, name, minLevel, maxLevel, targetNamespace = "oracle-run") {
     // -----------------------------------------------------------------------
     // Step 1: Roll the area seed (single unseeded roll - everything else is
     //         deterministic from it). Create the area authoring record.
@@ -102,7 +103,10 @@ export function createSoloArea(actor, idea, minLevel, maxLevel, targetNamespace 
     const _sizeTarget = SIZE_TARGET_OPTIONS[Math.floor(rng() * SIZE_TARGET_OPTIONS.length)];
     // Unique bare area id. Deterministic slug from seed.
     const areaSlug = targetNamespace + "-" + (areaSeed >>> 0).toString(16);
-    const nameHint = (idea && idea.trim() !== "") ? idea.trim() : "the wilds";
+    // ideaHint feeds the LLM prompt context (concept / theme of the area).
+    // nameHint is the display name shown to players; defaults to ideaHint if not supplied.
+    const ideaHint = (idea && idea.trim() !== "") ? idea.trim() : "the wilds";
+    const nameHint = (name && name.trim() !== "") ? name.trim() : ideaHint;
     const levelRange = [minLevel, maxLevel];
     const created = tapestry.authoring.createArea(areaSlug, nameHint);
     if (!created) {
@@ -175,7 +179,9 @@ export function createSoloArea(actor, idea, minLevel, maxLevel, targetNamespace 
     //          The pending entry is registered above so the synchronous callback
     //          finds it and marks it ready before the wait loop's first tick.
     // -----------------------------------------------------------------------
-    const ideaStr = nameHint;
+    // Use ideaHint (the concept) as the LLM context string - this is the descriptive phrase
+    // that drives table generation. nameHint (the display name) is used for room/area labels.
+    const ideaStr = ideaHint;
     const llmEnabled = tapestry.authoring.recommendEnabled && tapestry.authoring.recommendEnabled();
     if (!llmEnabled) {
         const tables = bakedTables("test-kitchen");
@@ -200,7 +206,7 @@ export function createSoloArea(actor, idea, minLevel, maxLevel, targetNamespace 
         // -------------------------------------------------------------------
         // Step 6: Build the entry room from the now-frozen tables.
         // -------------------------------------------------------------------
-        buildEntryRoom(actor, areaSlug, areaSeed, levelRange, biomePalette, nameHint, targetNamespace);
+        buildEntryRoom(actor, areaSlug, areaSeed, levelRange, biomePalette, ideaHint, nameHint, targetNamespace);
         // -------------------------------------------------------------------
         // Step 7: Mark ready - the wait loop will teleport on its next tick.
         // -------------------------------------------------------------------
@@ -216,7 +222,7 @@ export function createSoloArea(actor, idea, minLevel, maxLevel, targetNamespace 
 // The entry room id is fixed: targetNamespace + ":" + areaSlug + "-entry".
 // Registers all area-state + room-state needed by the stub resolver.
 // ---------------------------------------------------------------------------
-function buildEntryRoom(actor, areaSlug, areaSeed, levelRange, biomePalette, nameHint, targetNamespace) {
+function buildEntryRoom(actor, areaSlug, areaSeed, levelRange, biomePalette, ideaHint, nameHint, targetNamespace) {
     const entryRoomId = targetNamespace + ":" + areaSlug + "-entry";
     const entryRoomPath = "0,0";
     const primaryBiome = biomePalette[0] || "wilds";
@@ -233,18 +239,28 @@ function buildEntryRoom(actor, areaSlug, areaSeed, levelRange, biomePalette, nam
     // The roster field is kept for compatibility but is no longer used
     // in the hot path (frozen tables replace it). Pass a null-safe stub.
     // -------------------------------------------------------------------
+    // Roster is no longer consulted in P-E (frozen tables replace it).
+    // Pass an empty-but-typed stub so the AreaState type is satisfied without a null cast.
+    const emptyRoster = {
+        mobs: [],
+        boss: {
+            ref: "", base: "", level: 0, hp: 0, damage: "",
+            swell_baseline_gap_ticks: 0, swell_jitter_ticks: 0, swell_telegraph_ticks: 0,
+            swell_window_ticks: 0, swell_chunk_pct: 0, swell_whiff_pct: 0, swell_weather_pct: 0,
+            name: "",
+        },
+        loot: [],
+    };
     setAreaState(areaSlug, {
         areaId: areaSlug,
         areaSeed,
         biomePalette,
-        theme: nameHint,
+        theme: ideaHint,
         levelRange,
         targetNamespace,
         areaSlug,
         runStateKey: stateKey,
-        // Roster is no longer used in P-E (frozen tables replace it).
-        // Pass a minimal stub so the AreaState type is satisfied.
-        roster: { mobs: [], boss: null, loot: [] },
+        roster: emptyRoster,
     });
     // Register the entry room's area ownership + coordinate path.
     setRoomArea(entryRoomId, areaSlug);
@@ -257,8 +273,8 @@ function buildEntryRoom(actor, areaSlug, areaSeed, levelRange, biomePalette, nam
     // We pass the nulled roster stub for signature compatibility until P-G
     // canonically removes it.
     // -------------------------------------------------------------------
-    const entryFacts = rollRoomFacts(areaSeed, entryRoomPath, { mobs: [], boss: null, loot: [] }, primaryBiome);
-    materializeRoom(entryRoomId, areaSlug, areaSeed, entryFacts, entryRunState, primaryBiome, nameHint);
+    const entryFacts = rollRoomFacts(areaSeed, entryRoomPath, emptyRoster, primaryBiome);
+    materializeRoom(entryRoomId, areaSlug, areaSeed, entryFacts, entryRunState, primaryBiome, ideaHint, getMintedSet(areaSlug));
 }
 // ---------------------------------------------------------------------------
 // simpleHash - deterministic hash of a string into a 32-bit unsigned integer.

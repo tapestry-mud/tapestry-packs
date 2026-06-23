@@ -85,6 +85,39 @@ export function mintMobInstance(areaId, level, rng) {
     };
 }
 // ---------------------------------------------------------------------------
+// mintMobInstanceByTypeId - re-instantiate a specific mob type from the frozen
+// <area>:mobs table by its id. Used when shouldReuse fires to spawn another
+// copy of an already-introduced type (consistent encounter feel within an area).
+// Returns null if the type is not found in the table.
+// ---------------------------------------------------------------------------
+export function mintMobInstanceByTypeId(areaId, typeId, level, rng) {
+    const entries = table(areaId, "mobs");
+    if (entries.length === 0) {
+        return null;
+    }
+    let type = null;
+    for (let i = 0; i < entries.length; i++) {
+        if (entries[i].id === typeId) {
+            type = entries[i];
+            break;
+        }
+    }
+    if (!type) {
+        return null;
+    }
+    const stats = statsFor("mob", level, rng);
+    const maxHp = rollFormula(stats.hp, rng);
+    return {
+        fromType: type.id,
+        name: type.name,
+        desc: type.desc,
+        maxHp,
+        damage: stats.damage,
+        items: [],
+        noReroll: true,
+    };
+}
+// ---------------------------------------------------------------------------
 // mintItemInstance - roll an item type from frozen <area>:items, apply rarity
 // modifier to the level band, roll stats, return the frozen override blob.
 // Returns null if the table is empty.

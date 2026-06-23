@@ -33,7 +33,7 @@ import { getRunState } from "./run-state.js";
 // Session-scoped (resets on reboot, per tuning decision 2).
 // ---------------------------------------------------------------------------
 const _mintedMobTypes = new Map();
-function getMintedSet(areaId) {
+export function getMintedSet(areaId) {
     let s = _mintedMobTypes.get(areaId);
     if (!s) {
         s = new Set();
@@ -61,6 +61,14 @@ function resolveAreaSeed(areaId) {
         if (!isNaN(parsed)) {
             return parsed;
         }
+        // Seed field present but not parseable as integer - determinism degraded.
+        // (tapestry.system is not declared in the type stubs; cast to any for the warn call.)
+        tapestry.system?.warn("[oracle] resolveAreaSeed: area '" + areaId + "' has non-integer seed '" + area.seed + "'; falling back to 0. Determinism degraded.");
+    }
+    else {
+        // No in-memory state and no persisted seed. The area may have been reloaded
+        // without T6 AuthoredOracleLoader. Room generation will be non-deterministic.
+        tapestry.system?.warn("[oracle] resolveAreaSeed: no seed found for area '" + areaId + "'; falling back to 0. Determinism degraded.");
     }
     return 0;
 }
@@ -199,7 +207,7 @@ function resolveStub(roomId, direction) {
         //    materializeRoom (P-E) is now synchronous: prose from composeProse,
         //    spawns from frozen tables, no LLM. No async callback needed.
         // ------------------------------------------------------------------
-        materializeRoom(neighborId, areaId, areaSeed, facts, runState, biome, theme);
+        materializeRoom(neighborId, areaId, areaSeed, facts, runState, biome, theme, getMintedSet(areaId));
         // ------------------------------------------------------------------
         // j. Register the neighbor in area-state so future resolver calls work.
         // ------------------------------------------------------------------

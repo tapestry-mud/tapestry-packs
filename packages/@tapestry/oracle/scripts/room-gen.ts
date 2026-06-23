@@ -28,7 +28,7 @@ import { placeholder } from "./prompts.js";
 import { type Roster } from "./roster.js";
 import { type RunState } from "./run-state.js";
 import { composeProse } from "./prose-compose.js";
-import { mintMobInstance, mintBossInstance, mintItemInstance, rngFor } from "./resolver.js";
+import { mintMobInstance, mintBossInstance, mintItemInstance, mintMobInstanceByTypeId, rngFor, shouldReuse } from "./resolver.js";
 
 // ---------------------------------------------------------------------------
 // Tuning constants
@@ -252,7 +252,8 @@ export function materializeRoom(
     facts: RoomFacts,
     runState: RunState,
     biome: string,
-    theme: string
+    theme: string,
+    mintedMobTypes?: Set<string>
 ): void {
     // -------------------------------------------------------------------------
     // 1. Compose prose deterministically from frozen table + create the room.
@@ -290,14 +291,30 @@ export function materializeRoom(
     //    If the table is not yet frozen (empty), no mobs spawn (graceful).
     // -------------------------------------------------------------------------
 
-    // Spawn ambient mobs: use level=1 as a default band start.
-    // A P-G pass will thread AreaState.levelRange here so mobs scale correctly.
+    // Spawn ambient mobs.
+    // Level band comes from the area's level range; for now we use a flat level=1
+    // as the minimum (the areaState levelRange is not threaded here yet in slice-1).
+    // shouldReuse gates whether we introduce a fresh mob type (new variety) or re-spawn
+    // an already-introduced one (consistent encounter feel within the same area).
     // mintMobInstance + mintItemInstance read frozen tables; no LLM call.
     const spawnRng = rngFor(areaSeed, coordKey + ":spawn");
 
     for (let i = 0; i < facts.ambientCount; i++) {
-        const level = 1; // P-G will thread levelRange from AreaState
-        const override = mintMobInstance(areaId, level, spawnRng);
+        const level = 1;
+        let override: any;
+        if (mintedMobTypes && shouldReuse(mintedMobTypes.size, spawnRng)) {
+            // Reuse path: spawn another copy of an already-introduced mob type.
+            const mintedArr = Array.from(mintedMobTypes);
+            const reuseIdx = Math.floor(spawnRng() * mintedArr.length);
+            const reuseTypeId = mintedArr[reuseIdx];
+            override = mintMobInstanceByTypeId(areaId, reuseTypeId, level, spawnRng);
+        } else {
+            // Fresh mint path: roll a new type from the weighted frozen table.
+            override = mintMobInstance(areaId, level, spawnRng);
+            if (override && mintedMobTypes) {
+                mintedMobTypes.add(override.fromType);
+            }
+        }
         if (override) {
             tapestry.mobs.spawnMob({
                 template: "tapestry-oracle:hostile-melee",
@@ -306,14 +323,11 @@ export function materializeRoom(
             });
         }
 
-        // Loot drop: attach item to mob inventory so it drops on death.
-        // mintItemInstance calculates the override; loot attachment via the
-        // spawnMob items[] array requires P-G to thread the item base id.
-        // Advance the rng regardless (keep the rng stream deterministic).
+        // Loot drop: advance the rng to keep the stream deterministic (the items
+        // attachment path is deferred until the item base template id is threaded
+        // through here correctly).
         if (spawnRng() < LOOT_DROP_CHANCE) {
             const _itemOverride = mintItemInstance(areaId, level, spawnRng);
-            // TODO P-G: attach _itemOverride to mob via spawnMob items[] once
-            // the base template id is threaded through here correctly.
             void _itemOverride;
         }
     }
