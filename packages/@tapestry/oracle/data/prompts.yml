@@ -142,3 +142,41 @@ loot_name:
     Name a piece of gear (a {slot} item) found in the {biome} of {theme}, worn
     and salvaged. Reply with 3 to 6 words only - no surrounding quotes, no
     trailing period.
+
+# ---------------------------------------------------------------------------
+# Table-fill prompts (used by P-B - oracle-tables.ts fillTables burst)
+# Each call fills one oracle table on-theme. Output format is strict:
+#   fill_places: comma-separated list (no numbers, no quotes)
+#   fill_mobs/fill_boss: one entry per line as "name | description"
+#   fill_items: one entry per line as "name | description | rarity | kind"
+#   fill_prose_*: one line per entry, terse clause
+# ASCII only, no em dashes, no smart quotes.
+# ---------------------------------------------------------------------------
+
+fill_places:
+  system: "You name places. Output a comma-separated list, nothing else. 7-bit ASCII only."
+  template: "List 6 to 8 distinct places found in {idea}. Lowercase nouns, comma-separated."
+
+fill_mobs:
+  system: "You name creatures and foes. Output one per line as: name | short description. ASCII only."
+  template: "List 5 common foes that inhabit {idea}, levels {level_min} to {level_max}. name | one short clause each."
+
+fill_boss:
+  system: "You name a single memorable boss. Output: name | short description. ASCII only."
+  template: "Name one boss that rules {idea}. name | one short clause."
+
+fill_items:
+  system: "You name loot. Output one per line as: name | description | rarity | kind. rarity is common, uncommon, rare, or epic. kind is weapon or armor. ASCII only."
+  template: "List 6 items found in {idea}, levels {level_min} to {level_max}. Mix weapons and armor, mostly common with a couple rare. name | clause | rarity | kind."
+
+fill_prose_openers:
+  system: "You write room opening lines. One per line, terse, ASCII only."
+  template: "Write 6 opening lines for a {place} in {idea}. One short sentence each."
+
+fill_prose_details:
+  system: "You write a single room detail. One per line, terse, ASCII only."
+  template: "Write 6 sensory details for a {place} in {idea}. One short clause each."
+
+fill_prose_atmosphere:
+  system: "You write a closing atmosphere line. One per line, terse, ASCII only."
+  template: "Write 6 atmosphere lines for a {place} in {idea}. One short clause each."
