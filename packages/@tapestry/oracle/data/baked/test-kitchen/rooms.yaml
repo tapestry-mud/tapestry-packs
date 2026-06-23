@@ -1,0 +1,5 @@
+oracle_table:
+  kind: rooms
+  entries:
+    - { w: 60, id: kitchen-room, name: "kitchen", desc: "" }
+    - { w: 40, id: store-room, name: "store room", desc: "" }

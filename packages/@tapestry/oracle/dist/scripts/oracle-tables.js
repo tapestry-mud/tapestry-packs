@@ -15,8 +15,11 @@
 //   Round 3 (in flight: up to 2 at once): fill_prose_openers, fill_prose_details,
 //     fill_prose_atmosphere (fired after mobs/boss/items complete, also in pairs)
 //
-// bakedTables loads a hand-authored baked set from data/baked/<setId>/ (P-F).
+// bakedTables(setId) returns a hand-authored OracleTableData[] for that set.
+// Tables are eagerly loaded at module init time (P-F) - the engine clears
+// CurrentPackDir after boot, so any lazy load inside a runtime callback returns null.
 import * as tapestry from "@tapestry/engine";
+import { data } from "@tapestry/engine";
 import { getPrompt } from "./prompts.js";
 // ---------------------------------------------------------------------------
 // Constants
@@ -223,16 +226,30 @@ function pushLines(out, raw, kind) {
 // ---------------------------------------------------------------------------
 // bakedTables
 //
-// Load a hand-authored baked set from data/baked/<setId>/tables.yml.
-// Returns [] if the file is missing (P-F is responsible for populating these).
+// Return the eagerly-loaded baked table set for a given setId.
+// Falls back to "test-kitchen" if the requested id is unknown.
+//
+// EAGER load at module init - the engine clears CurrentPackDir after boot,
+// so a lazy load inside any runtime callback returns null.
 // ---------------------------------------------------------------------------
-export function bakedTables(setId) {
-    const path = "data/baked/" + setId + "/tables.yml";
-    const raw = tapestry.data.loadYaml(path);
-    if (!raw || !Array.isArray(raw.tables)) {
-        return [];
+const BAKED_KINDS = ["places", "mobs", "boss", "items", "rooms", "prose"];
+const BAKED_SET_IDS = ["test-kitchen"]; // phase-1 minimal set; add ids as baked sets are authored
+const BAKED = (() => {
+    const all = {};
+    for (const setId of BAKED_SET_IDS) {
+        const tables = [];
+        for (const kind of BAKED_KINDS) {
+            const raw = data.loadYaml("data/baked/" + setId + "/" + kind + ".yaml");
+            if (raw && raw.oracle_table) {
+                tables.push({ kind: raw.oracle_table.kind, entries: raw.oracle_table.entries });
+            }
+        }
+        all[setId] = tables;
     }
-    return raw.tables;
+    return all;
+})();
+export function bakedTables(setId) {
+    return BAKED[setId] || BAKED["test-kitchen"] || [];
 }
 // ---------------------------------------------------------------------------
 // Deterministic fallbacks (LLM unavailable / empty output)

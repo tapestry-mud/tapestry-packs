@@ -1,0 +1,6 @@
+oracle_table:
+  kind: places
+  entries:
+    - { w: 10, id: hearth, name: hearth, desc: "" }
+    - { w: 10, id: pantry, name: pantry, desc: "" }
+    - { w: 10, id: cold-room, name: cold room, desc: "" }

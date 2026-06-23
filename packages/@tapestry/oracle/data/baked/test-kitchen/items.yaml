@@ -1,0 +1,5 @@
+oracle_table:
+  kind: items
+  entries:
+    - { w: 60, id: dented-ladle, name: "dented ladle", desc: "Battered but heavy.", balance_ref: weapon, rarity: common }
+    - { w: 8, id: master-ladle, name: "masterwork ladle", desc: "Dents plate.", balance_ref: weapon, rarity: rare }

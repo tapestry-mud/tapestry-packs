@@ -27,7 +27,7 @@ import { rollBiomePalette } from "./roster.js";
 import { runKey, setRunState } from "./run-state.js";
 import { setAreaState, setRoomArea, setRoomPath } from "./area-state.js";
 import { rollRoomFacts, materializeRoom } from "./room-gen.js";
-import { fillTables, type OracleTableData } from "./oracle-tables.js";
+import { fillTables, bakedTables, type OracleTableData } from "./oracle-tables.js";
 
 // ---------------------------------------------------------------------------
 // Configurable constants
@@ -212,14 +212,30 @@ export function createSoloArea(
     handle = tapestry.schedule.every(FLAVOR_INTERVAL, step);
 
     // -----------------------------------------------------------------------
-    // Step 4: Front-loaded LLM burst. fillTables fires all LLM calls
-    //         (places, mobs, boss, items, prose) respecting the in-flight limit.
-    //         onReady is called exactly once when all tables have resolved.
+    // Step 4: Front-loaded table fill.
+    //
+    // LLM-on:  fillTables fires the full LLM burst respecting RecommendMaxInFlight=2.
+    //          onReady is called exactly once when all tables have resolved.
+    //
+    // LLM-off: skip the LLM path entirely - use the baked table set directly.
+    //          onReady is called synchronously on the same tick.
+    //          The pending entry is registered above so the synchronous callback
+    //          finds it and marks it ready before the wait loop's first tick.
     // -----------------------------------------------------------------------
 
     const ideaStr = nameHint;
 
-    fillTables(ideaStr, levelRange, function (tables: OracleTableData[]) {
+    const llmEnabled = tapestry.authoring.recommendEnabled && tapestry.authoring.recommendEnabled();
+
+    if (!llmEnabled) {
+        const tables = bakedTables("test-kitchen");
+        onReadyTables(tables);
+        return;
+    }
+
+    fillTables(ideaStr, levelRange, onReadyTables);
+
+    function onReadyTables(tables: OracleTableData[]): void {
         // -------------------------------------------------------------------
         // Step 5: Freeze every returned table to disk (T4 seam).
         //         Tables are now live in the engine registry AND written to
@@ -248,7 +264,7 @@ export function createSoloArea(
         if (pending[playerId]) {
             pending[playerId].ready = true;
         }
-    });
+    }
 }
 
 // ---------------------------------------------------------------------------

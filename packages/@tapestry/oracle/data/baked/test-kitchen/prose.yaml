@@ -1,0 +1,9 @@
+oracle_table:
+  kind: prose
+  entries:
+    - { w: 10, id: opener-0, name: opener, desc: "Steam hangs in the air." }
+    - { w: 10, id: opener-1, name: opener, desc: "Pots clatter somewhere close." }
+    - { w: 10, id: detail-0, name: detail, desc: "Grease slicks the flagstones." }
+    - { w: 10, id: detail-1, name: detail, desc: "A long bench runs the wall." }
+    - { w: 10, id: atmosphere-0, name: atmosphere, desc: "It smells of scorched fat." }
+    - { w: 10, id: atmosphere-1, name: atmosphere, desc: "Heat presses from the ovens." }

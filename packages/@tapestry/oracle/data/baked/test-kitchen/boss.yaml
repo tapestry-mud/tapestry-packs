@@ -1,0 +1,4 @@
+oracle_table:
+  kind: boss
+  entries:
+    - { w: 100, id: head-chef, name: "the head chef", desc: "Knives for every occasion.", balance_ref: boss }

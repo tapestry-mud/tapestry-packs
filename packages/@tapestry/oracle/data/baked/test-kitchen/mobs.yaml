@@ -1,0 +1,5 @@
+oracle_table:
+  kind: mobs
+  entries:
+    - { w: 60, id: angry-cook, name: "angry cook", desc: "Red-faced, ladle raised.", balance_ref: mob }
+    - { w: 40, id: scullion, name: "scullion", desc: "A soot-streaked pot-scrubber.", balance_ref: mob }
