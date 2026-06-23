@@ -1,5 +1,5 @@
 name: "@tapestry/oracle"
-version: "0.1.0"
+version: "0.2.0-dev.0"
 type: module
 display_name: "Tapestry Oracle"
 description: >
@@ -20,4 +20,4 @@ content:
   scripts: "dist/scripts/**/*.js"
   scripts_format: esm
   help: "help/**/*.yaml"
-# slice-1 complete
+  oracle: "areas/**/*-oracle-table.yaml"
