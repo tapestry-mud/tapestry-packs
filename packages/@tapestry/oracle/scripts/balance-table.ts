@@ -1,106 +1,75 @@
-import { data } from "@tapestry/engine";
-import { rollDice, weightedPick } from "./prng.js";
+import { data as engineData } from "@tapestry/engine";
+import { weightedPick } from "./prng.js";
+// Eager load at module init - the engine clears CurrentPackDir after boot, so a lazy load returns null.
+const data: any = engineData.loadYaml("data/master-balance.yml");
 
-// Eagerly loaded at module init time so data.loadYaml runs while CurrentPackDir
-// is still set (the engine clears it after boot; lazy init at runtime = null return).
-const _balance: any = data.loadYaml("data/master-balance.yml");
-
-function getBalance(): any {
-    return _balance;
+export function clampLevel(level: number): number {
+    if (level < 1) { return 1; }
+    if (level > 60) { return 60; }
+    return Math.floor(level);
 }
 
-// Resolve a table row by level, CLAMPING to the table's defined range so a level band
-// can exceed the (sparse) table without crashing: levels above the top row reuse the top
-// row, below the bottom reuse the bottom. The table is the live tuning knob and may be
-// sparse while balancing; this keeps generation crash-proof until rows are filled in.
-// Returns null only when the table has no numeric rows at all (a real misconfig).
-function resolveRow(table: any, level: number): any {
-    if (!table) {
-        return null;
+export function interpolateNumeric(anchors: number[], values: number[], level: number): number {
+    const L = clampLevel(level);
+    for (let i = 0; i < anchors.length - 1; i++) {
+        if (L >= anchors[i] && L <= anchors[i + 1]) {
+            const span = anchors[i + 1] - anchors[i];
+            const t = span === 0 ? 0 : (L - anchors[i]) / span;
+            return Math.round(values[i] + t * (values[i + 1] - values[i]));
+        }
     }
-    const keys = Object.keys(table)
-        .map((k) => parseInt(k, 10))
-        .filter((n) => !isNaN(n));
-    if (keys.length === 0) {
-        return null;
-    }
-    let lo = keys[0];
-    let hi = keys[0];
-    for (let i = 1; i < keys.length; i++) {
-        if (keys[i] < lo) { lo = keys[i]; }
-        if (keys[i] > hi) { hi = keys[i]; }
-    }
-    let lvl = level;
-    if (lvl < lo) { lvl = lo; }
-    if (lvl > hi) { lvl = hi; }
-    return table[lvl] ?? table[String(lvl)];
+    return values[L <= anchors[0] ? 0 : values.length - 1];
 }
 
-export type StatKind = "weapon" | "armor" | "mob" | "boss";
-
-/**
- * Roll stats for a given kind and level (or boss rank) from master-balance.yml.
- *
- * weapon  -> { damage: string }        rolled notation string ("dice to pick the dice")
- * armor   -> { slots: string[], ac: number }
- * mob     -> { hp: number, damage: string, flee_threshold: number }
- * boss    -> { hp: number, damage: string, swell_baseline_gap_ticks: number,
- *               swell_jitter_ticks: number, swell_telegraph_ticks: number,
- *               swell_window_ticks: number, swell_chunk_pct: number,
- *               swell_whiff_pct: number, swell_weather_pct: number }
- *
- * For mob, hp is rolled from the dice notation and returned as a concrete number.
- * For boss, hp is already a fixed integer in the table (frozen at roster creation).
- * For weapon, the damage field is a weighted list; weightedPick selects the notation string.
- * rng must be a seeded PRNG from splitmix64() - this function never constructs one.
- */
-export function statsFor(kind: StatKind, level: number, rng: () => number): Record<string, any> {
-    const balance = getBalance();
-    const table = balance[kind];
-    if (!table) {
-        throw new Error(`oracle/balance-table: unknown kind '${kind}'`);
+function nearestAnchor(anchors: number[], level: number): number {
+    const L = clampLevel(level);
+    let best = anchors[0];
+    let bestDist = Math.abs(L - anchors[0]);
+    for (const a of anchors) {
+        const d = Math.abs(L - a);
+        if (d < bestDist) { best = a; bestDist = d; }
     }
-    const row = resolveRow(table, level);
-    if (!row) {
-        throw new Error(`oracle/balance-table: kind '${kind}' has no rows`);
-    }
+    return best;
+}
 
-    if (kind === "weapon") {
-        const damageNotation = weightedPick(row.damage, rng);
-        return { damage: damageNotation };
-    }
+export function rarityModifier(rarity: string): number {
+    const r = data.rarity || {};
+    return typeof r[rarity] === "number" ? r[rarity] : 0;
+}
 
-    if (kind === "armor") {
-        return {
-            slots: row.slots,
-            ac: row.ac,
-        };
-    }
-
+export function statsFor(kind: string, level: number, rng: () => number): Record<string, string | number> {
+    const L = clampLevel(level);
     if (kind === "mob") {
-        const hp = rollDice(row.hp, rng);
-        return {
-            hp,
-            damage: row.damage,
-            flee_threshold: row.flee_threshold,
-        };
+        const a = data.mob.anchors;
+        const count = interpolateNumeric(a, data.mob.hp_count, L);
+        const dmgBand = data.mob.damage[nearestAnchor(a, L)];
+        const flee = interpolateNumeric(a, data.mob.flee_threshold.map((f: number) => Math.round(f * 100)), L) / 100;
+        return { hp: count + "d" + data.mob.hp_die, damage: weightedPick(dmgBand, rng), flee_threshold: flee };
     }
-
+    if (kind === "weapon") {
+        const band = data.weapon.damage[nearestAnchor(data.weapon.anchors, L)];
+        return { damage: weightedPick(band, rng) };
+    }
+    if (kind === "armor") {
+        const ac = interpolateNumeric(data.armor.anchors, data.armor.ac, L);
+        const slots = data.armor.slots[nearestAnchor(data.armor.anchors, L)];
+        return { ac, slots: slots.join(",") };
+    }
     if (kind === "boss") {
-        return {
-            hp: row.hp,
-            damage: row.damage,
-            swell_baseline_gap_ticks: row.swell_baseline_gap_ticks,
-            swell_jitter_ticks: row.swell_jitter_ticks,
-            swell_telegraph_ticks: row.swell_telegraph_ticks,
-            swell_window_ticks: row.swell_window_ticks,
-            swell_chunk_pct: row.swell_chunk_pct,
-            swell_whiff_pct: row.swell_whiff_pct,
-            swell_weather_pct: row.swell_weather_pct,
-        };
+        const hp = interpolateNumeric(data.boss.anchors, data.boss.hp, L);
+        const band = data.boss.damage[nearestAnchor(data.boss.anchors, L)];
+        return { hp, damage: weightedPick(band, rng) };
     }
+    return {};
+}
 
-    throw new Error(`oracle/balance-table: unhandled kind '${kind}'`);
+// Boss swell dials: unchanged v1 clamped lookup. Combat lane owns the 1-60 curve later.
+export function bossSwellDials(rank: number): Record<string, number> {
+    const swell = data.boss_swell;
+    const ranks = Object.keys(swell).map(Number).sort((x, y) => x - y);
+    let r = ranks[0];
+    for (const k of ranks) { if (rank >= k) { r = k; } }
+    return swell[r];
 }
 
 /**
@@ -108,10 +77,5 @@ export function statsFor(kind: StatKind, level: number, rng: () => number): Reco
  * Used by rollRoster to store hp_formula on mob types for per-instance rolling in P4.
  */
 export function mobHpFormula(level: number): string {
-    const balance = getBalance();
-    const table = balance["mob"];
-    if (!table) { return "1d10"; }
-    const row = resolveRow(table, level);
-    if (!row || !row.hp) { return "1d10"; }
-    return String(row.hp);
+    return statsFor("mob", level, () => 0.5).hp as string;
 }
