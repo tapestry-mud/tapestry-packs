@@ -75,5 +75,19 @@ export function rollBiomePalette(rng: () => number): string[] {
     return BIOME_PALETTES[idx].slice();
 }
 
+/**
+ * soloAreaBiomePalette - the canonical area biome-palette derivation, shared by area
+ * creation (area-gen) and reboot reconstruction (stub-resolver) so the two can never
+ * drift. Replicates the creation rng sequence exactly: one roll is consumed first (the
+ * area-gen size_target roll) before the palette is drawn, so an area reconstructed off
+ * the persisted seed picks the byte-identical palette it had at creation. Keep this the
+ * SOLE place that derives the palette from a seed.
+ */
+export function soloAreaBiomePalette(areaSeed: number): string[] {
+    const rng = splitmix64(areaSeed);
+    rng(); // consume the size_target roll (area-gen createSoloArea step 1)
+    return rollBiomePalette(rng);
+}
+
 // rollBiomePalette is the only live export from this section.
 // rollRoster, dressRoster, fallbackPlacePalette were removed (dead code after P-E rework).

@@ -10,8 +10,12 @@
 //   - min >= 0, max <= SERVER_MAX_LEVEL, min <= max -> error on violation.
 //
 // destination_pack:
-//   - Blank -> use a deterministic scratch pack named "scratch-oracle-run"
-//   - Non-blank -> use as the targetNamespace for the new area.
+//   - Blank -> create a fresh scratch pack "@scratch/oracle-run".
+//   - Non-blank bare name -> scoped under "@solo/<slug>".
+//   - Non-blank scoped name (contains "/") -> used as-is.
+//   The pack is created + registered via authoring.createPack BEFORE generation, which
+//   writes a real world-pack manifest and registers the namespace so createRoom is accepted.
+//   createPack returns the namespace, which becomes the new area's targetNamespace.
 
 import * as tapestry from "@tapestry/engine";
 import { createSoloArea } from "../area-gen.js";
@@ -121,11 +125,26 @@ tapestry.flows.register({
         const ideaValue = (rawIdea && rawIdea.trim() !== "") ? rawIdea.trim() : null;
         const destValue = (rawDest && rawDest.trim() !== "") ? rawDest.trim() : null;
 
-        // Blank destination -> create a fresh scratch pack named for this run.
-        const destPack = destValue || "scratch-oracle-run";
+        // Resolve the destination pack NAME (scoped @scope/name form for createPack).
+        let packName: string;
+        if (destValue == null) {
+            packName = "@scratch/oracle-run";
+        } else if (destValue.indexOf("/") >= 0) {
+            packName = destValue;
+        } else {
+            const slug = destValue.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+            packName = "@solo/" + (slug || "run");
+        }
+
+        // Create + register the destination pack; createPack writes its manifest and returns
+        // the registered namespace used for the new area's room ids.
+        const namespace = (tapestry as any).authoring.createPack(packName);
+        if (!namespace) {
+            return { success: false, message: "Could not create destination pack '" + packName + "'." };
+        }
 
         try {
-            createSoloArea(entity, ideaValue, nameValue, minLevel, maxLevel, destPack);
+            createSoloArea(entity, ideaValue, nameValue, minLevel, maxLevel, namespace);
         } catch (err) {
             const detail = (err && (err as any).message) ? (err as any).message : String(err);
             return { success: false, message: "Area generation failed: " + detail };

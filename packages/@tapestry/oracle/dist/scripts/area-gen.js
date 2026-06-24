@@ -22,7 +22,7 @@
 // (or MAX_TICKS elapses). Then teleports to the fully-built entry room.
 import * as tapestry from "@tapestry/engine";
 import { splitmix64 } from "./prng.js";
-import { rollBiomePalette } from "./roster.js";
+import { soloAreaBiomePalette } from "./roster.js";
 import { runKey, setRunState } from "./run-state.js";
 import { setAreaState, setRoomArea, setRoomPath } from "./area-state.js";
 import { rollRoomFacts, materializeRoom } from "./room-gen.js";
@@ -118,7 +118,10 @@ export function createSoloArea(actor, idea, name, minLevel, maxLevel, targetName
     tapestry.authoring.setAreaAttribute(areaSlug, "level_range", minLevel + "," + maxLevel);
     tapestry.authoring.setAreaAttribute(areaSlug, "reset_interval", "0");
     // Placeholder dressing - makes the area immediately valid + playable.
-    tapestry.authoring.setAreaTheme(areaSlug, nameHint);
+    // Theme = the IDEA (drives room naming "<theme> - <biome>"), persisted so a
+    // reboot reconstruction (stub-resolver) names new rooms identically. The area's
+    // display NAME stays nameHint; theme is the generative concept, not the name.
+    tapestry.authoring.setAreaTheme(areaSlug, ideaHint);
     tapestry.authoring.setAreaShort(areaSlug, "An area, level " + minLevel + "-" + maxLevel + ".");
     tapestry.authoring.setAreaDescription(areaSlug, "The " + nameHint + " stretches before you. Levels " + minLevel + " to " + maxLevel + ".");
     // -----------------------------------------------------------------------
@@ -126,7 +129,10 @@ export function createSoloArea(actor, idea, name, minLevel, maxLevel, targetName
     //         This is separate from the places table: biomes control terrain
     //         tags, places control prose palette word choice.
     // -----------------------------------------------------------------------
-    const biomePalette = rollBiomePalette(rng);
+    // Derive via the shared helper so a reboot reconstruction (stub-resolver) gets the
+    // byte-identical palette off the persisted seed. (Helper re-consumes the size_target
+    // roll internally, matching this stream's position - see soloAreaBiomePalette.)
+    const biomePalette = soloAreaBiomePalette(areaSeed);
     const playerId = actor.entityId;
     // -----------------------------------------------------------------------
     // Step 3: Start the flavor-wait loop immediately so the player sees

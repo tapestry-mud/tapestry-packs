@@ -74,6 +74,22 @@ produces the same room regardless of traversal order, reboot, or box.
 returns `0` and emits a warn (determinism degraded but not fatal).
 (packages/@tapestry/oracle/scripts/stub-resolver.ts:58-80; packages/@tapestry/oracle/scripts/resolver.ts:143-145)
 
+### Reload reconstruction
+
+The in-memory stores (`AreaState`, room->area, room->path, run-state) are populated at
+creation and are empty after a reboot/reshare. `ensureAreaContext(roomId)` rebuilds them on
+the first stub traversal after a restart: it parses the namespace and grid path out of the
+room id (`<namespace>:<areaId>-<pathKey>`, where `pathKey` is `entry` = `0,0` or `<x>_<y>`),
+reads the persisted seed / level range / theme from `tapestry.area.get(areaId)`, and re-derives
+the biome palette from the seed via the shared `soloAreaBiomePalette` helper so a reconstructed
+area is byte-identical to creation. A room is reconstructed only when the area has a persisted
+seed (the oracle marker); otherwise the resolver refuses gracefully. Already-explored rooms
+need no reconstruction - they persist their real two-way exits to their side-cars and load as
+plain rooms. Run-state (the boss clock) resets on reboot, consistent with the session-scoped
+mint-reuse set.
+(packages/@tapestry/oracle/scripts/stub-resolver.ts:ensureAreaContext;
+packages/@tapestry/oracle/scripts/roster.ts:soloAreaBiomePalette)
+
 ### LLM-on branch
 
 When `authoring.recommendEnabled()` returns true, `fillTables` fires the LLM burst:
@@ -97,12 +113,15 @@ the loop fires once before the teleport happens.
 ### Destination-pack model
 
 The `solo` flow collects five inputs: `name`, `idea`, `min_level`, `max_level`, and
-`destination_pack`. Blank `destination_pack` defaults to `"scratch-oracle-run"`. The
-`targetNamespace` value is used as the pack namespace prefix on every room id minted in the area
-(`targetNamespace + ":" + areaSlug + "-" + pathKey`). Area packs that depend on `@tapestry/oracle`
-declare `oracle: "areas/**/*-oracle-table.yaml"` in their `content:` block to load frozen tables
-at boot via the T6 `AuthoredOracleLoader`.
-(packages/@tapestry/oracle/scripts/flows/solo-flow.ts:67-71; packages/@tapestry/oracle/pack.yaml:23)
+`destination_pack`. The flow resolves a pack NAME (blank -> `@scratch/oracle-run`; a bare name ->
+`@solo/<slug>`; a name containing `/` -> used as-is) and calls `authoring.createPack(packName)`,
+which creates the destination pack if it does not exist (writes a `type: world` `pack.yaml`,
+registers the namespace live) and returns the registered namespace. That namespace becomes the
+`targetNamespace` used as the prefix on every room id minted in the area
+(`targetNamespace + ":" + areaSlug + "-" + pathKey`). The destination pack declares
+`oracle: "areas/**/*-oracle-table.yaml"` in its `content:` block to load frozen tables at boot
+via the T6 `AuthoredOracleLoader`.
+(packages/@tapestry/oracle/scripts/flows/solo-flow.ts:on_complete; packages/@tapestry/oracle/pack.yaml:23)
 
 ### Mint-vs-reuse
 

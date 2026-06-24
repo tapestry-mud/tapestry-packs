@@ -25,8 +25,9 @@
 import * as tapestry from "@tapestry/engine";
 import { DIR_OFFSETS, rollRoomFacts, materializeRoom } from "./room-gen.js";
 import { hashCoord, splitmix64, pick } from "./prng.js";
-import { getAreaState, getRoomArea, getRoomPath, setRoomArea, setRoomPath } from "./area-state.js";
-import { getRunState } from "./run-state.js";
+import { getAreaState, setAreaState, getRoomArea, getRoomPath, setRoomArea, setRoomPath } from "./area-state.js";
+import { getRunState, setRunState } from "./run-state.js";
+import { soloAreaBiomePalette } from "./roster.js";
 // ---------------------------------------------------------------------------
 // Per-area in-memory minted type sets.
 // Tracks which mob type ids have been minted so shouldReuse can gate on count.
@@ -106,6 +107,93 @@ function parseCoord(path) {
     return [x, y];
 }
 // ---------------------------------------------------------------------------
+// EMPTY_ROSTER - typed null-object. The roster is no longer consulted in the hot
+// path (P-E: frozen tables replace it), but AreaState.roster must satisfy the type.
+// ---------------------------------------------------------------------------
+const EMPTY_ROSTER = {
+    mobs: [],
+    boss: {
+        ref: "", base: "", level: 0, hp: 0, damage: "",
+        swell_baseline_gap_ticks: 0, swell_jitter_ticks: 0, swell_telegraph_ticks: 0,
+        swell_window_ticks: 0, swell_chunk_pct: 0, swell_whiff_pct: 0, swell_weather_pct: 0,
+        name: "",
+    },
+    loot: [],
+};
+// ---------------------------------------------------------------------------
+// normalizeLevelRange - coerce the engine area.levelRange into a [min,max] tuple.
+// ---------------------------------------------------------------------------
+function normalizeLevelRange(lr) {
+    if (lr && typeof lr.length === "number" && lr.length >= 2) {
+        const a = parseInt(String(lr[0]), 10);
+        const b = parseInt(String(lr[1]), 10);
+        if (!isNaN(a) && !isNaN(b)) {
+            return [a, b];
+        }
+    }
+    return [1, 5];
+}
+// ---------------------------------------------------------------------------
+// ensureAreaContext - returns the areaId owning roomId, reconstructing the in-memory
+// resolver context (AreaState + room->area + room->path + run-state) from the persisted
+// area.yaml when it is absent. This is the reboot / reshare path: the in-memory maps
+// (set at creation) are empty after a restart, but the room ids encode the namespace +
+// grid path, and the seed / level range / theme persist in area.yaml (T5). The biome
+// palette is re-derived from the seed via the shared soloAreaBiomePalette helper, so a
+// reconstructed area is byte-identical to creation. Returns undefined for a non-oracle
+// room (no persisted seed), so the resolver refuses gracefully.
+//
+// Room id scheme (authored by this pack): "<namespace>:<areaId>-<pathKey>" where pathKey
+// is "entry" (= 0,0) or "<x>_<y>" (signed). areaId itself contains hyphens.
+// ---------------------------------------------------------------------------
+function ensureAreaContext(roomId) {
+    const mapped = getRoomArea(roomId);
+    if (mapped && getAreaState(mapped)) {
+        return mapped; // fully live this session - fast path.
+    }
+    const colon = roomId.indexOf(":");
+    if (colon < 0) {
+        return undefined;
+    }
+    const ns = roomId.slice(0, colon);
+    const rest = roomId.slice(colon + 1);
+    const m = rest.match(/^(.+)-(entry|-?\d+_-?\d+)$/);
+    if (!m) {
+        return undefined;
+    }
+    const areaId = m[1];
+    const pathKey = m[2];
+    // Only reconstruct for a real oracle area (a persisted seed is the marker).
+    const area = tapestry.area && tapestry.area.get(areaId);
+    if (!area || !area.seed) {
+        return undefined;
+    }
+    const seed = parseInt(String(area.seed), 10);
+    if (isNaN(seed)) {
+        return undefined;
+    }
+    if (!getAreaState(areaId)) {
+        // Run-state is session-scoped (resets on reboot, per plan tuning decision 2);
+        // a synthetic per-area key suffices since the resolver has no playerId here.
+        const runStateKey = "reload:" + areaId;
+        setRunState(runStateKey, { roomsSinceLastBoss: 0 });
+        setAreaState(areaId, {
+            areaId,
+            areaSeed: seed,
+            biomePalette: soloAreaBiomePalette(seed),
+            theme: typeof area.theme === "string" ? area.theme : "",
+            levelRange: normalizeLevelRange(area.levelRange),
+            targetNamespace: ns,
+            areaSlug: areaId,
+            runStateKey,
+            roster: EMPTY_ROSTER,
+        });
+    }
+    setRoomArea(roomId, areaId);
+    setRoomPath(roomId, pathKey === "entry" ? "0,0" : pathKey.replace("_", ","));
+    return areaId;
+}
+// ---------------------------------------------------------------------------
 // resolveStub - the E3 hook implementation.
 //
 // roomId:    the current room the player is standing in.
@@ -119,9 +207,11 @@ function resolveStub(roomId, direction) {
         // ------------------------------------------------------------------
         // a. Look up area state from the room.
         // ------------------------------------------------------------------
-        const areaId = getRoomArea(roomId);
+        // Resolve the owning area, reconstructing in-memory context from the persisted
+        // area.yaml when this is the first traversal after a reboot/reshare.
+        const areaId = ensureAreaContext(roomId);
         if (!areaId) {
-            // Room is not registered as oracle-owned. Graceful refusal.
+            // Room is not oracle-owned (or no persisted seed). Graceful refusal.
             return false;
         }
         const areaState = getAreaState(areaId);
