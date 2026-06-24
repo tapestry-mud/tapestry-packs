@@ -277,6 +277,27 @@ function pushLines(out: OracleEntry[], raw: string | null, kind: string): void {
 const BAKED_KINDS = ["places", "mobs", "boss", "items", "rooms", "prose"];
 const BAKED_SET_IDS = ["test-kitchen"]; // phase-1 minimal set; add ids as baked sets are authored
 
+// Rebuild loadYaml entry rows (CLR-backed, not native JsArrays) into native JS objects
+// so the writeOracleTable freeze keeps them. Tolerates string-typed scalars from YAML.
+function nativeEntries(src: any): OracleEntry[] {
+    const out: OracleEntry[] = [];
+    if (!src || typeof src.length !== "number") { return out; }
+    for (let i = 0; i < src.length; i++) {
+        const e = src[i];
+        if (!e) { continue; }
+        const entry: OracleEntry = {
+            w: typeof e.w === "number" ? e.w : (parseInt(String(e.w), 10) || 0),
+            id: e.id != null ? String(e.id) : "",
+            name: e.name != null ? String(e.name) : "",
+            desc: e.desc != null ? String(e.desc) : "",
+        };
+        if (e.balance_ref != null) { entry.balance_ref = String(e.balance_ref); }
+        if (e.rarity != null) { entry.rarity = String(e.rarity); }
+        out.push(entry);
+    }
+    return out;
+}
+
 const BAKED: Record<string, OracleTableData[]> = ((): Record<string, OracleTableData[]> => {
     const all: Record<string, OracleTableData[]> = {};
     for (const setId of BAKED_SET_IDS) {
@@ -284,7 +305,12 @@ const BAKED: Record<string, OracleTableData[]> = ((): Record<string, OracleTable
         for (const kind of BAKED_KINDS) {
             const raw: any = (tapestry as any).data.loadYaml("data/baked/" + setId + "/" + kind + ".yaml");
             if (raw && raw.oracle_table) {
-                tables.push({ kind: raw.oracle_table.kind, entries: raw.oracle_table.entries });
+                // data.loadYaml returns CLR-backed objects/lists (YamlDotNet), which are
+                // indexable in JS but are NOT native JsArrays - so writeOracleTable's
+                // `is JsArray` check drops them and freezes empty tables. Rebuild every
+                // entry as a NATIVE JS object/array so the freeze keeps them. (Index access
+                // + .length on loadYaml lists is the same pattern balance-table relies on.)
+                tables.push({ kind: String(raw.oracle_table.kind), entries: nativeEntries(raw.oracle_table.entries) });
             }
         }
         all[setId] = tables;
