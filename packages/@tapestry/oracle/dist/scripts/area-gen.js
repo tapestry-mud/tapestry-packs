@@ -35,8 +35,14 @@ import { getMintedSet } from "./stub-resolver.js";
 const SIZE_TARGET_OPTIONS = [8, 10, 12, 15, 20];
 /** Ticks between flavor messages. Tick = 100ms -> 15 ticks = ~1.5s. */
 const FLAVOR_INTERVAL = 15;
-/** Safety: teleport even if tables never land (~20s). */
-const MAX_TICKS = 200;
+/**
+ * Hard abort ceiling for the flavor-wait loop (~90s). Generous because the teleport is
+ * tied to room READINESS (onReadyTables), not to this timer - a slow LLM burst completes
+ * and teleports whenever it lands. This ceiling only fires on a true hang, and on expiry
+ * it aborts gracefully (a message, no teleport) rather than stranding the player in a
+ * room that does not exist yet.
+ */
+const MAX_TICKS = 900;
 // ---------------------------------------------------------------------------
 // Flavor messages shown while tables are being filled.
 // Sent in rotating order via idx. Each is rendered with "..." appended.
@@ -146,14 +152,16 @@ export function createSoloArea(actor, idea, name, minLevel, maxLevel, targetName
     //         All callbacks run on the single game-loop thread - no races.
     // -----------------------------------------------------------------------
     // Register the pending entry BEFORE fillTables so the synchronous
-    // (LLM-off) onReady callback finds the entry and can mark it ready.
+    // (LLM-off) onReady callback finds the entry and teleports.
     pending[playerId] = {
         entryRoomId: targetNamespace + ":" + areaSlug + "-entry",
-        ready: false,
         ticks: 0,
         idx: 0,
     };
     let handle;
+    // The wait loop is FLAVOR ONLY. The teleport lives in onReadyTables (tied to the room
+    // actually being built), so a slow LLM burst can never strand the player in the void.
+    // On the hard ceiling this aborts gracefully - no teleport into a not-yet-built room.
     const step = function () {
         const gen = pending[playerId];
         if (!gen) {
@@ -161,13 +169,12 @@ export function createSoloArea(actor, idea, name, minLevel, maxLevel, targetName
             return;
         }
         gen.ticks += FLAVOR_INTERVAL;
-        if (gen.ready || gen.ticks >= MAX_TICKS) {
+        if (gen.ticks >= MAX_TICKS) {
             tapestry.schedule.cancel(handle);
             delete pending[playerId];
-            tapestry.world.teleportEntity(playerId, gen.entryRoomId);
-            // teleportEntity does NOT auto-render the room - dispatch look as the player.
-            tapestry.world.send(playerId, "The pattern settles into place around you.");
-            tapestry.admin.executeAs(playerId, "look");
+            // A late onReadyTables will see pending gone and skip the teleport; the area
+            // still freezes to disk and can be re-entered. Player stays where they are.
+            tapestry.world.send(playerId, "The oracle's weaving falters. Try `solo` again in a moment.");
             return;
         }
         tapestry.world.send(playerId, FLAVOR[gen.idx % FLAVOR.length]);
@@ -214,10 +221,19 @@ export function createSoloArea(actor, idea, name, minLevel, maxLevel, targetName
         // -------------------------------------------------------------------
         buildEntryRoom(actor, areaSlug, areaSeed, levelRange, biomePalette, ideaHint, nameHint, targetNamespace);
         // -------------------------------------------------------------------
-        // Step 7: Mark ready - the wait loop will teleport on its next tick.
+        // Step 7: Teleport into the now-built entry room. Tied to room readiness
+        //         (here), NOT to the flavor timer, so a slow LLM burst can never
+        //         strand the player in the void. If the wait loop already aborted
+        //         (pending gone), the room is still frozen to disk; skip teleport.
         // -------------------------------------------------------------------
-        if (pending[playerId]) {
-            pending[playerId].ready = true;
+        const gen = pending[playerId];
+        if (gen) {
+            tapestry.schedule.cancel(handle);
+            delete pending[playerId];
+            tapestry.world.teleportEntity(playerId, gen.entryRoomId);
+            // teleportEntity does NOT auto-render the room - dispatch look as the player.
+            tapestry.world.send(playerId, "The pattern settles into place around you.");
+            tapestry.admin.executeAs(playerId, "look");
         }
     }
 }
