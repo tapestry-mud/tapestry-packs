@@ -21,73 +21,11 @@
 import * as tapestry from "@tapestry/engine";
 import { getPrompt } from "./prompts.js";
 // ---------------------------------------------------------------------------
-// Constants
+// Parsing helpers - all parsing is now in oracle-parse.ts (hardened, zero engine imports,
+// golden-tested with node --test). Re-export so existing importers keep working.
 // ---------------------------------------------------------------------------
-const RARITY_WEIGHTS = { common: 60, uncommon: 30, rare: 8, epic: 2 };
-// ---------------------------------------------------------------------------
-// Pure parsing helpers (exported for golden tests)
-// ---------------------------------------------------------------------------
-/**
- * Slugify a name: lowercase, replace non-alnum runs with "-", strip leading/trailing
- * dashes, cap at 40 chars. Returns "item" if the result is empty.
- */
-export function slug(name) {
-    return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "item";
-}
-/**
- * Parse a comma-separated LLM list into a string[], trimming each entry and capping at 8.
- * Returns [] on null/empty input.
- */
-export function parseList(raw) {
-    if (!raw) {
-        return [];
-    }
-    return raw.split(",").map((s) => s.trim()).filter((s) => s.length > 0).slice(0, 8);
-}
-/**
- * Parse "name | desc[ | rarity | kind]" lines into OracleEntry[].
- * For items (isItem=true): weight by rarity; 4th field (weapon|armor) sets balance_ref.
- * For non-items: weight=50; balance_ref=defaultBalanceRef.
- * Lines missing a name or desc are skipped.
- */
-export function parsePipeLines(raw, defaultBalanceRef, isItem) {
-    if (!raw) {
-        return [];
-    }
-    const out = [];
-    for (const line of raw.split("\n")) {
-        const parts = line.split("|").map((p) => p.trim());
-        if (parts.length < 2 || parts[0].length === 0) {
-            continue;
-        }
-        const name = parts[0];
-        const desc = parts[1];
-        const rarity = isItem ? normalizeRarity(parts[2]) : undefined;
-        const balanceRef = isItem ? normalizeItemKind(parts[3]) : defaultBalanceRef;
-        const w = isItem ? (RARITY_WEIGHTS[rarity] || 60) : 50;
-        const entry = { w, id: slug(name), name, desc, balance_ref: balanceRef };
-        if (rarity) {
-            entry.rarity = rarity;
-        }
-        out.push(entry);
-    }
-    return out;
-}
-// ---------------------------------------------------------------------------
-// Private helpers
-// ---------------------------------------------------------------------------
-function normalizeRarity(s) {
-    const r = (s || "").toLowerCase().trim();
-    return RARITY_WEIGHTS[r] !== undefined ? r : "common";
-}
-/**
- * Normalize "weapon" or "armor" from the LLM kind field.
- * Anything that is not "armor" defaults to "weapon".
- * This is what lets statsFor("armor",...) be reached for armor loot.
- */
-function normalizeItemKind(s) {
-    return (s || "").toLowerCase().trim() === "armor" ? "armor" : "weapon";
-}
+export { slug, parseList, parsePipeLines, pushLines } from "./oracle-parse.js";
+import { parseList, parsePipeLines, pushLines, slug } from "./oracle-parse.js";
 function call(recommend, promptKey, vars, cb) {
     const pr = getPrompt(promptKey);
     recommend({ field: promptKey, template: pr.template, system: pr.system, vars }, cb);
@@ -207,20 +145,6 @@ function fillProse(recommend, idea, places, tables, onReady) {
         // details slot freed - fire atmosphere if openers hasn't already triggered it.
         fireAtmosphere();
     });
-}
-function pushLines(out, raw, kind) {
-    if (!raw) {
-        return;
-    }
-    let i = 0;
-    for (const line of raw.split("\n")) {
-        const t = line.trim();
-        if (t.length === 0) {
-            continue;
-        }
-        out.push({ w: 10, id: kind + "-" + i, name: kind, desc: t });
-        i++;
-    }
 }
 // ---------------------------------------------------------------------------
 // bakedTables

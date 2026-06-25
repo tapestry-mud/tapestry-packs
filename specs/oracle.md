@@ -183,6 +183,27 @@ before the spawn does not shift the stream.
 (packages/@tapestry/oracle/scripts/resolver.ts:mintItemInstance;
 packages/@tapestry/oracle/scripts/room-gen.ts:materializeRoom)
 
+### LLM table-fill parser hardening
+
+LLM table-fill output is processed through `oracle-parse.ts` (zero engine imports, golden-tested
+with `node --test`). The hardened helpers strip common small-model leakage:
+- **Preambles**: any line ending in ":" with no "|" separator is skipped (`isPreamble`).
+- **Phrasing-agnostic lead-in clauses**: any single-line "Common places: ..." or "Options: ..."
+  style prefix is stripped regardless of phrasing (colon detection + no comma before the colon).
+- **Interjections**: leading "Sure!", "Okay,", "OK -" patterns are stripped before parsing.
+- **Numbering prefixes**: "1.", "2)", "- ", "* " are stripped from each fragment (`cleanLine`).
+- **Over-long fragments**: any name or desc exceeding 120 characters is hard-capped.
+- **Junk rows**: pipe-delimited rows whose name field has no alphanumeric character (e.g. "--- | ---"
+  or " | orphaned desc") are dropped.
+
+Crammed multi-record lines (multiple records on one line, not split by newline) are a NAMED
+DEFERRAL - no such leak has been observed; a conservative splitter is deferred until one appears
+in a real playtest session.
+
+`oracle-tables.ts` re-exports `slug`, `parseList`, `parsePipeLines`, `pushLines` from
+`oracle-parse.ts` so existing importers are unchanged.
+(packages/@tapestry/oracle/scripts/oracle-parse.ts; packages/@tapestry/oracle/test/oracle-parse.test.mjs)
+
 ## Rejected and Reverted
 
 - Per-room LLM calls -- the original design called `authoring.recommend` for each room's prose
