@@ -18,6 +18,11 @@
 //   createPack returns the namespace, which becomes the new area's targetNamespace.
 import * as tapestry from "@tapestry/engine";
 import { createSoloArea } from "../area-gen.js";
+import { BAKED_SET_IDS } from "../oracle-tables.js";
+function llmOff() {
+    const fn = tapestry.authoring.recommendEnabled;
+    return !(fn && fn());
+}
 /** Server max level. No API available; use the documented constant. */
 const SERVER_MAX_LEVEL = 60;
 tapestry.flows.register({
@@ -38,8 +43,23 @@ tapestry.flows.register({
             id: "idea",
             type: "text",
             prompt: "Describe the idea (e.g. a sunken ship):",
+            skip_if: function (_entity) { return llmOff(); },
             on_input: function (entity, value) {
                 entity.setProperty("__solo_idea", value);
+            },
+        },
+        {
+            id: "baked_set",
+            type: "choice",
+            skip_if: function (_entity) { return !llmOff(); },
+            prompt: "Pick a baked set:",
+            options: function (_entity) {
+                return BAKED_SET_IDS.map(function (setId) {
+                    return { label: setId, value: setId };
+                });
+            },
+            on_select: function (entity, option) {
+                entity.setProperty("__solo_baked_set", option.value);
             },
         },
         {
@@ -136,8 +156,10 @@ tapestry.flows.register({
         if (!namespace) {
             return { success: false, message: "Could not create destination pack '" + packName + "'." };
         }
+        const rawBaked = entity.getProperty("__solo_baked_set") || "";
+        const bakedSetId = (rawBaked && rawBaked.trim() !== "") ? rawBaked.trim() : BAKED_SET_IDS[0];
         try {
-            createSoloArea(entity, ideaValue, nameValue, minLevel, maxLevel, namespace);
+            createSoloArea(entity, ideaValue, nameValue, minLevel, maxLevel, namespace, bakedSetId);
         }
         catch (err) {
             const detail = (err && err.message) ? err.message : String(err);

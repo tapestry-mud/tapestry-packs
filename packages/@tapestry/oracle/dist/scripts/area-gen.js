@@ -96,7 +96,7 @@ const pending = {};
 //                   P7 supplies "@scratch/oracle-run"'s namespace; this is the prefix
 //                   on the room id, e.g. "oracle-run:..." so createRoom can find the pack.
 // ---------------------------------------------------------------------------
-export function createSoloArea(actor, idea, name, minLevel, maxLevel, targetNamespace = "oracle-run") {
+export function createSoloArea(actor, idea, name, minLevel, maxLevel, targetNamespace = "oracle-run", bakedSetId = "test-kitchen") {
     // -----------------------------------------------------------------------
     // Step 1: Roll the area seed (single unseeded roll - everything else is
     //         deterministic from it). Create the area authoring record.
@@ -197,7 +197,7 @@ export function createSoloArea(actor, idea, name, minLevel, maxLevel, targetName
     const ideaStr = ideaHint;
     const llmEnabled = tapestry.authoring.recommendEnabled && tapestry.authoring.recommendEnabled();
     if (!llmEnabled) {
-        const tables = bakedTables("test-kitchen");
+        const tables = bakedTables(bakedSetId);
         onReadyTables(tables);
         return;
     }

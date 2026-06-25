@@ -123,7 +123,8 @@ export function createSoloArea(
     name: string | null,
     minLevel: number,
     maxLevel: number,
-    targetNamespace: string = "oracle-run"
+    targetNamespace: string = "oracle-run",
+    bakedSetId: string = "test-kitchen"
 ): void {
     // -----------------------------------------------------------------------
     // Step 1: Roll the area seed (single unseeded roll - everything else is
@@ -247,7 +248,7 @@ export function createSoloArea(
     const llmEnabled = tapestry.authoring.recommendEnabled && tapestry.authoring.recommendEnabled();
 
     if (!llmEnabled) {
-        const tables = bakedTables("test-kitchen");
+        const tables = bakedTables(bakedSetId);
         onReadyTables(tables);
         return;
     }

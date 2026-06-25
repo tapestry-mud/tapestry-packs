@@ -19,6 +19,12 @@
 
 import * as tapestry from "@tapestry/engine";
 import { createSoloArea } from "../area-gen.js";
+import { BAKED_SET_IDS } from "../oracle-tables.js";
+
+function llmOff(): boolean {
+    const fn = (tapestry as any).authoring.recommendEnabled;
+    return !(fn && fn());
+}
 
 /** Server max level. No API available; use the documented constant. */
 const SERVER_MAX_LEVEL = 60;
@@ -41,8 +47,23 @@ tapestry.flows.register({
             id: "idea",
             type: "text",
             prompt: "Describe the idea (e.g. a sunken ship):",
+            skip_if: function(_entity: any) { return llmOff(); },
             on_input: function(entity: any, value: string) {
                 entity.setProperty("__solo_idea", value);
+            },
+        },
+        {
+            id: "baked_set",
+            type: "choice",
+            skip_if: function(_entity: any) { return !llmOff(); },
+            prompt: "Pick a baked set:",
+            options: function(_entity: any) {
+                return BAKED_SET_IDS.map(function(setId: string) {
+                    return { label: setId, value: setId };
+                });
+            },
+            on_select: function(entity: any, option: any) {
+                entity.setProperty("__solo_baked_set", option.value);
             },
         },
         {
@@ -143,8 +164,11 @@ tapestry.flows.register({
             return { success: false, message: "Could not create destination pack '" + packName + "'." };
         }
 
+        const rawBaked = entity.getProperty("__solo_baked_set") || "";
+        const bakedSetId = (rawBaked && rawBaked.trim() !== "") ? rawBaked.trim() : BAKED_SET_IDS[0];
+
         try {
-            createSoloArea(entity, ideaValue, nameValue, minLevel, maxLevel, namespace);
+            createSoloArea(entity, ideaValue, nameValue, minLevel, maxLevel, namespace, bakedSetId);
         } catch (err) {
             const detail = (err && (err as any).message) ? (err as any).message : String(err);
             return { success: false, message: "Area generation failed: " + detail };

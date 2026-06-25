@@ -232,7 +232,7 @@ function pushLines(out, raw, kind) {
 // so a lazy load inside any runtime callback returns null.
 // ---------------------------------------------------------------------------
 const BAKED_KINDS = ["places", "mobs", "boss", "items", "rooms", "prose"];
-const BAKED_SET_IDS = ["test-kitchen"]; // phase-1 minimal set; add ids as baked sets are authored
+export const BAKED_SET_IDS = ["test-kitchen"]; // phase-1 minimal set; add ids as baked sets are authored
 // Rebuild loadYaml entry rows (CLR-backed, not native JsArrays) into native JS objects
 // so the writeOracleTable freeze keeps them. Tolerates string-typed scalars from YAML.
 function nativeEntries(src) {

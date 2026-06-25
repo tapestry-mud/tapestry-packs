@@ -103,12 +103,20 @@ All six tables resolve before `onReady` fires. The player sees flavor messages d
 
 ### LLM-off branch
 
-When `authoring.recommendEnabled()` returns false (or is unavailable), `bakedTables("test-kitchen")`
-is used instead. Baked table sets are YAML files eagerly loaded at module init time
-(`data/baked/<setId>/<kind>.yaml`) so `data.loadYaml` runs while `CurrentPackDir` is still set.
-The `onReadyTables` callback fires synchronously on the same tick; no flavor wait is needed but
-the loop fires once before the teleport happens.
-(packages/@tapestry/oracle/scripts/oracle-tables.ts:280-298; packages/@tapestry/oracle/data/baked/test-kitchen/)
+When `authoring.recommendEnabled()` returns false (or is unavailable), the `solo` flow skips the
+`idea` prompt (which is ignored in LLM-off mode) and instead presents a `choice` step listing the
+available baked sets. Options are driven by `BAKED_SET_IDS` (exported from `oracle-tables.ts`) so
+new polished sets are added with zero flow edits. The chosen set id is stashed as
+`__solo_baked_set` and threaded to `createSoloArea(... bakedSetId)`, which calls
+`bakedTables(bakedSetId)` instead of the hardcoded `"test-kitchen"` default. A missing or blank
+selection defaults to `BAKED_SET_IDS[0]`.
+
+Baked table sets are YAML files eagerly loaded at module init time (`data/baked/<setId>/<kind>.yaml`)
+so `data.loadYaml` runs while `CurrentPackDir` is still set. The `onReadyTables` callback fires
+synchronously on the same tick; no flavor wait is needed but the loop fires once before the
+teleport happens.
+(packages/@tapestry/oracle/scripts/flows/solo-flow.ts; packages/@tapestry/oracle/scripts/oracle-tables.ts;
+packages/@tapestry/oracle/scripts/area-gen.ts; packages/@tapestry/oracle/data/baked/test-kitchen/)
 
 ### Destination-pack model
 
