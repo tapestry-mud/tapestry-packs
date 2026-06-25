@@ -1,6 +1,6 @@
 ---
 capability: oracle
-last-updated: 2026-06-23
+last-updated: 2026-06-25
 ---
 
 # oracle
@@ -221,6 +221,4 @@ in a real playtest session.
 
 ## Change Log
 
-- 2026-06-25: solo-oracle-v2-completion - item delivery (freeze + mob-inventory ride + corpse
-  drop), LLM-off baked-set picker, hardened LLM table-fill parser, 3 missing armor base
-  templates, AuthoredRoomLoader boot-crash fix. See changes/2026-06-25-solo-oracle-v2-completion.md.
+- 2026-06-25 [solo-oracle-v2-completion](changes/2026-06-25-solo-oracle-v2-completion.md) - item delivery (freeze + mob-inventory ride + corpse drop), LLM-off baked-set picker, hardened parse module with 11 golden tests, 3 missing armor base templates
