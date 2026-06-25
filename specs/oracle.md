@@ -149,6 +149,32 @@ calls `LoadOracleData` and registers frozen tables at boot for areas that live i
 Destination packs declare the same glob to load their frozen tables at boot.
 (packages/@tapestry/oracle/pack.yaml:22-23)
 
+### Item delivery - freeze + ride mob inventory
+
+When a loot-drop roll fires for an ambient mob, `mintItemInstance(areaId, level, rng, coordKey, index)`
+freezes the rolled item as a standalone item-template side-car and returns its id so the caller can
+attach it to the mob's inventory before spawning. The item rides the mob and drops to a room corpse
+on death via the core `death.ts` `transferAll`.
+
+`mintItemInstance` maps the rolled `balance_ref` to a base template (`armor-<slot>` for armor,
+`weapon-melee` for weapons), overlays the rolled stats (`damage_dice` for weapons; `ac` map +
+`slot` for armor), and calls `tapestry.authoring.writeItemTemplate`. The write freezes the item as
+`data/areas/<areaId>/items/loot-<typeId>-<coordKey>-<index>.yaml` AND registers it live in the
+`ItemRegistry` so the same-session mob inventory resolves without a reboot. The `AuthoredItemLoader`
+restores frozen side-cars at boot (reload half).
+
+All 7 armor slots defined in the master balance table (head, hands, feet, body, wrist, waist, neck,
+covering level bands 1-60) have a corresponding base template in the oracle pack's `templates/items/`
+directory, so a slot roll always resolves to a real base and `writeItemTemplate` never returns null
+for armor at any supported level.
+
+The loot threshold draw (`LOOT_DROP_CHANCE = 0.35`) is unconditional per spawn iteration (same
+rng-stream position as the shipped v2 code); `mintItemInstance` only fires when the draw succeeds
+AND the mob override is non-null. `tapestry.mobs.spawnMob` consumes no rng, so attaching loot
+before the spawn does not shift the stream.
+(packages/@tapestry/oracle/scripts/resolver.ts:mintItemInstance;
+packages/@tapestry/oracle/scripts/room-gen.ts:materializeRoom)
+
 ## Rejected and Reverted
 
 - Per-room LLM calls -- the original design called `authoring.recommend` for each room's prose

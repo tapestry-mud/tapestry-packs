@@ -119,10 +119,11 @@ export function mintMobInstanceByTypeId(areaId, typeId, level, rng) {
 }
 // ---------------------------------------------------------------------------
 // mintItemInstance - roll an item type from frozen <area>:items, apply rarity
-// modifier to the level band, roll stats, return the frozen override blob.
-// Returns null if the table is empty.
+// modifier to the level band, roll stats, freeze via writeItemTemplate, and
+// return { id, base, name } so the caller can attach it to a mob's inventory.
+// Returns null if the table is empty or the base template is unknown.
 // ---------------------------------------------------------------------------
-export function mintItemInstance(areaId, level, rng) {
+export function mintItemInstance(areaId, level, rng, coordKey, index) {
     const entries = table(areaId, "items");
     if (entries.length === 0) {
         return null;
@@ -130,17 +131,39 @@ export function mintItemInstance(areaId, level, rng) {
     const type = rollEntry(entries, rng);
     const rarity = type.rarity || "common";
     const effectiveLevel = clampLevel(level + rarityModifier(rarity));
-    const kind = type.balance_ref === "armor" ? "armor" : "weapon";
+    const isArmor = type.balance_ref === "armor";
+    const kind = isArmor ? "armor" : "weapon";
     const stats = statsFor(kind, effectiveLevel, rng);
-    return {
-        fromType: type.id,
+    let baseId;
+    const properties = { rarity };
+    if (isArmor) {
+        // statsFor("armor",...) -> { ac: number, slots: "a,b,c" }. Pick a slot deterministically.
+        const slotList = String(stats.slots || "body").split(",");
+        const slot = slotList[Math.floor(rng() * slotList.length)] || "body";
+        baseId = "tapestry-oracle:armor-" + slot;
+        const acVal = Number(stats.ac) || 0;
+        properties.slot = slot;
+        properties.ac = { slash: acVal, pierce: acVal, bash: acVal, exotic: acVal };
+    }
+    else {
+        baseId = "tapestry-oracle:weapon-melee";
+        properties.slot = "wield";
+        properties.damage_dice = String(stats.damage);
+    }
+    const frozenId = areaId + ":loot-" + type.id + "-" + coordKey + "-" + index;
+    const written = tapestry.authoring.writeItemTemplate({
+        areaId,
+        id: frozenId,
+        base: baseId,
         name: type.name,
         desc: type.desc,
-        rarity,
-        damage: stats.damage,
-        ac: stats.ac,
-        slots: stats.slots,
-    };
+        type: "item",
+        properties,
+    });
+    if (!written) {
+        return null;
+    }
+    return { id: frozenId, base: baseId, name: type.name };
 }
 // ---------------------------------------------------------------------------
 // mintBossInstance - use the first entry in the frozen <area>:boss table.

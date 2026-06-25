@@ -315,20 +315,24 @@ export function materializeRoom(
                 mintedMobTypes.add(override.fromType);
             }
         }
+        // Loot threshold draw is UNCONDITIONAL - same rng-stream position as the shipped code
+        // (the original rolled this every iteration, outside `if (override)`). spawnMob consumes
+        // no rng, so minting + attaching loot before the spawn does not shift the stream.
+        const lootRoll = spawnRng();
+        if (override && lootRoll < LOOT_DROP_CHANCE) {
+            const loot = mintItemInstance(areaId, level, spawnRng, coordKey, i);
+            if (loot) {
+                if (!override.items) { override.items = []; }
+                override.items.push(loot.id);
+            }
+        }
+
         if (override) {
             tapestry.mobs.spawnMob({
                 template: "tapestry-oracle:hostile-melee",
                 roomId,
                 override,
             });
-        }
-
-        // Loot drop: advance the rng to keep the stream deterministic (the items
-        // attachment path is deferred until the item base template id is threaded
-        // through here correctly).
-        if (spawnRng() < LOOT_DROP_CHANCE) {
-            const _itemOverride = mintItemInstance(areaId, level, spawnRng);
-            void _itemOverride;
         }
     }
 
