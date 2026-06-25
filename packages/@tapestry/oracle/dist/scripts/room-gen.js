@@ -262,3 +262,4 @@ export function materializeRoom(roomId, areaId, areaSeed, facts, runState, biome
         runState.roomsSinceLastBoss += 1;
     }
 }
+// touch

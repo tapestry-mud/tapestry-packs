@@ -1,0 +1,16 @@
+# Behavior-only armor base: waist slot.
+# No fixed name or ac values -- oracle override blob supplies those.
+id: "tapestry-oracle:armor-waist"
+name: "a belt"
+type: "item"
+tags: []
+keywords: [armor, waist, belt]
+properties:
+  slot: waist
+  weight: 2
+  rarity: common
+  ac:
+    slash: 0
+    pierce: 0
+    bash: 0
+    exotic: 0

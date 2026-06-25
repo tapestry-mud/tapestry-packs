@@ -1,0 +1,16 @@
+# Behavior-only armor base: wrist slot.
+# No fixed name or ac values -- oracle override blob supplies those.
+id: "tapestry-oracle:armor-wrist"
+name: "a bracer"
+type: "item"
+tags: []
+keywords: [armor, wrist, bracer]
+properties:
+  slot: wrist
+  weight: 2
+  rarity: common
+  ac:
+    slash: 0
+    pierce: 0
+    bash: 0
+    exotic: 0
