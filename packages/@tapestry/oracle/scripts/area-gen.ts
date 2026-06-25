@@ -27,7 +27,7 @@ import { soloAreaBiomePalette } from "./roster.js";
 import { runKey, setRunState } from "./run-state.js";
 import { setAreaState, setRoomArea, setRoomPath } from "./area-state.js";
 import { rollRoomFacts, materializeRoom } from "./room-gen.js";
-import { fillTables, bakedTables, type OracleTableData } from "./oracle-tables.js";
+import { fillTables, bakedTables, BAKED_SET_IDS, type OracleTableData } from "./oracle-tables.js";
 import { getMintedSet } from "./stub-resolver.js";
 
 // ---------------------------------------------------------------------------
@@ -124,7 +124,7 @@ export function createSoloArea(
     minLevel: number,
     maxLevel: number,
     targetNamespace: string = "oracle-run",
-    bakedSetId: string = "test-kitchen"
+    bakedSetId: string = BAKED_SET_IDS[0]
 ): void {
     // -----------------------------------------------------------------------
     // Step 1: Roll the area seed (single unseeded roll - everything else is

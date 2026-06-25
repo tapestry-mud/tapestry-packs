@@ -221,4 +221,6 @@ in a real playtest session.
 
 ## Change Log
 
-- None on record.
+- 2026-06-25: solo-oracle-v2-completion - item delivery (freeze + mob-inventory ride + corpse
+  drop), LLM-off baked-set picker, hardened LLM table-fill parser, 3 missing armor base
+  templates, AuthoredRoomLoader boot-crash fix. See changes/2026-06-25-solo-oracle-v2-completion.md.

@@ -26,7 +26,7 @@ import { soloAreaBiomePalette } from "./roster.js";
 import { runKey, setRunState } from "./run-state.js";
 import { setAreaState, setRoomArea, setRoomPath } from "./area-state.js";
 import { rollRoomFacts, materializeRoom } from "./room-gen.js";
-import { fillTables, bakedTables } from "./oracle-tables.js";
+import { fillTables, bakedTables, BAKED_SET_IDS } from "./oracle-tables.js";
 import { getMintedSet } from "./stub-resolver.js";
 // ---------------------------------------------------------------------------
 // Configurable constants
@@ -96,7 +96,7 @@ const pending = {};
 //                   P7 supplies "@scratch/oracle-run"'s namespace; this is the prefix
 //                   on the room id, e.g. "oracle-run:..." so createRoom can find the pack.
 // ---------------------------------------------------------------------------
-export function createSoloArea(actor, idea, name, minLevel, maxLevel, targetNamespace = "oracle-run", bakedSetId = "test-kitchen") {
+export function createSoloArea(actor, idea, name, minLevel, maxLevel, targetNamespace = "oracle-run", bakedSetId = BAKED_SET_IDS[0]) {
     // -----------------------------------------------------------------------
     // Step 1: Roll the area seed (single unseeded roll - everything else is
     //         deterministic from it). Create the area authoring record.
