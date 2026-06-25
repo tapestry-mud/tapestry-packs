@@ -4,6 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "\"D:\\Skunkworks\\tapestry-cli\\node_modules\\.bin\\tsc\" --project tsconfig.json"
+    "build": "\"D:\\Skunkworks\\tapestry-cli\\node_modules\\.bin\\tsc\" --project tsconfig.json",
+    "pretest": "npm run build",
+    "test": "node --test"
   }
 }
