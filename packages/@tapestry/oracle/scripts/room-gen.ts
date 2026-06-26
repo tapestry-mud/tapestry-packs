@@ -29,6 +29,8 @@ import { type RunState } from "./run-state.js";
 import { composeProse } from "./prose-compose.js";
 import { mintMobInstance, mintBossInstance, mintItemInstance, mintMobInstanceByTypeId, rngFor, shouldReuse } from "./resolver.js";
 import { DIR_OFFSETS, ALL_DIRECTIONS } from "./coords.js";
+import { type SixAxisTable } from "./six-axis.js";
+import { composeFor, composeRoomProse } from "./room-compose.js";
 
 // ---------------------------------------------------------------------------
 // Tuning constants
@@ -238,7 +240,9 @@ export function materializeRoom(
     runState: RunState,
     biome: string,
     theme: string,
-    mintedMobTypes?: Set<string>
+    mintedMobTypes: Set<string>,
+    sixAxis: Record<string, SixAxisTable>,
+    depth: number
 ): void {
     // -------------------------------------------------------------------------
     // 1. Compose prose deterministically from frozen table + create the room.
@@ -251,13 +255,24 @@ export function materializeRoom(
     // We use the facts.roomSeed as a coord key for composeProse.
     const coordKey = String(facts.roomSeed);
 
-    const prose = composeProse(areaId, areaSeed, coordKey, biome);
+    // Depth-biased composition: roll band + density from ROOM-1 (if six-axis tables are present).
+    // composeRng seeds BOTH the degree roll (via composeFor) AND the prose fragment pick.
+    // When ROOM-1 is absent, composeFor returns null -> flat fallback path unchanged.
+    const composeRng = splitmix64(facts.roomSeed + 2);
+    const composition = composeFor("rooms", sixAxis, {
+        depth,
+        pressure: runState.roomsSinceLastBoss,
+        rng: composeRng,
+    });
 
-    const exitDirNames = facts.exits.map(function (e) { return e.direction; });
+    // Banded prose: use ROOM-2 dressing when available; fall back to legacy composeProse.
+    const sixAxisProse = composeRoomProse(sixAxis, composeRng);
+    const prose = sixAxisProse !== "" ? sixAxisProse : composeProse(areaId, areaSeed, coordKey, biome);
 
-    const roomName = theme
-        ? theme + " - " + titleCase(biome)
-        : titleCase(biome);
+    // Banded room name: prefix the band when composition is active; else legacy theme-name.
+    const roomName = composition
+        ? titleCase(composition.band) + " - " + titleCase(biome)
+        : (theme ? theme + " - " + titleCase(biome) : titleCase(biome));
 
     tapestry.authoring.createRoom(areaId, roomId, roomName, prose);
 
@@ -284,7 +299,8 @@ export function materializeRoom(
     // mintMobInstance + mintItemInstance read frozen tables; no LLM call.
     const spawnRng = rngFor(areaSeed, coordKey + ":spawn");
 
-    for (let i = 0; i < facts.ambientCount; i++) {
+    const spawnCount = composition ? composition.spawnDensity : facts.ambientCount;
+    for (let i = 0; i < spawnCount; i++) {
         const level = 1;
         let override: any;
         if (mintedMobTypes && shouldReuse(mintedMobTypes.size, spawnRng)) {

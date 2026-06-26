@@ -26,7 +26,8 @@
 import * as tapestry from "@tapestry/engine";
 import { rollRoomFacts, materializeRoom } from "./room-gen.js";
 import { hashCoord, splitmix64, pick } from "./prng.js";
-import { DIR_OFFSETS, oppositeDir, neighborPath, pathKey, parsePathKey } from "./coords.js";
+import { DIR_OFFSETS, oppositeDir, neighborPath, pathKey, parsePathKey, descentDepth } from "./coords.js";
+import { loadSixAxisTables } from "./six-axis.js";
 import { getAreaState, setAreaState, getRoomArea, getRoomPath, setRoomArea, setRoomPath } from "./area-state.js";
 import { getRunState, setRunState } from "./run-state.js";
 import { soloAreaBiomePalette, type Roster } from "./roster.js";
@@ -149,16 +150,19 @@ function ensureAreaContext(roomId: string): string | undefined {
         // a synthetic per-area key suffices since the resolver has no playerId here.
         const runStateKey = "reload:" + areaId;
         setRunState(runStateKey, { roomsSinceLastBoss: 0 });
+        const theme = typeof area.theme === "string" ? area.theme : "";
+        const themeDir = theme.toLowerCase().indexOf("underdeep") !== -1 ? "endless-underdeep" : "";
         setAreaState(areaId, {
             areaId,
             areaSeed: seed,
             biomePalette: soloAreaBiomePalette(seed),
-            theme: typeof area.theme === "string" ? area.theme : "",
+            theme,
             levelRange: normalizeLevelRange(area.levelRange),
             targetNamespace: ns,
             areaSlug: areaId,
             runStateKey,
             roster: EMPTY_ROSTER,
+            sixAxis: loadSixAxisTables(themeDir),
         });
     }
 
@@ -288,7 +292,9 @@ function resolveStub(roomId: string, direction: string): boolean {
             runState,
             biome,
             theme,
-            getMintedSet(areaId)
+            getMintedSet(areaId),
+            areaState.sixAxis,
+            descentDepth(neighbor)
         );
 
         // ------------------------------------------------------------------

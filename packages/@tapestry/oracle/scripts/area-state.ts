@@ -37,6 +37,9 @@ export interface AreaState {
     runStateKey: string;
     /** Frozen roster rolled at creation. */
     roster: Roster;
+    /** Loaded six-axis tables for this area's theme, keyed by table id (ROOM-1..6).
+     *  Empty when the area has no six-axis tables (flat-oracle fallback). */
+    sixAxis: Record<string, import("./six-axis.js").SixAxisTable>;
 }
 
 // ---------------------------------------------------------------------------
