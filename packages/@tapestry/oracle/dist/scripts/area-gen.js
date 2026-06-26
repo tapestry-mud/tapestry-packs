@@ -246,7 +246,7 @@ export function createSoloArea(actor, idea, name, minLevel, maxLevel, targetName
 // ---------------------------------------------------------------------------
 function buildEntryRoom(actor, areaSlug, areaSeed, levelRange, biomePalette, ideaHint, nameHint, targetNamespace) {
     const entryRoomId = targetNamespace + ":" + areaSlug + "-entry";
-    const entryRoomPath = "0,0";
+    const entryRoomPath = "0,0,0";
     const primaryBiome = biomePalette[0] || "wilds";
     // -------------------------------------------------------------------
     // Construct and store the RunState cell.
