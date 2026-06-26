@@ -24,8 +24,9 @@
 // ASCII; no em dashes; braces on all control flow.
 
 import * as tapestry from "@tapestry/engine";
-import { DIR_OFFSETS, rollRoomFacts, materializeRoom } from "./room-gen.js";
+import { rollRoomFacts, materializeRoom } from "./room-gen.js";
 import { hashCoord, splitmix64, pick } from "./prng.js";
+import { DIR_OFFSETS, oppositeDir, neighborPath, pathKey, parsePathKey } from "./coords.js";
 import { getAreaState, setAreaState, getRoomArea, getRoomPath, setRoomArea, setRoomPath } from "./area-state.js";
 import { getRunState, setRunState } from "./run-state.js";
 import { soloAreaBiomePalette, type Roster } from "./roster.js";
@@ -77,31 +78,6 @@ function resolveAreaSeed(areaId: string): number {
         (tapestry as any).system?.warn("[oracle] resolveAreaSeed: no seed found for area '" + areaId + "'; falling back to 0. Determinism degraded.");
     }
     return 0;
-}
-
-// ---------------------------------------------------------------------------
-// oppositeDir - returns the cardinal opposite of a direction.
-// ---------------------------------------------------------------------------
-
-function oppositeDir(direction: string): string {
-    if (direction === "north") { return "south"; }
-    if (direction === "south") { return "north"; }
-    if (direction === "east") { return "west"; }
-    if (direction === "west") { return "east"; }
-    return "";
-}
-
-// ---------------------------------------------------------------------------
-// parseCoord - parse "x,y" into [x, y] integers. Returns null on bad input.
-// ---------------------------------------------------------------------------
-
-function parseCoord(path: string): [number, number] | null {
-    const parts = path.split(",");
-    if (parts.length !== 2) { return null; }
-    const x = parseInt(parts[0], 10);
-    const y = parseInt(parts[1], 10);
-    if (isNaN(x) || isNaN(y)) { return null; }
-    return [x, y];
 }
 
 // ---------------------------------------------------------------------------
@@ -157,10 +133,10 @@ function ensureAreaContext(roomId: string): string | undefined {
     if (colon < 0) { return undefined; }
     const ns = roomId.slice(0, colon);
     const rest = roomId.slice(colon + 1);
-    const m = rest.match(/^(.+)-(entry|-?\d+_-?\d+)$/);
+    const m = rest.match(/^(.+)-(entry|-?\d+_-?\d+_-?\d+)$/);
     if (!m) { return undefined; }
     const areaId = m[1];
-    const pathKey = m[2];
+    const pathKeyStr = m[2];
 
     // Only reconstruct for a real oracle area (a persisted seed is the marker).
     const area = (tapestry as any).area && (tapestry as any).area.get(areaId);
@@ -187,7 +163,7 @@ function ensureAreaContext(roomId: string): string | undefined {
     }
 
     setRoomArea(roomId, areaId);
-    setRoomPath(roomId, pathKey === "entry" ? "0,0" : pathKey.replace("_", ","));
+    setRoomPath(roomId, parsePathKey(pathKeyStr) || "0,0,0");
     return areaId;
 }
 
@@ -227,33 +203,18 @@ function resolveStub(roomId: string, direction: string): boolean {
 
         const currentPath = getRoomPath(roomId);
         if (!currentPath) {
-            // Current room has no registered path - cannot derive neighbor.
             return false;
         }
 
-        const offset = DIR_OFFSETS[direction];
-        if (!offset) {
-            // Not a cardinal direction - no stub resolver handles this.
+        const neighbor = neighborPath(currentPath, direction);
+        if (!neighbor) {
+            // Not a known direction, or unparseable path. No stub resolver handles it.
             return false;
         }
 
-        const coords = parseCoord(currentPath);
-        if (!coords) {
-            return false;
-        }
-
-        const neighborX = coords[0] + offset[0];
-        const neighborY = coords[1] + offset[1];
-        const neighborPath = neighborX + "," + neighborY;
-
-        // ------------------------------------------------------------------
-        // c. Derive the neighbor room id.
-        //    Scheme: namespace:areaSlug-x_y  (comma replaced with underscore)
-        //    e.g. "oracle-run:oracle-run-abc123-0_1"
-        // ------------------------------------------------------------------
-
-        const pathKey = neighborX + "_" + neighborY;
-        const neighborId = areaState.targetNamespace + ":" + areaState.areaSlug + "-" + pathKey;
+        // Derive the neighbor room id. Scheme: namespace:areaSlug-x_y_z.
+        const neighborKey = pathKey(neighbor);
+        const neighborId = areaState.targetNamespace + ":" + areaState.areaSlug + "-" + neighborKey;
 
         const retDir = oppositeDir(direction);
 
@@ -289,7 +250,7 @@ function resolveStub(roomId: string, direction: string): boolean {
         // f. Derive per-neighbor biome deterministically from position.
         // ------------------------------------------------------------------
 
-        const biomeRng = splitmix64(hashCoord(areaSeed, neighborPath));
+        const biomeRng = splitmix64(hashCoord(areaSeed, neighbor));
         const biome = pick(areaState.biomePalette, biomeRng);
         const theme = areaState.theme;
 
@@ -299,7 +260,7 @@ function resolveStub(roomId: string, direction: string): boolean {
         //    still accepts it. Pass the null stub from area-state.
         // ------------------------------------------------------------------
 
-        const facts = rollRoomFacts(areaSeed, neighborPath, areaState.roster, biome);
+        const facts = rollRoomFacts(areaSeed, neighbor, areaState.roster, biome);
 
         // ------------------------------------------------------------------
         // h. Fetch the run state for this area's solo run.
@@ -335,7 +296,7 @@ function resolveStub(roomId: string, direction: string): boolean {
         // ------------------------------------------------------------------
 
         setRoomArea(neighborId, areaId);
-        setRoomPath(neighborId, neighborPath);
+        setRoomPath(neighborId, neighbor);
 
         // ------------------------------------------------------------------
         // k. Wire the two-way exits.

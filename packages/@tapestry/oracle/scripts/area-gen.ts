@@ -315,7 +315,7 @@ function buildEntryRoom(
     targetNamespace: string
 ): void {
     const entryRoomId = targetNamespace + ":" + areaSlug + "-entry";
-    const entryRoomPath = "0,0";
+    const entryRoomPath = "0,0,0";
     const primaryBiome = biomePalette[0] || "wilds";
 
     // -------------------------------------------------------------------

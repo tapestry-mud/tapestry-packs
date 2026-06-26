@@ -49,7 +49,7 @@ const _areaStore = new Map<string, AreaState>();
 /** Maps roomId -> areaId so the resolver can find the AreaState from a roomId alone. */
 const _roomAreaMap = new Map<string, string>();
 
-/** Maps roomId -> roomPath ("x,y" grid coords, e.g. "0,0", "0,1", "-1,0"). */
+/** Maps roomId -> roomPath ("x,y,z" grid coords, e.g. "0,0,0", "0,1,0", "-1,0,0"). */
 const _roomPathMap = new Map<string, string>();
 
 // ---------------------------------------------------------------------------
@@ -82,12 +82,12 @@ export function getRoomArea(roomId: string): string | undefined {
 // Room path map (coordinate string "x,y" per room)
 // ---------------------------------------------------------------------------
 
-/** Register the grid path for a room. Path format: "x,y" (signed integers). */
+/** Register the grid path for a room. Path format: "x,y,z" (signed integers). */
 export function setRoomPath(roomId: string, path: string): void {
     _roomPathMap.set(roomId, path);
 }
 
-/** Get the grid path for a room, if registered. */
+/** Get the grid path for a room, if registered. Returns "x,y,z" string or undefined. */
 export function getRoomPath(roomId: string): string | undefined {
     return _roomPathMap.get(roomId);
 }

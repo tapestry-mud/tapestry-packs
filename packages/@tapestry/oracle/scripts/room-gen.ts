@@ -14,10 +14,9 @@
 //   Boss spawn uses mintBossInstance from frozen tables.
 //   Zero LLM calls remain in this file.
 //
-// roomPath convention: signed grid coords string "x,y" (integers, no spaces).
-// Entry room is "0,0". North of "0,0" is "0,1". East is "1,0". etc.
-// P5 derives a neighbor's roomPath by parsing the current path and applying the
-// direction offset from DIR_OFFSETS below.
+// roomPath convention: signed grid coords string "x,y,z" (integers, no spaces).
+// Entry room is "0,0,0". North of entry is "0,1,0". Down is "0,0,-1". See coords.ts.
+// The stub resolver derives a neighbor's roomPath via neighborPath() from coords.ts.
 //
 // Boss clock slope: BOSS_CLOCK_SLOPE (fraction per room). At count N, the threshold
 // is min(N * slope, 1.0). Room 0 = 0% (structurally boss-free). Resets cold on spawn.
@@ -29,6 +28,7 @@ import { type Roster } from "./roster.js";
 import { type RunState } from "./run-state.js";
 import { composeProse } from "./prose-compose.js";
 import { mintMobInstance, mintBossInstance, mintItemInstance, mintMobInstanceByTypeId, rngFor, shouldReuse } from "./resolver.js";
+import { DIR_OFFSETS, ALL_DIRECTIONS } from "./coords.js";
 
 // ---------------------------------------------------------------------------
 // Tuning constants
@@ -50,21 +50,6 @@ const EXIT_CHANCE = 0.55;
 
 /** Minimum exits in any rolled room. */
 const MIN_EXITS = 1;
-
-// ---------------------------------------------------------------------------
-// Direction coordinate offsets: roomPath "x,y" convention.
-// North = +y, South = -y, East = +x, West = -x.
-// P5 reads DIR_OFFSETS to compute a neighbor's roomPath.
-// ---------------------------------------------------------------------------
-
-export const DIR_OFFSETS: Record<string, [number, number]> = {
-    north: [0, 1],
-    south: [0, -1],
-    east: [1, 0],
-    west: [-1, 0],
-};
-
-const ALL_DIRECTIONS = Object.keys(DIR_OFFSETS);
 
 // ---------------------------------------------------------------------------
 // Types
@@ -262,7 +247,7 @@ export function materializeRoom(
     // -------------------------------------------------------------------------
 
     // Extract coord string from roomId to use as composeProse coord.
-    // Room ids follow: namespace:areaSlug-x_y  (e.g. "oracle-run:slug-0_0")
+    // Room ids follow: namespace:areaSlug-x_y_z  (e.g. "oracle-run:slug-0_0_0"). See coords.ts.
     // We use the facts.roomSeed as a coord key for composeProse.
     const coordKey = String(facts.roomSeed);
 
