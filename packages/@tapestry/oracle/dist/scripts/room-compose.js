@@ -45,6 +45,23 @@ export function composeRoomProse(tables, rng) {
     }
     return parts.join(" ");
 }
+// applyStateOverrides - PURE. For each stamped kind with a stateOverrides[kind] pool in the
+// ROOM-2 dressing, appends the first fragment to baseProse (space-joined). Deterministic.
+// Returns baseProse unchanged when nothing matches. The empty-base + trim form is used by
+// room-revisit.ts to build the trailing scar line sent on walk-in.
+export function applyStateOverrides(baseProse, dressing, stampedKinds) {
+    if (!dressing || !dressing.stateOverrides) {
+        return baseProse;
+    }
+    let prose = baseProse;
+    for (let i = 0; i < stampedKinds.length; i++) {
+        const pool = dressing.stateOverrides[stampedKinds[i]];
+        if (pool && pool.length > 0) {
+            prose = prose + " " + pool[0];
+        }
+    }
+    return prose;
+}
 registerComposer("rooms", function (tables, ctx) {
     const room1 = tables["ROOM-1"];
     if (!room1) {
