@@ -26,6 +26,7 @@ import { placeholder } from "./prompts.js";
 import { composeProse } from "./prose-compose.js";
 import { mintMobInstance, mintBossInstance, mintItemInstance, mintMobInstanceByTypeId, rngFor, shouldReuse } from "./resolver.js";
 import { ALL_DIRECTIONS } from "./coords.js";
+import { composeFor, composeRoomProse } from "./room-compose.js";
 // ---------------------------------------------------------------------------
 // Tuning constants
 // ---------------------------------------------------------------------------
@@ -161,7 +162,7 @@ export function bossClockFires(roomsSinceLastBoss, rng) {
 //
 // Note: onProseReady is removed (prose is now synchronous - no LLM wait).
 // ---------------------------------------------------------------------------
-export function materializeRoom(roomId, areaId, areaSeed, facts, runState, biome, theme, mintedMobTypes) {
+export function materializeRoom(roomId, areaId, areaSeed, facts, runState, biome, theme, mintedMobTypes, sixAxis, depth) {
     // -------------------------------------------------------------------------
     // 1. Compose prose deterministically from frozen table + create the room.
     //    composeProse reads the frozen <areaId>:prose table and picks fragments
@@ -171,11 +172,22 @@ export function materializeRoom(roomId, areaId, areaSeed, facts, runState, biome
     // Room ids follow: namespace:areaSlug-x_y_z  (e.g. "oracle-run:slug-0_0_0"). See coords.ts.
     // We use the facts.roomSeed as a coord key for composeProse.
     const coordKey = String(facts.roomSeed);
-    const prose = composeProse(areaId, areaSeed, coordKey, biome);
-    const exitDirNames = facts.exits.map(function (e) { return e.direction; });
-    const roomName = theme
-        ? theme + " - " + titleCase(biome)
-        : titleCase(biome);
+    // Depth-biased composition: roll band + density from ROOM-1 (if six-axis tables are present).
+    // composeRng seeds BOTH the degree roll (via composeFor) AND the prose fragment pick.
+    // When ROOM-1 is absent, composeFor returns null -> flat fallback path unchanged.
+    const composeRng = splitmix64(facts.roomSeed + 2);
+    const composition = composeFor("rooms", sixAxis, {
+        depth,
+        pressure: runState.roomsSinceLastBoss,
+        rng: composeRng,
+    });
+    // Banded prose: use ROOM-2 dressing when available; fall back to legacy composeProse.
+    const sixAxisProse = composeRoomProse(sixAxis, composeRng);
+    const prose = sixAxisProse !== "" ? sixAxisProse : composeProse(areaId, areaSeed, coordKey, biome);
+    // Banded room name: prefix the band when composition is active; else legacy theme-name.
+    const roomName = composition
+        ? titleCase(composition.band) + " - " + titleCase(biome)
+        : (theme ? theme + " - " + titleCase(biome) : titleCase(biome));
     tapestry.authoring.createRoom(areaId, roomId, roomName, prose);
     // -------------------------------------------------------------------------
     // 2. setStubExit for each rolled exit direction.
@@ -196,7 +208,8 @@ export function materializeRoom(roomId, areaId, areaSeed, facts, runState, biome
     // an already-introduced one (consistent encounter feel within the same area).
     // mintMobInstance + mintItemInstance read frozen tables; no LLM call.
     const spawnRng = rngFor(areaSeed, coordKey + ":spawn");
-    for (let i = 0; i < facts.ambientCount; i++) {
+    const spawnCount = composition ? composition.spawnDensity : facts.ambientCount;
+    for (let i = 0; i < spawnCount; i++) {
         const level = 1;
         let override;
         if (mintedMobTypes && shouldReuse(mintedMobTypes.size, spawnRng)) {

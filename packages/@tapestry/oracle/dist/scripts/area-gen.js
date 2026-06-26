@@ -24,8 +24,10 @@ import * as tapestry from "@tapestry/engine";
 import { splitmix64 } from "./prng.js";
 import { soloAreaBiomePalette } from "./roster.js";
 import { runKey, setRunState } from "./run-state.js";
-import { setAreaState, setRoomArea, setRoomPath } from "./area-state.js";
+import { setAreaState, getAreaState, setRoomArea, setRoomPath } from "./area-state.js";
 import { rollRoomFacts, materializeRoom } from "./room-gen.js";
+import { descentDepth } from "./coords.js";
+import { loadSixAxisTables } from "./six-axis.js";
 import { fillTables, bakedTables, BAKED_SET_IDS } from "./oracle-tables.js";
 import { getMintedSet } from "./stub-resolver.js";
 // ---------------------------------------------------------------------------
@@ -273,6 +275,7 @@ function buildEntryRoom(actor, areaSlug, areaSeed, levelRange, biomePalette, ide
         },
         loot: [],
     };
+    const themeDir = ideaHint && ideaHint.toLowerCase().indexOf("underdeep") !== -1 ? "endless-underdeep" : "";
     setAreaState(areaSlug, {
         areaId: areaSlug,
         areaSeed,
@@ -283,6 +286,7 @@ function buildEntryRoom(actor, areaSlug, areaSeed, levelRange, biomePalette, ide
         areaSlug,
         runStateKey: stateKey,
         roster: emptyRoster,
+        sixAxis: loadSixAxisTables(themeDir),
     });
     // Register the entry room's area ownership + coordinate path.
     setRoomArea(entryRoomId, areaSlug);
@@ -296,7 +300,7 @@ function buildEntryRoom(actor, areaSlug, areaSeed, levelRange, biomePalette, ide
     // canonically removes it.
     // -------------------------------------------------------------------
     const entryFacts = rollRoomFacts(areaSeed, entryRoomPath, emptyRoster, primaryBiome);
-    materializeRoom(entryRoomId, areaSlug, areaSeed, entryFacts, entryRunState, primaryBiome, ideaHint, getMintedSet(areaSlug));
+    materializeRoom(entryRoomId, areaSlug, areaSeed, entryFacts, entryRunState, primaryBiome, ideaHint, getMintedSet(areaSlug), getAreaState(areaSlug)?.sixAxis || {}, descentDepth(entryRoomPath));
 }
 // ---------------------------------------------------------------------------
 // simpleHash - deterministic hash of a string into a 32-bit unsigned integer.

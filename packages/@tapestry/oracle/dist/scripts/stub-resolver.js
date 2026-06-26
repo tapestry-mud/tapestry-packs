@@ -25,7 +25,8 @@
 import * as tapestry from "@tapestry/engine";
 import { rollRoomFacts, materializeRoom } from "./room-gen.js";
 import { hashCoord, splitmix64, pick } from "./prng.js";
-import { oppositeDir, neighborPath, pathKey, parsePathKey } from "./coords.js";
+import { oppositeDir, neighborPath, pathKey, parsePathKey, descentDepth } from "./coords.js";
+import { loadSixAxisTables } from "./six-axis.js";
 import { getAreaState, setAreaState, getRoomArea, getRoomPath, setRoomArea, setRoomPath } from "./area-state.js";
 import { getRunState, setRunState } from "./run-state.js";
 import { soloAreaBiomePalette } from "./roster.js";
@@ -145,16 +146,19 @@ function ensureAreaContext(roomId) {
         // a synthetic per-area key suffices since the resolver has no playerId here.
         const runStateKey = "reload:" + areaId;
         setRunState(runStateKey, { roomsSinceLastBoss: 0 });
+        const theme = typeof area.theme === "string" ? area.theme : "";
+        const themeDir = theme.toLowerCase().indexOf("underdeep") !== -1 ? "endless-underdeep" : "";
         setAreaState(areaId, {
             areaId,
             areaSeed: seed,
             biomePalette: soloAreaBiomePalette(seed),
-            theme: typeof area.theme === "string" ? area.theme : "",
+            theme,
             levelRange: normalizeLevelRange(area.levelRange),
             targetNamespace: ns,
             areaSlug: areaId,
             runStateKey,
             roster: EMPTY_ROSTER,
+            sixAxis: loadSixAxisTables(themeDir),
         });
     }
     setRoomArea(roomId, areaId);
@@ -253,7 +257,7 @@ function resolveStub(roomId, direction) {
         //    materializeRoom (P-E) is now synchronous: prose from composeProse,
         //    spawns from frozen tables, no LLM. No async callback needed.
         // ------------------------------------------------------------------
-        materializeRoom(neighborId, areaId, areaSeed, facts, runState, biome, theme, getMintedSet(areaId));
+        materializeRoom(neighborId, areaId, areaSeed, facts, runState, biome, theme, getMintedSet(areaId), areaState.sixAxis, descentDepth(neighbor));
         // ------------------------------------------------------------------
         // j. Register the neighbor in area-state so future resolver calls work.
         // ------------------------------------------------------------------
