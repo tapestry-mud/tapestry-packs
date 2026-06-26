@@ -40,3 +40,4 @@ subtables:
     looted:    [ "The vein is a spray of shards now, picked clean. Old crates lie staved-in and empty." ]
     haunted:   [ "The cold here has a weight to it; the dark seems to lean in and listen." ]
     claimed:   [ "Crude wards and gnaw-marks: something has made this its own." ]
+    boss-slain: [ "The thing that ruled this place lies dead; the dark here has gone quiet and watchful." ]
