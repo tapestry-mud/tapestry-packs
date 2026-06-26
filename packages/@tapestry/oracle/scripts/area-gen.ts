@@ -160,7 +160,13 @@ export function createSoloArea(
     // Persist seed to area.yaml (T5 seam) - used on reload/share.
     tapestry.authoring.setAreaAttribute(areaSlug, "seed", String(areaSeed));
     tapestry.authoring.setAreaAttribute(areaSlug, "level_range", minLevel + "," + maxLevel);
-    tapestry.authoring.setAreaAttribute(areaSlug, "reset_interval", "0");
+    // Repop ON: the repop tick restocks cleared mobs (frozen overrides return the
+    // same unique instances, never a re-roll) AND drives the engine consequence
+    // overlay's ephemeral eviction (looted clears on repop, persistent/succession
+    // scars linger). reset_interval is in engine ticks (100ms); a solo player always
+    // occupies the area, so the effective interval is reset_interval * occupied_modifier
+    // (default 3.0): 2000 * 3 = 6000 ticks = ~10 minutes. Tunable.
+    tapestry.authoring.setAreaAttribute(areaSlug, "reset_interval", "2000");
 
     // Placeholder dressing - makes the area immediately valid + playable.
     // Theme = the IDEA (drives room naming "<theme> - <biome>"), persisted so a
