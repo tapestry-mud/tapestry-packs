@@ -20,10 +20,31 @@
 import * as tapestry from "@tapestry/engine";
 import { createSoloArea } from "../area-gen.js";
 import { BAKED_SET_IDS } from "../oracle-tables.js";
+import { SIX_AXIS_THEMES } from "../six-axis.js";
 
 function llmOff(): boolean {
     const fn = (tapestry as any).authoring.recommendEnabled;
     return !(fn && fn());
+}
+
+// LLM-off scenario picker. With the LLM off there is no idea to theme an area from, so
+// the player picks a pre-baked scenario instead - and that pick drives BOTH the room
+// theme and the mob/item roster. Each six-axis theme is a depth-banded generated
+// scenario (its idea string is the theme dir, which the themeDir resolver matches); each
+// baked set is a flat pre-authored area. The roster always comes from a baked set.
+interface Scenario { id: string; label: string; idea: string; bakedSet: string; }
+
+const SCENARIOS: Scenario[] = SIX_AXIS_THEMES.map(function (t: string): Scenario {
+    return { id: t, label: t + " (depth-banded)", idea: t, bakedSet: BAKED_SET_IDS[0] };
+}).concat(BAKED_SET_IDS.map(function (s: string): Scenario {
+    return { id: "flat:" + s, label: s + " (flat)", idea: "", bakedSet: s };
+}));
+
+function scenarioById(id: string): Scenario | null {
+    for (let i = 0; i < SCENARIOS.length; i++) {
+        if (SCENARIOS[i].id === id) { return SCENARIOS[i]; }
+    }
+    return null;
 }
 
 /** Server max level. No API available; use the documented constant. */
@@ -36,14 +57,24 @@ tapestry.flows.register({
     cancellable: true,
     steps: [
         {
-            id: "name",
-            type: "text",
-            prompt: "Area name (blank for random):",
-            on_input: function(entity: any, value: string) {
-                entity.setProperty("__solo_name", value);
+            // LLM off: pick a pre-baked scenario FIRST (it sets the theme AND the roster),
+            // THEN name it. The "describe the idea" step is LLM-only and is skipped here -
+            // there is no LLM to theme from. (Shown only when LLM is off.)
+            id: "scenario",
+            type: "choice",
+            skip_if: function(_entity: any) { return !llmOff(); },
+            prompt: "Pick a scenario:",
+            options: function(_entity: any) {
+                return SCENARIOS.map(function(s: Scenario) {
+                    return { label: s.label, value: s.id };
+                });
+            },
+            on_select: function(entity: any, option: any) {
+                entity.setProperty("__solo_scenario", option.value);
             },
         },
         {
+            // LLM on: free-text idea the LLM themes the area from. (Skipped when LLM off.)
             id: "idea",
             type: "text",
             prompt: "Describe the idea (e.g. a sunken ship):",
@@ -53,17 +84,11 @@ tapestry.flows.register({
             },
         },
         {
-            id: "baked_set",
-            type: "choice",
-            skip_if: function(_entity: any) { return !llmOff(); },
-            prompt: "Pick a baked set:",
-            options: function(_entity: any) {
-                return BAKED_SET_IDS.map(function(setId: string) {
-                    return { label: setId, value: setId };
-                });
-            },
-            on_select: function(entity: any, option: any) {
-                entity.setProperty("__solo_baked_set", option.value);
+            id: "name",
+            type: "text",
+            prompt: "Area name (blank for random):",
+            on_input: function(entity: any, value: string) {
+                entity.setProperty("__solo_name", value);
             },
         },
         {
@@ -97,6 +122,8 @@ tapestry.flows.register({
         const rawMin = entity.getProperty("__solo_min_level") || "";
         const rawMax = entity.getProperty("__solo_max_level") || "";
         const rawDest = entity.getProperty("__solo_dest_pack") || "";
+        const rawScenario = entity.getProperty("__solo_scenario") || "";
+        const scenario = (String(rawScenario).trim() !== "") ? scenarioById(String(rawScenario).trim()) : null;
 
         // Parse min level.
         let minLevel: number;
@@ -143,7 +170,9 @@ tapestry.flows.register({
         }
 
         const nameValue = (rawName && rawName.trim() !== "") ? rawName.trim() : null;
-        const ideaValue = (rawIdea && rawIdea.trim() !== "") ? rawIdea.trim() : null;
+        // A picked scenario (LLM off) supplies the idea/theme; otherwise the free-text idea.
+        const ideaSource = scenario ? scenario.idea : rawIdea;
+        const ideaValue = (ideaSource && ideaSource.trim() !== "") ? ideaSource.trim() : null;
         const destValue = (rawDest && rawDest.trim() !== "") ? rawDest.trim() : null;
 
         // Resolve the destination pack NAME (scoped @scope/name form for createPack).
@@ -164,8 +193,7 @@ tapestry.flows.register({
             return { success: false, message: "Could not create destination pack '" + packName + "'." };
         }
 
-        const rawBaked = entity.getProperty("__solo_baked_set") || "";
-        const bakedSetId = (rawBaked && rawBaked.trim() !== "") ? rawBaked.trim() : BAKED_SET_IDS[0];
+        const bakedSetId = scenario ? scenario.bakedSet : BAKED_SET_IDS[0];
 
         try {
             createSoloArea(entity, ideaValue, nameValue, minLevel, maxLevel, namespace, bakedSetId);

@@ -178,21 +178,44 @@ export function resolveBands(table: SixAxisTable, degree: number): BandEntry {
     return table.bands[table.bands.length - 1];
 }
 
-export function loadSixAxisTables(areaThemeDir: string): Record<string, SixAxisTable> {
-    const out: Record<string, SixAxisTable> = {};
+// The six-axis theme dirs to eager-load (each is data/six-axis/<theme>/ROOM-1..6.yaml).
+// One per authored theme - extend this when a new themed table set ships, exactly like
+// BAKED_SET_IDS gates the baked rosters. The solo-flow scenario picker reads this too.
+export const SIX_AXIS_THEMES: string[] = ["endless-underdeep"];
+
+// Eager-load + cache ALL theme tables at MODULE INIT, when the oracle pack is being
+// loaded and tapestry.data.loadYaml resolves against the oracle pack dir
+// (PackContext.CurrentPackDir). A LAZY runtime load is the bug this replaces:
+// CurrentPackDir is set only during pack load (PackLoader), so at runtime it holds the
+// LAST-loaded pack (the @scratch dest pack, load_order 900), which has no data/six-axis -
+// the load silently returns nothing and every room falls back to flat. The baked-table
+// loader (oracle-tables.ts BAKED) uses this same module-init pattern for the same reason.
+const SIX_AXIS_CACHE: Record<string, Record<string, SixAxisTable>> = ((): Record<string, Record<string, SixAxisTable>> => {
+    const all: Record<string, Record<string, SixAxisTable>> = {};
     const ids = ["ROOM-1", "ROOM-2", "ROOM-3", "ROOM-4", "ROOM-5", "ROOM-6"];
-    for (let i = 0; i < ids.length; i++) {
-        const path = "data/six-axis/" + areaThemeDir + "/" + ids[i] + ".yaml";
-        try {
-            const raw: any = (tapestry as any).data.loadYaml(path);
-            if (raw && raw.table) {
-                const table = parseSixAxisTable(raw);
-                out[table.id] = table;
+    for (let t = 0; t < SIX_AXIS_THEMES.length; t++) {
+        const theme = SIX_AXIS_THEMES[t];
+        const out: Record<string, SixAxisTable> = {};
+        for (let i = 0; i < ids.length; i++) {
+            const path = "data/six-axis/" + theme + "/" + ids[i] + ".yaml";
+            try {
+                const raw: any = (tapestry as any).data.loadYaml(path);
+                if (raw && raw.table) {
+                    const table = parseSixAxisTable(raw);
+                    out[table.id] = table;
+                }
+            } catch (_err) {
+                // Missing file or parse failure: skip gracefully (graceful degradation).
             }
-        } catch (_err) {
-            // Missing file or parse failure: skip gracefully (graceful degradation,
-            // same posture as resolveAreaSeed). A real boot issue surfaces at strict boot.
         }
+        all[theme] = out;
     }
-    return out;
+    return all;
+})();
+
+export function loadSixAxisTables(areaThemeDir: string): Record<string, SixAxisTable> {
+    if (!areaThemeDir) {
+        return {};
+    }
+    return SIX_AXIS_CACHE[areaThemeDir] || {};
 }
