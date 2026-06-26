@@ -7,6 +7,7 @@
 //
 // ASCII; braces on all control flow.
 import * as tapestry from "@tapestry/engine";
+import { rollDice } from "./prng.js";
 const VALID_AXES = ["DEGREE", "DRESSING", "CONSEQUENCE", "CASCADE", "SIGNATURE", "CONTEXT"];
 // Rebuild a possibly CLR-backed list/object into a native JS array of plain objects.
 // (loadYaml returns YamlDotNet-backed values; native rebuild mirrors oracle-tables.ts.)
@@ -121,6 +122,46 @@ export function parseSixAxisTable(raw) {
         t.inputs = nativeArray(raw.inputs);
     }
     return t;
+}
+export function diceSpan(dice) {
+    const m = /^(\d+)d(\d+)([+-]\d+)?$/i.exec(String(dice).trim());
+    if (!m) {
+        const k = parseInt(String(dice), 10);
+        if (isNaN(k)) {
+            return [1, 1];
+        }
+        return [k, k];
+    }
+    const count = parseInt(m[1], 10);
+    const sides = parseInt(m[2], 10);
+    const mod = m[3] ? parseInt(m[3], 10) : 0;
+    return [count + mod, count * sides + mod];
+}
+export function rollDegree(table, rng) {
+    return rollDice(table.dice, rng);
+}
+export function resolveBands(table, degree) {
+    if (table.axis !== "DEGREE") {
+        throw new Error("six-axis: resolveBands requires a DEGREE table, got '" + table.axis + "'");
+    }
+    if (table.bands.length === 0) {
+        throw new Error("six-axis: DEGREE table '" + table.id + "' has no bands");
+    }
+    const span = diceSpan(table.dice);
+    let d = Math.round(degree);
+    if (d < span[0]) {
+        d = span[0];
+    }
+    if (d > span[1]) {
+        d = span[1];
+    }
+    for (let i = 0; i < table.bands.length; i++) {
+        const b = table.bands[i];
+        if (d >= b.min && d <= b.max) {
+            return b;
+        }
+    }
+    return table.bands[table.bands.length - 1];
 }
 export function loadSixAxisTables(areaThemeDir) {
     const out = {};
