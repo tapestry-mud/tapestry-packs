@@ -46,3 +46,35 @@ test("parseSixAxisTable throws on a missing or invalid axis", () => {
     assert.throws(() => parseSixAxisTable({ table: "X", name: "no axis" }), /axis/);
     assert.throws(() => parseSixAxisTable({ table: "X", axis: "BOGUS", name: "bad" }), /axis/);
 });
+
+import { diceSpan, rollDegree, resolveBands } from "../dist/scripts/six-axis.js";
+import { splitmix64 } from "../dist/scripts/prng.js";
+
+test("diceSpan computes min/max of a dice expression", () => {
+    assert.deepEqual(diceSpan("1d10"), [1, 10]);
+    assert.deepEqual(diceSpan("2d6+1"), [3, 13]);
+    assert.deepEqual(diceSpan("3d8-2"), [1, 22]);
+    assert.deepEqual(diceSpan("7"), [7, 7]);
+    assert.deepEqual(diceSpan("garbage"), [1, 1]);
+});
+
+test("resolveBands selects the band containing the clamped degree", () => {
+    const t = parseSixAxisTable(ROOM1); // ROOM1 from F1 test: transit 1-2, chamber 3-5, threshold 10-10
+    assert.equal(resolveBands(t, 1).band, "transit");
+    assert.equal(resolveBands(t, 4).band, "chamber");
+    assert.equal(resolveBands(t, 10).band, "threshold");
+    assert.equal(resolveBands(t, 99).band, "threshold"); // clamps to span max (10) -> threshold
+    assert.equal(resolveBands(t, -5).band, "transit");   // clamps to span min (1) -> transit
+});
+
+test("rollDegree rolls the table's declared die deterministically", () => {
+    const t = parseSixAxisTable(ROOM1);
+    const rng = splitmix64(42);
+    const d = rollDegree(t, rng);
+    assert.ok(d >= 1 && d <= 10); // within 1d10 span
+});
+
+test("resolveBands rejects a non-DEGREE table", () => {
+    const t = parseSixAxisTable(ROOM3); // CONSEQUENCE
+    assert.throws(() => resolveBands(t, 1), /DEGREE/);
+});
