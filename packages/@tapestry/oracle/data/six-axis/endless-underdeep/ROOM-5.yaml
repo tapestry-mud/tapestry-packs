@@ -1,0 +1,16 @@
+table: ROOM-5
+axis: SIGNATURE
+name: Landmark Signature (Underdeep)
+entries:
+  - { id: the-sunless-bazaar, name: "the Sunless Bazaar",
+      bend: "a persistent merchant enclave that anchors here regardless of depth; trades, rumors, a safe node" }
+  - { id: the-weeping-wall,   name: "the Weeping Wall",
+      bend: "a wall that drips cold light; touching it yields a one-time lore fragment + a minor boon, then it goes dark" }
+  - { id: the-deep-throat,    name: "the Deep Throat",
+      bend: "a vertical chasm you can descend to skip two depth levels - risk for reward (space + degree)" }
+  - { id: the-ossuary-choir,  name: "the Ossuary Choir",
+      bend: "singing bones; an info-economy field that bends comms in any combat fought here (links to the trinity, like a -2 to comms tells)" }
+  - { id: the-forge-eternal,  name: "the Forge Eternal",
+      bend: "a dwarven forge still lit by a tapped lava vein; a one-time repair/upgrade station, then it cools" }
+  - { id: the-glass-garden,   name: "the Glass Garden",
+      bend: "a crystal-forest grotto; harvesting a crystal here grants a one-time light source that ignores the dark light-state penalty" }

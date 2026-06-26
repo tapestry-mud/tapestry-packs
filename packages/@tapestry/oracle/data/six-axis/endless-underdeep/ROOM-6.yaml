@@ -1,0 +1,9 @@
+table: ROOM-6
+axis: CONTEXT
+name: Room Context (Underdeep palette)
+inputs:
+  - { name: place-palette,   effect: "the active place (glowcap-grove, crystal-forest, lava-river, forgotten-city, ...) sets eligible room types, prose pool, and hazards" }
+  - { name: depth-band,      effect: "shallow favors transit/chamber; deep favors charged/landmark/threshold; descent re-weights ROOM-1" }
+  - { name: light,           effect: "the deep is lightless by default: a room with no light source feeds the CMB-7 light-state penalty into any fight here" }
+  - { name: adjacency,       effect: "a room next to a threshold/descent-gate leans toward set-pieces; a room off a transit stays thin" }
+  - { name: prior-life-scar, effect: "(succession, deferred) a succession-seed consequence at this coord bends the roll: flooded regrows damp+amphibious, collapsed reroutes, scorched regrows ashen" }

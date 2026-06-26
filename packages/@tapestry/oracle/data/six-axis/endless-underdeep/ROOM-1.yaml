@@ -1,0 +1,17 @@
+# Endless Underdeep - ROOM-1 DEGREE (room outcome banded by descent depth).
+# dice: the die whose [min,max] span defines the degree space. The rooms adapter
+# (F3) ROLLS this die and biases the roll upward by descent depth (deeper re-weights
+# the distribution up), reserving the top value for the boss clock so the threshold
+# band stays a rare tail. Roll-based domains (combat) roll this die directly. The
+# resolver never hardcodes the die - it reads it here.
+table: ROOM-1
+axis: DEGREE
+name: Room Outcome (Underdeep)
+dice: "1d10"
+degree: "depth-biased roll over the die span (deeper re-weights up); pressure adds, the top band stays a rare tail"
+bands:
+  - { min: 1, max: 2,  band: transit,   effect: "corridor, junction, stair. thin, connective. mostly empty.", fires: "ROOM-2" }
+  - { min: 3, max: 5,  band: chamber,   effect: "a featured room themed by the place palette; normal spawn, maybe loot.", fires: "ROOM-2" }
+  - { min: 6, max: 7,  band: charged,   effect: "a hazard or triggered event; denser spawn; a swell-capable mob.", fires: "ROOM-4" }
+  - { min: 8, max: 9,  band: landmark,  effect: "a named, unique space worth remembering.", fires: "ROOM-5" }
+  - { min: 10, max: 10, band: threshold, effect: "a boss arena, or a descent gate to the next ecosystem.", fires: "ROOM-6" }

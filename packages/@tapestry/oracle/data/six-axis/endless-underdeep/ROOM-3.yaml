@@ -1,0 +1,16 @@
+table: ROOM-3
+axis: CONSEQUENCE
+name: Room State (Underdeep)
+tiers:
+  minor:
+    - { id: looted,    effect: "containers empty, vein spent: prose gains 'ransacked, picked clean'",            lifespan: ephemeral }
+    - { id: scorched,  effect: "fire passed through: caps dead, spawns shift to ash-scavengers, charred prose",  lifespan: succession-seed }
+    - { id: haunted,   effect: "a death or a lore-touch left a chill: an unnerving-prose override, a sensor penalty", lifespan: ephemeral }
+  moderate:
+    - { id: flooded,   effect: "water table broke in: a hazard, eligible spawns shift amphibious, slick footing",  lifespan: succession-seed }
+    - { id: claimed,   effect: "a faction or a tamed mob holds it: a guard spawn, a faction marker",               lifespan: ephemeral }
+    - { id: lore-read, effect: "a rune/record/wall was read here: a one-time lore fragment + minor boon, then spent", lifespan: persistent }
+  severe:
+    - { id: collapsed, effect: "a cave-in: an EXIT becomes rubble - the room graph itself changes (space axis)",   lifespan: succession-seed }
+    - { id: warded,    effect: "an old dwarven ward re-lit: aberrations treat it as off-limits (a safe pocket)",   lifespan: persistent }
+    - { id: boss-slain,effect: "the arena's keeper is dead for good: the threshold opens, the swell field quiets", lifespan: persistent }

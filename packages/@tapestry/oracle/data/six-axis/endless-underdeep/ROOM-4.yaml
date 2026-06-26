@@ -1,0 +1,19 @@
+table: ROOM-4
+axis: CASCADE
+name: Room Cascade (Underdeep)
+entries:
+  - { id: hidden-pocket,   trigger: "a charged/landmark room with a search success",
+      effect: "lazy-mint a 1-3 room pocket: a shrine, a sealed vault, an aberration lair",
+      guard: "one pocket per room; minted deterministically from seed+coord" }
+  - { id: triggered-event, trigger: "entering a charged room",
+      effect: "roll the event: a cave-in (-> CONSEQUENCE collapsed), an ambush (-> extra spawn), a resource vein (a harvest)",
+      guard: "one event per room visit; ambush respects the spawn budget" }
+  - { id: deep-connector,  trigger: "a landmark/threshold near a chasm or an aqueduct",
+      effect: "an aqueduct line or chasm-bridge links to a far coordinate (the non-grid loopback)",
+      guard: "deterministic target coord; the connector persists and can later collapse (ROOM-3)" }
+  - { id: descent-gate,    trigger: "a threshold band reached at depth",
+      effect: "a vertical gate rotates the palette to the next ecosystem (glowcap -> obsidian chasm -> silent aqueducts)",
+      guard: "fires once per threshold crossing; the new palette gates ROOM-6 from here down" }
+  - { id: deep-throat,     trigger: "a chasm landmark with a descent option",
+      effect: "a vertical chasm you can descend to SKIP two depth levels - risk (a climb check) for reward (space + degree)",
+      guard: "single use per chasm; a failed check applies a hurled/into-the-dark consequence" }

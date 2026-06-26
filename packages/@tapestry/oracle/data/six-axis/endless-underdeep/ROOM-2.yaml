@@ -1,0 +1,42 @@
+table: ROOM-2
+axis: DRESSING
+name: Composition (Underdeep)
+subtables:
+  openers:
+    - "The tunnel opens into a wider dark."
+    - "Glowing caps light the chamber in cold blue."
+    - "Stone arches lean close overhead."
+    - "Water drips somewhere out past the torchlight."
+    - "The floor slopes down into older stone."
+    - "Crystal walls catch your light and split it."
+    - "A dead city's bones rise from the cavern floor."
+    - "Heat breathes up from a crack in the ground."
+    - "A narrow stair coils down between furred walls."
+    - "The cavern is so vast your light finds no far wall."
+  details:
+    - "Pale roots grope down from the ceiling."
+    - "Old dwarf-runes are chiseled into a fallen lintel."
+    - "Bones of something huge litter the corner."
+    - "A vein of ore glints where a pick once bit."
+    - "Webbing strings the gaps between the columns."
+    - "A black pool sits flat and waiting."
+    - "Spores drift through your torchlight like snow."
+    - "An aqueduct channel runs dry along the wall."
+    - "Lichen furs every surface in pale grey-green."
+    - "A cold draft from below smells of wet mineral."
+  atmosphere:
+    - "The air is damp and tastes of cold iron."
+    - "Your footsteps come back to you a moment late."
+    - "Something far off scrapes against stone."
+    - "The dark presses in past the edge of the light."
+    - "A warm draft carries the reek of sulfur."
+    - "The silence down here is total and very old."
+    - "Glow-fungus breathes its light in and out."
+    - "You cannot tell how far the ceiling climbs."
+  state_overrides:
+    flooded:   [ "Black water laps at your shins and hides the floor." ]
+    scorched:  [ "The caps here are blackened and dead now; the blue light is gone. Ash crunches underfoot." ]
+    collapsed: [ "A fall of rock has closed half the chamber; raw stone marks where an exit used to be." ]
+    looted:    [ "The vein is a spray of shards now, picked clean. Old crates lie staved-in and empty." ]
+    haunted:   [ "The cold here has a weight to it; the dark seems to lean in and listen." ]
+    claimed:   [ "Crude wards and gnaw-marks: something has made this its own." ]
