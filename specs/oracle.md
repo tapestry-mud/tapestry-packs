@@ -1,6 +1,6 @@
 ---
 capability: oracle
-last-updated: 2026-06-25
+last-updated: 2026-06-27
 ---
 
 # oracle
@@ -79,7 +79,7 @@ returns `0` and emits a warn (determinism degraded but not fatal).
 The in-memory stores (`AreaState`, room->area, room->path, run-state) are populated at
 creation and are empty after a reboot/reshare. `ensureAreaContext(roomId)` rebuilds them on
 the first stub traversal after a restart: it parses the namespace and grid path out of the
-room id (`<namespace>:<areaId>-<pathKey>`, where `pathKey` is `entry` = `0,0` or `<x>_<y>`),
+room id (`<namespace>:<areaId>-<pathKey>`, where `pathKey` is `entry` = `0,0,0` or `<x>_<y>_<z>`),
 reads the persisted seed / level range / theme from `tapestry.area.get(areaId)`, and re-derives
 the biome palette from the seed via the shared `soloAreaBiomePalette` helper so a reconstructed
 area is byte-identical to creation. A room is reconstructed only when the area has a persisted
@@ -104,12 +104,13 @@ All six tables resolve before `onReady` fires. The player sees flavor messages d
 ### LLM-off branch
 
 When `authoring.recommendEnabled()` returns false (or is unavailable), the `solo` flow skips the
-`idea` prompt (which is ignored in LLM-off mode) and instead presents a `choice` step listing the
-available baked sets. Options are driven by `BAKED_SET_IDS` (exported from `oracle-tables.ts`) so
-new polished sets are added with zero flow edits. The chosen set id is stashed as
-`__solo_baked_set` and threaded to `createSoloArea(... bakedSetId)`, which calls
-`bakedTables(bakedSetId)` instead of the hardcoded `"test-kitchen"` default. A missing or blank
-selection defaults to `BAKED_SET_IDS[0]`.
+`idea` prompt (LLM-only) and instead presents a `scenario` `choice` step FIRST, then the name.
+Each scenario maps to a roster (a baked set) AND a theme: every six-axis theme in
+`SIX_AXIS_THEMES` is offered as a depth-banded scenario (its idea string is the theme dir, which
+the themeDir resolver matches), and every `BAKED_SET_IDS` entry is offered as a flat scenario. The
+picked scenario sets both the `idea`/theme (so `composeFor` engages or falls back) and the
+`bakedSetId` roster threaded to `createSoloArea`; a blank selection defaults to the first baked set.
+(packages/@tapestry/oracle/scripts/flows/solo-flow.ts:SCENARIOS)
 
 Baked table sets are YAML files eagerly loaded at module init time (`data/baked/<setId>/<kind>.yaml`)
 so `data.loadYaml` runs while `CurrentPackDir` is still set. The `onReadyTables` callback fires
@@ -204,6 +205,41 @@ in a real playtest session.
 `oracle-parse.ts` so existing importers are unchanged.
 (packages/@tapestry/oracle/scripts/oracle-parse.ts; packages/@tapestry/oracle/test/oracle-parse.test.mjs)
 
+### Six-axis generator stack (rooms)
+
+Rooms resolve through six axes (degree, dressing, consequence, cascade, signature, context)
+loaded as pack data rather than a flat one-row-one-pick. `coords.ts` supplies a 3D `x,y,z`
+coordinate model with up/down offsets (fixing the u/d-exit bug and supplying `descentDepth`).
+`six-axis.ts` defines `parseSixAxisTable` (pure normalize, golden-tested) and the band resolver:
+`diceSpan`/`resolveBands` read the die declared in each table's `dice:` metadata - dice are data,
+never hardcoded. `degree.ts` rolls a DEPTH-BIASED degree over the die span (deeper re-weights the
+distribution up; the rare threshold band stays a tail gated by the boss clock, never reachable
+from depth alone). `room-compose.ts` is a generic composition core plus a registered `rooms`
+composer that maps the resolved band to spawn density and banded prose. The composer engages only
+when the area theme resolves to a six-axis theme dir (`themeDirFor`); a non-themed area returns
+null and falls back to the legacy flat path unchanged.
+(packages/@tapestry/oracle/scripts/coords.ts; packages/@tapestry/oracle/scripts/six-axis.ts;
+packages/@tapestry/oracle/scripts/degree.ts; packages/@tapestry/oracle/scripts/room-compose.ts;
+packages/@tapestry/oracle/data/six-axis/endless-underdeep/)
+
+The six-axis tables are eager-loaded + cached at module init (`SIX_AXIS_CACHE`), the same posture
+as the baked-table loader: `data.loadYaml` resolves against `CurrentPackDir`, which at RUNTIME is
+the last-loaded pack (the dest pack), so a lazy runtime load would resolve to the wrong directory
+and find nothing. `loadSixAxisTables(themeDir)` reads the cache.
+(packages/@tapestry/oracle/scripts/six-axis.ts:SIX_AXIS_CACHE)
+
+### Room consequences and revisit
+
+Gameplay events stamp room consequences via the engine `tapestry.consequence.*` overlay, routed by
+the ROOM-3 lifespan tag. `consequence-hooks.ts` subscribes to `mob.death`: a boss death stamps
+`boss-slain` (persistent); clearing the last npc in a room stamps `looted` (ephemeral). The engine
+evicts ephemeral entries on the area repop tick and keeps persistent/succession-seed until reboot;
+all consequences are memory-only and drop on reboot. `room-revisit.ts` subscribes to
+`player.direction.moved` and appends the destination room's scar prose (the ROOM-2
+`state_overrides` fragment for each stamped kind) as a trailing line on walk-in.
+(packages/@tapestry/oracle/scripts/consequence-hooks.ts; packages/@tapestry/oracle/scripts/room-revisit.ts;
+packages/@tapestry/oracle/data/six-axis/endless-underdeep/ROOM-3.yaml)
+
 ## Rejected and Reverted
 
 - Per-room LLM calls -- the original design called `authoring.recommend` for each room's prose
@@ -221,4 +257,5 @@ in a real playtest session.
 
 ## Change Log
 
+- 2026-06-27 [oracle-six-axis-tables](changes/2026-06-27-oracle-six-axis-tables.md) - six-axis generator stack: 3D coords (u/d fix + depth), per-table dice-metadata band resolver, depth-biased degree, multi-table composition + depth-banded rooms, module-init six-axis cache, consequence stamping + walk-in revisit scars, LLM-off scenario picker
 - 2026-06-25 [solo-oracle-v2-completion](changes/2026-06-25-solo-oracle-v2-completion.md) - item delivery (freeze + mob-inventory ride + corpse drop), LLM-off baked-set picker, hardened parse module with 11 golden tests, 3 missing armor base templates
