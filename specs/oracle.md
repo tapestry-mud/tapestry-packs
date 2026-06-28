@@ -1,6 +1,6 @@
 ---
 capability: oracle
-last-updated: 2026-06-27
+last-updated: 2026-06-28
 ---
 
 # oracle
@@ -38,20 +38,24 @@ The life of an oracle area goes through three phases:
    `splitmix64(hashCoord(areaSeed, roomPath))` -- same inputs always produce the same room.
    (packages/@tapestry/oracle/scripts/stub-resolver.ts:189-233)
 
-### Six table kinds
+### Table kinds
 
-Six `OracleTableData` kinds are registered per area:
+`OracleTableData` kinds registered per area:
 
 | Kind | Shape | Usage |
 |------|-------|-------|
-| `places` | list of place-word entries (`w`, `id`, `name`, `desc`) | palette for room names via `composeProse` |
-| `mobs` | pipe-delimited entries with `balance_ref: "mob"` | ambient spawn source via `mintMobInstance` |
+| `places` | list of place-word entries (`w`, `id`, `name`, `desc`) | themed room names + prose palette |
+| `mobs` | entries with `balance_ref: "mob"` | ambient spawn source via `mintMobInstance` |
 | `boss` | single entry with `balance_ref: "boss"` | boss spawn source via `mintBossInstance` |
-| `items` | pipe-delimited entries with rarity + item kind | loot source via `mintItemInstance` |
+| `items` | entries with rarity + item kind | loot source via `mintItemInstance` |
 | `rooms` | (baked sets only) | room description fragments |
-| `prose` | entries tagged `opener`, `detail`, `atmosphere` | room prose via `composeProse` |
+| `prose` | entries tagged `opener`, `detail`, `atmosphere` | room prose via `composeProse` / assembled ROOM-2 |
+| `scars` | entries tagged by consequence kind (`looted`, `boss-slain`, `collapsed`) | ROOM-3 state-override scar prose |
 
-(packages/@tapestry/oracle/scripts/oracle-tables.ts:278; packages/@tapestry/oracle/scripts/oracle-tables.ts:30-43)
+The `scars` table is always present: an LLM area fills it via `fill_scars`, and `bakedTables`
+appends a generic fallback scars table to any baked set that lacks one (`BAKED_KINDS` omits
+scars, so every baked set gets the fallback).
+(packages/@tapestry/oracle/scripts/oracle-tables.ts:228-229; packages/@tapestry/oracle/scripts/oracle-tables.ts:272-284; packages/@tapestry/oracle/scripts/oracle-tables.ts:29-41)
 
 ### Theme-x-balance separation
 
@@ -92,25 +96,35 @@ packages/@tapestry/oracle/scripts/roster.ts:soloAreaBiomePalette)
 
 ### LLM-on branch
 
-When `authoring.recommendEnabled()` returns true, `fillTables` fires the LLM burst:
+When `authoring.recommendEnabled()` returns true, `fillTables` fires the LLM burst. Each call
+passes a per-kind STRICT json_schema (`SCHEMA_*`) to `authoring.recommend`, so the seam returns
+constrained JSON, not free text:
 - Round 1 (1 in-flight): `fill_places`
 - Round 2 (up to 2 in-flight): `fill_mobs` + `fill_boss`, then `fill_items` after one slot frees
 - Round 3 (up to 2 in-flight): `fill_prose_openers` + `fill_prose_details`, then
-  `fill_prose_atmosphere` after one slot frees
+  `fill_prose_atmosphere` and `fill_scars` as those slots free
 
-All six tables resolve before `onReady` fires. The player sees flavor messages during the wait.
-(packages/@tapestry/oracle/scripts/oracle-tables.ts:141-201; packages/@tapestry/oracle/scripts/area-gen.ts:219-241)
+All tables (places, mobs, boss, items, prose, scars) resolve before `onReady` fires. Each call's
+mapper falls back to deterministic entries when the LLM returns empty or unparseable JSON. The
+player sees flavor messages during the wait.
+(packages/@tapestry/oracle/scripts/oracle-tables.ts:86-216; packages/@tapestry/oracle/scripts/area-gen.ts:219-241)
 
 ### LLM-off branch
 
 When `authoring.recommendEnabled()` returns false (or is unavailable), the `solo` flow skips the
 `idea` prompt (LLM-only) and instead presents a `scenario` `choice` step FIRST, then the name.
-Each scenario maps to a roster (a baked set) AND a theme: every six-axis theme in
-`SIX_AXIS_THEMES` is offered as a depth-banded scenario (its idea string is the theme dir, which
-the themeDir resolver matches), and every `BAKED_SET_IDS` entry is offered as a flat scenario. The
-picked scenario sets both the `idea`/theme (so `composeFor` engages or falls back) and the
-`bakedSetId` roster threaded to `createSoloArea`; a blank selection defaults to the first baked set.
-(packages/@tapestry/oracle/scripts/flows/solo-flow.ts:SCENARIOS)
+The scenario list is built by the engine-free `buildScenarios(SIX_AXIS_THEMES, BAKED_SET_IDS)`
+(golden-tested under plain node): every six-axis theme is offered as a depth-banded scenario and
+uses its OWN baked set when one exists (else the first baked set); every other baked set is offered
+as a flat scenario, and a baked set that is also a theme is NOT offered as a duplicate flat entry.
+Each scenario carries both an `idea`/theme and a `bakedSet`; the pick threads both into
+`createSoloArea`.
+(packages/@tapestry/oracle/scripts/scenarios.ts:8-19; packages/@tapestry/oracle/scripts/flows/solo-flow.ts:34)
+
+The `__solo_scenario` property is read back in `on_complete` ONLY when the LLM is off. A stale
+value left by a prior LLM-off run is otherwise ignored, so it can no longer override a typed idea
+in an LLM-on run (the "typed Haunted Circus, generated endless-underdeep" bug).
+(packages/@tapestry/oracle/scripts/flows/solo-flow.ts:118-122)
 
 Baked table sets are YAML files eagerly loaded at module init time (`data/baked/<setId>/<kind>.yaml`)
 so `data.loadYaml` runs while `CurrentPackDir` is still set. The `onReadyTables` callback fires
@@ -184,26 +198,31 @@ before the spawn does not shift the stream.
 (packages/@tapestry/oracle/scripts/resolver.ts:mintItemInstance;
 packages/@tapestry/oracle/scripts/room-gen.ts:materializeRoom)
 
-### LLM table-fill parser hardening
+### Structured-output table fill
 
-LLM table-fill output is processed through `oracle-parse.ts` (zero engine imports, golden-tested
-with `node --test`). The hardened helpers strip common small-model leakage:
-- **Preambles**: any line ending in ":" with no "|" separator is skipped (`isPreamble`).
-- **Phrasing-agnostic lead-in clauses**: any single-line "Common places: ..." or "Options: ..."
-  style prefix is stripped regardless of phrasing (colon detection + no comma before the colon).
-- **Interjections**: leading "Sure!", "Okay,", "OK -" patterns are stripped before parsing.
-- **Numbering prefixes**: "1.", "2)", "- ", "* " are stripped from each fragment (`cleanLine`).
-- **Over-long fragments**: any name or desc exceeding 120 characters is hard-capped.
-- **Junk rows**: pipe-delimited rows whose name field has no alphanumeric character (e.g. "--- | ---"
-  or " | orphaned desc") are dropped.
+LLM table-fill output is structured JSON, not free text. Each `fill_*` call passes a per-kind
+STRICT json_schema constant (`SCHEMA_PLACES`, `SCHEMA_MOBS`, `SCHEMA_BOSS`, `SCHEMA_ITEMS`,
+`SCHEMA_PROSE`, `SCHEMA_SCARS`) to `authoring.recommend`; the seam returns JSON constrained to
+that schema. Each schema is a root object with `additionalProperties:false` and all properties
+required; arrays are wrapped in an object property because strict mode forbids a root array. The
+item schema carries rarity (`common`/`uncommon`/`rare`/`epic`) and kind (`weapon`/`armor`) as
+enums.
+(packages/@tapestry/oracle/scripts/oracle-structured.ts:165-239; packages/@tapestry/oracle/scripts/oracle-tables.ts:61-72)
 
-Crammed multi-record lines (multiple records on one line, not split by newline) are a NAMED
-DEFERRAL - no such leak has been observed; a conservative splitter is deferred until one appears
-in a real playtest session.
+`oracle-structured.ts` (zero engine imports, golden-tested with `node --test`) holds the
+JSON->`OracleEntry` mappers `mapPlaces` / `mapMobs` / `mapBoss` / `mapItems` / `mapProse` /
+`mapScars`. The engine returns raw JSON, so the mappers fold values pack-side: `asciiFold`
+enforces 7-bit ASCII, names cap at 60 chars (`MAX_NAME`), descriptions cap on a SENTENCE boundary
+at ~200 chars (`MAX_DESC`), `normalize` turns LLM snake_case identifiers back into spaces and
+strips leading list-numbering the model sometimes bakes into array items. Any `JSON.parse`
+failure returns `[]`, and the caller falls back to baked/deterministic entries.
+(packages/@tapestry/oracle/scripts/oracle-structured.ts:11-163; packages/@tapestry/oracle/scripts/oracle-tables.ts:100-145)
 
-`oracle-tables.ts` re-exports `slug`, `parseList`, `parsePipeLines`, `pushLines` from
-`oracle-parse.ts` so existing importers are unchanged.
-(packages/@tapestry/oracle/scripts/oracle-parse.ts; packages/@tapestry/oracle/test/oracle-parse.test.mjs)
+The crammed-multi-record leak class - the unfixed weakness of the old heuristic parser - is gone
+by construction: each schema array element is one discrete record, so records can never share a
+line. `normalizeRarity` / `normalizeKind` are kept as a defensive guard for the baked /
+schema-ignoring path.
+(packages/@tapestry/oracle/scripts/oracle-structured.ts:74-81; packages/@tapestry/oracle/test/oracle-structured.test.mjs)
 
 ### Six-axis generator stack (rooms)
 
@@ -215,12 +234,35 @@ coordinate model with up/down offsets (fixing the u/d-exit bug and supplying `de
 never hardcoded. `degree.ts` rolls a DEPTH-BIASED degree over the die span (deeper re-weights the
 distribution up; the rare threshold band stays a tail gated by the boss clock, never reachable
 from depth alone). `room-compose.ts` is a generic composition core plus a registered `rooms`
-composer that maps the resolved band to spawn density and banded prose. The composer engages only
-when the area theme resolves to a six-axis theme dir (`themeDirFor`); a non-themed area returns
-null and falls back to the legacy flat path unchanged.
+composer that maps the resolved band to spawn density and banded prose. The composer engages
+whenever ROOM-1 is present in the area's table set, returning null only if it is absent.
 (packages/@tapestry/oracle/scripts/coords.ts; packages/@tapestry/oracle/scripts/six-axis.ts;
-packages/@tapestry/oracle/scripts/degree.ts; packages/@tapestry/oracle/scripts/room-compose.ts;
+packages/@tapestry/oracle/scripts/degree.ts; packages/@tapestry/oracle/scripts/room-compose.ts:86-100;
 packages/@tapestry/oracle/data/six-axis/endless-underdeep/)
+
+### Six-axis on every area
+
+Every area is six-axis, not just the one authored theme. The six-axis set splits into shared
+theme-agnostic MECHANICS and per-area DRESSING. Shared MECHANICS - the ROOM-1 DEGREE bands and
+the ROOM-3 CONSEQUENCE taxonomy/lifespans - live in `data/six-axis/_default/` and are eager-loaded
+into `DEFAULT_MECHANICS` at module init, the same posture as `SIX_AXIS_CACHE`. The band structure
+(dice span, ranges, which table fires) and the consequence kinds/lifespans are fixed game logic
+the LLM never touches; only the prose is themed.
+(packages/@tapestry/oracle/data/six-axis/_default/ROOM-1.yaml; packages/@tapestry/oracle/data/six-axis/_default/ROOM-3.yaml; packages/@tapestry/oracle/scripts/six-axis.ts:223-241)
+
+`buildAreaSixAxis(themeDir, proseEntries, scarEntries)` assembles the per-area set: the shared
+MECHANICS plus a ROOM-2 DRESSING table. An AUTHORED theme (endless-underdeep) keeps its full
+authored set, and its authored ROOM-2 still wins. Any other area (an LLM-themed idea, or a flat
+baked set) gets a ROOM-2 ASSEMBLED by `assembleRoom2` from the area's frozen `prose` table
+(openers/details/atmosphere subtables) and frozen `scars` table (the per-kind `state_overrides`).
+This is how an LLM-themed area gets six-axis dressing with no authored YAML.
+(packages/@tapestry/oracle/scripts/six-axis.ts:247-298; packages/@tapestry/oracle/scripts/area-gen.ts:358-375)
+
+A generated room is named after a themed place word drawn from the frozen `places` table
+(deterministic per room), NOT `theme/band - biome` - the generic terrain biome clashed with the
+area theme (a "Cavern" in a circus). It falls back to the composed band, then the theme, then the
+biome when the places table is empty.
+(packages/@tapestry/oracle/scripts/room-gen.ts:275-291)
 
 The six-axis tables are eager-loaded + cached at module init (`SIX_AXIS_CACHE`), the same posture
 as the baked-table loader: `data.loadYaml` resolves against `CurrentPackDir`, which at RUNTIME is
@@ -231,14 +273,17 @@ and find nothing. `loadSixAxisTables(themeDir)` reads the cache.
 ### Room consequences and revisit
 
 Gameplay events stamp room consequences via the engine `tapestry.consequence.*` overlay, routed by
-the ROOM-3 lifespan tag. `consequence-hooks.ts` subscribes to `mob.death`: a boss death stamps
+the lifespan from the shared ROOM-3 taxonomy (`lifespanFor`, with a `LIFESPAN_FALLBACK` for the
+reachable kinds). `consequence-hooks.ts` subscribes to `mob.death`: a boss death stamps
 `boss-slain` (persistent); clearing the last npc in a room stamps `looted` (ephemeral). The engine
 evicts ephemeral entries on the area repop tick and keeps persistent/succession-seed until reboot;
 all consequences are memory-only and drop on reboot. `room-revisit.ts` subscribes to
 `player.direction.moved` and appends the destination room's scar prose (the ROOM-2
-`state_overrides` fragment for each stamped kind) as a trailing line on walk-in.
-(packages/@tapestry/oracle/scripts/consequence-hooks.ts; packages/@tapestry/oracle/scripts/room-revisit.ts;
-packages/@tapestry/oracle/data/six-axis/endless-underdeep/ROOM-3.yaml)
+`state_overrides` fragment for each stamped kind) as a trailing line on walk-in. The scar prose
+comes from the per-area ROOM-2: the authored set for a six-axis theme, or the set assembled from
+the frozen `scars` table for any other area.
+(packages/@tapestry/oracle/scripts/consequence-hooks.ts:33-83; packages/@tapestry/oracle/scripts/room-revisit.ts;
+packages/@tapestry/oracle/data/six-axis/_default/ROOM-3.yaml)
 
 ## Rejected and Reverted
 
@@ -255,7 +300,15 @@ packages/@tapestry/oracle/data/six-axis/endless-underdeep/ROOM-3.yaml)
   rolled roster across packs via `packs.export`. Removed when the ESM pack module system shipped
   (2026-06-20). Cross-module sharing is now native ESM import/export.
 
+- `oracle-parse.ts` heuristic free-text parser -- the table-fill output was once free text run
+  through a hardened parser (preamble/interjection/numbering/junk-row stripping). It carried an
+  unfixed crammed-multi-record leak class (several records on one line). Deleted in 0.3.0 when the
+  recommend seam moved to STRICT json_schema structured output; the parser is replaced by the
+  schema-constrained mappers in `oracle-structured.ts`, where each array element is one discrete
+  record by construction. (packages/@tapestry/oracle/scripts/oracle-structured.ts:1-7)
+
 ## Change Log
 
+- 2026-06-28 [oracle-structured-six-axis-everywhere](changes/2026-06-28-oracle-structured-six-axis-everywhere.md) - structured-output table fill (parser deleted, per-kind json_schema + JSON->entry mappers); six-axis on every area (shared _default mechanics + assembled ROOM-2 dressing, composer ungated); fill_scars + always-present scars table; place-word room names; extracted buildScenarios with theme/baked dedup; playtest fixes (stale-scenario gate, weighted exit count, present-tense prompts)
 - 2026-06-27 [oracle-six-axis-tables](changes/2026-06-27-oracle-six-axis-tables.md) - six-axis generator stack: 3D coords (u/d fix + depth), per-table dice-metadata band resolver, depth-biased degree, multi-table composition + depth-banded rooms, module-init six-axis cache, consequence stamping + walk-in revisit scars, LLM-off scenario picker
 - 2026-06-25 [solo-oracle-v2-completion](changes/2026-06-25-solo-oracle-v2-completion.md) - item delivery (freeze + mob-inventory ride + corpse drop), LLM-off baked-set picker, hardened parse module with 11 golden tests, 3 missing armor base templates
