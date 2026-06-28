@@ -170,17 +170,17 @@ fill_items:
   template: "List 6 items found in {idea}, levels {level_min} to {level_max}. Mix weapons and armor, mostly common with a couple rare. Give each a name, a short description, a rarity (common, uncommon, rare, or epic), and a kind (weapon or armor)."
 
 fill_prose_openers:
-  system: "You write room opening lines. Terse, ASCII only."
+  system: "You write room opening lines. Present tense, second person, terse, ASCII only."
   template: "Write 6 opening lines for a {place} in {idea}. One short sentence each."
 
 fill_prose_details:
-  system: "You write room details. Terse, ASCII only."
+  system: "You write room details. Present tense, second person, terse, ASCII only."
   template: "Write 6 sensory details for a {place} in {idea}. One short clause each."
 
 fill_prose_atmosphere:
-  system: "You write closing atmosphere lines. Terse, ASCII only."
+  system: "You write closing atmosphere lines. Present tense, second person, terse, ASCII only."
   template: "Write 6 atmosphere lines for a {place} in {idea}. One short clause each."
 
 fill_scars:
-  system: "You write one short scar line for a room after something happened to it. Terse, ASCII only."
+  system: "You write one short scar line for a room after something happened to it. Present tense, second person, terse, ASCII only."
   template: "For an area themed {idea}, write one short scar line for each of: a looted room picked clean, a room where the boss was just slain, and a collapsed room where an exit fell in. Match the theme."
