@@ -50,8 +50,8 @@ export interface OracleTableData {
 export { slug } from "./oracle-structured.js";
 import {
     slug,
-    mapPlaces, mapMobs, mapBoss, mapItems, mapProse,
-    SCHEMA_PLACES, SCHEMA_MOBS, SCHEMA_BOSS, SCHEMA_ITEMS, SCHEMA_PROSE,
+    mapPlaces, mapMobs, mapBoss, mapItems, mapProse, mapScars,
+    SCHEMA_PLACES, SCHEMA_MOBS, SCHEMA_BOSS, SCHEMA_ITEMS, SCHEMA_PROSE, SCHEMA_SCARS,
 } from "./oracle-structured.js";
 
 // ---------------------------------------------------------------------------
@@ -161,9 +161,10 @@ function fillProse(
     onReady: (t: OracleTableData[]) => void
 ): void {
     const proseEntries: OracleEntry[] = [];
+    const scarEntries: OracleEntry[] = [];
     // Phase 1: fill fragments for the primary place; used loosely for all rooms.
     const keyPlace = places[0] || "chamber";
-    let pending = 3;
+    let pending = 4;
     const done = () => {
         pending -= 1;
         if (pending === 0) {
@@ -171,14 +172,17 @@ function fillProse(
                 for (const e of fallbackProse()) { proseEntries.push(e); }
             }
             tables.push({ kind: "prose", entries: proseEntries });
+            if (scarEntries.length === 0) {
+                for (const e of fallbackScars()) { scarEntries.push(e); }
+            }
+            tables.push({ kind: "scars", entries: scarEntries });
             onReady(tables);
         }
     };
     const proseVars: Record<string, string> = { idea, place: keyPlace };
 
-    // Pair 1: openers + details (2 in-flight).
-    // fill_prose_atmosphere is chained inside the openers callback so it fires only
-    // after openers resolves, keeping in-flight <= 2 at all times.
+    // Round B (atmosphere + scars) fires as Round A (openers + details) frees slots,
+    // keeping in-flight <= 2 at all times.
     let atmosphereFired = false;
     const fireAtmosphere = () => {
         if (atmosphereFired) { return; }
@@ -188,17 +192,26 @@ function fillProse(
             done();
         });
     };
+    let scarsFired = false;
+    const fireScars = () => {
+        if (scarsFired) { return; }
+        scarsFired = true;
+        call(recommend, "fill_scars", proseVars, SCHEMA_SCARS, (raw) => {
+            for (const e of mapScars(raw)) { scarEntries.push(e); }
+            done();
+        });
+    };
+
+    // Round A: openers + details (2 in-flight). Each completion frees a slot for one Round B call.
     call(recommend, "fill_prose_openers", proseVars, SCHEMA_PROSE, (raw) => {
         for (const e of mapProse(raw, "opener")) { proseEntries.push(e); }
         done();
-        // openers slot freed - now fire atmosphere (details may still be in-flight: 1 -> 2).
         fireAtmosphere();
     });
     call(recommend, "fill_prose_details", proseVars, SCHEMA_PROSE, (raw) => {
         for (const e of mapProse(raw, "detail")) { proseEntries.push(e); }
         done();
-        // details slot freed - fire atmosphere if openers hasn't already triggered it.
-        fireAtmosphere();
+        fireScars();
     });
 }
 
@@ -257,7 +270,17 @@ const BAKED: Record<string, OracleTableData[]> = ((): Record<string, OracleTable
 })();
 
 export function bakedTables(setId: string): OracleTableData[] {
-    return BAKED[setId] || BAKED["test-kitchen"] || [];
+    const t = (BAKED[setId] || BAKED["test-kitchen"] || []).slice();
+    // Ensure a scars table so consequences are visible on LLM-off areas too (an authored
+    // six-axis theme like underdeep uses its own state_overrides and ignores this).
+    let hasScars = false;
+    for (let i = 0; i < t.length; i++) {
+        if (t[i].kind === "scars") { hasScars = true; }
+    }
+    if (!hasScars) {
+        t.push({ kind: "scars", entries: fallbackScars() });
+    }
+    return t;
 }
 
 // ---------------------------------------------------------------------------
@@ -282,5 +305,15 @@ function fallbackProse(): OracleEntry[] {
         { w: 10, id: "opener-0", name: "opener", desc: "A plain space." },
         { w: 10, id: "detail-0", name: "detail", desc: "Dust in the corners." },
         { w: 10, id: "atmosphere-0", name: "atmosphere", desc: "It is quiet here." },
+    ];
+}
+
+// Generic scar lines when the LLM is off or returns empty - so consequences are still
+// visible on any area. name = the consequence kind, desc = the scar fragment.
+function fallbackScars(): OracleEntry[] {
+    return [
+        { w: 10, id: "looted-0", name: "looted", desc: "The room has been stripped of anything worth taking." },
+        { w: 10, id: "boss-slain-0", name: "boss-slain", desc: "The body of the fallen ruler lies cooling here." },
+        { w: 10, id: "collapsed-0", name: "collapsed", desc: "Rubble blocks part of the room where a way out used to be." },
     ];
 }

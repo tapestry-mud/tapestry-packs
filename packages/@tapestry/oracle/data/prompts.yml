@@ -180,3 +180,7 @@ fill_prose_details:
 fill_prose_atmosphere:
   system: "You write closing atmosphere lines. Terse, ASCII only."
   template: "Write 6 atmosphere lines for a {place} in {idea}. One short clause each."
+
+fill_scars:
+  system: "You write one short scar line for a room after something happened to it. Terse, ASCII only."
+  template: "For an area themed {idea}, write one short scar line for each of: a looted room picked clean, a room where the boss was just slain, and a collapsed room where an exit fell in. Match the theme."

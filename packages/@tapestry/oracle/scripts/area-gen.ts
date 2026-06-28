@@ -28,7 +28,7 @@ import { runKey, setRunState } from "./run-state.js";
 import { setAreaState, getAreaState, setRoomArea, setRoomPath } from "./area-state.js";
 import { rollRoomFacts, materializeRoom } from "./room-gen.js";
 import { descentDepth } from "./coords.js";
-import { loadSixAxisTables } from "./six-axis.js";
+import { buildAreaSixAxis } from "./six-axis.js";
 import { fillTables, bakedTables, BAKED_SET_IDS, type OracleTableData } from "./oracle-tables.js";
 import { getMintedSet } from "./stub-resolver.js";
 
@@ -355,7 +355,12 @@ function buildEntryRoom(
         loot: [],
     };
 
+    // Every area is six-axis now: an authored theme (underdeep) uses its authored set; any
+    // other area assembles ROOM-2 from its frozen prose + scars tables (the freeze ran in
+    // onReadyTables before this). Shared ROOM-1/3 mechanics come from buildAreaSixAxis.
     const themeDir = ideaHint && ideaHint.toLowerCase().indexOf("underdeep") !== -1 ? "endless-underdeep" : "";
+    const proseTable = (tapestry as any).oracle.table(areaSlug + ":prose");
+    const scarsTable = (tapestry as any).oracle.table(areaSlug + ":scars");
     setAreaState(areaSlug, {
         areaId: areaSlug,
         areaSeed,
@@ -366,7 +371,7 @@ function buildEntryRoom(
         areaSlug,
         runStateKey: stateKey,
         roster: emptyRoster,
-        sixAxis: loadSixAxisTables(themeDir),
+        sixAxis: buildAreaSixAxis(themeDir, proseTable ? proseTable.entries : [], scarsTable ? scarsTable.entries : []),
     });
 
     // Register the entry room's area ownership + coordinate path.

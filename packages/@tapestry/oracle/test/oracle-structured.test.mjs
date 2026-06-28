@@ -1,9 +1,22 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  slug, mapPlaces, mapMobs, mapBoss, mapItems, mapProse,
+  slug, mapPlaces, mapMobs, mapBoss, mapItems, mapProse, mapScars,
   SCHEMA_MOBS, SCHEMA_ITEMS,
 } from "../dist/scripts/oracle-structured.js";
+
+test("mapScars maps scar records to kind-tagged entries, normalizing the kind", () => {
+  const raw = JSON.stringify({ scars: [{ kind: "looted", line: "Picked clean." }, { kind: "Boss Slain", line: "A body cools here." }] });
+  const out = mapScars(raw);
+  assert.equal(out[0].name, "looted");
+  assert.equal(out[0].desc, "Picked clean.");
+  assert.equal(out[1].name, "boss-slain");
+});
+
+test("mapScars returns [] on malformed JSON", () => {
+  assert.deepEqual(mapScars("nope"), []);
+  assert.deepEqual(mapScars(null), []);
+});
 
 test("mapMobs maps wrapped JSON to entries", () => {
   const raw = JSON.stringify({ mobs: [{ name: "Imp", desc: "small" }, { name: "Ogre", desc: "big" }] });

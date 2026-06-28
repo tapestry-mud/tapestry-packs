@@ -1,0 +1,17 @@
+# Shared ROOM-1 DEGREE mechanics - used by EVERY solo area (theme-agnostic).
+# The band STRUCTURE (dice span, ranges, band names, which table fires) is fixed game
+# mechanics; a "charged" room is charged in any theme. Only the room PROSE (ROOM-2) and
+# scar overrides are themed (LLM-generated per area). The effect text here is design
+# documentation, never shown to the player (the composer returns band + spawn density;
+# prose comes from ROOM-2). Endless-underdeep is the worked reference for this shape.
+table: ROOM-1
+axis: DEGREE
+name: Room Outcome (shared)
+dice: "1d10"
+degree: "depth-biased roll over the die span (deeper re-weights up); the top band stays a rare tail on the boss clock"
+bands:
+  - { min: 1, max: 2,  band: transit,   effect: "thin, connective space: corridor, junction, stair. mostly empty.", fires: "ROOM-2" }
+  - { min: 3, max: 5,  band: chamber,   effect: "a featured room; normal spawn, maybe loot.", fires: "ROOM-2" }
+  - { min: 6, max: 7,  band: charged,   effect: "a hazard or denser spawn; a swell-capable mob.", fires: "ROOM-4" }
+  - { min: 8, max: 9,  band: landmark,  effect: "a named, unique space worth remembering.", fires: "ROOM-5" }
+  - { min: 10, max: 10, band: threshold, effect: "a boss arena, or a gate to the next ecosystem.", fires: "ROOM-6" }

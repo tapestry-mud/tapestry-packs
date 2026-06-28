@@ -143,6 +143,25 @@ export function mapProse(raw: string | null, tag: string): OracleEntry[] {
     return out;
 }
 
+// Scar prose per consequence kind, frozen as a "scars" oracle table (name=kind, desc=line)
+// so the pack assembles ROOM-2 stateOverrides from it. kind is normalized to the canonical
+// tag (lowercase, spaces/underscores -> hyphen) so "Boss Slain" -> "boss-slain".
+export function mapScars(raw: string | null): OracleEntry[] {
+    const j = parseJson(raw);
+    const arr = j && Array.isArray(j.scars) ? j.scars : null;
+    if (!arr) { return []; }
+    const out: OracleEntry[] = [];
+    let i = 0;
+    for (const rec of arr) {
+        const kind = String((rec && rec.kind) || "").toLowerCase().trim().replace(/[\s_]+/g, "-");
+        const line = cleanDesc(rec && rec.line);
+        if (!kind || junk(line)) { continue; }
+        out.push({ w: 10, id: kind + "-" + i, name: kind, desc: line });
+        i++;
+    }
+    return out;
+}
+
 // Strict json_schema (root object, additionalProperties:false, all properties required).
 // Arrays are wrapped in an object property (OpenAI strict mode forbids a root array).
 // Passed to authoring.recommend as a stringified JSON schema.
@@ -197,4 +216,24 @@ export const SCHEMA_PROSE = JSON.stringify({
     type: "object",
     properties: { lines: { type: "array", items: { type: "string" } } },
     required: ["lines"], additionalProperties: false,
+});
+
+// One short themed scar line per gameplay-reachable consequence kind (the LLM writes the
+// prose; the kinds + their lifespans are fixed mechanics in the shared ROOM-3).
+export const SCHEMA_SCARS = JSON.stringify({
+    type: "object",
+    properties: {
+        scars: {
+            type: "array",
+            items: {
+                type: "object",
+                properties: {
+                    kind: { type: "string", enum: ["looted", "boss-slain", "collapsed"] },
+                    line: { type: "string" },
+                },
+                required: ["kind", "line"], additionalProperties: false,
+            },
+        },
+    },
+    required: ["scars"], additionalProperties: false,
 });

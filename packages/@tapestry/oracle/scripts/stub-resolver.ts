@@ -27,7 +27,7 @@ import * as tapestry from "@tapestry/engine";
 import { rollRoomFacts, materializeRoom } from "./room-gen.js";
 import { hashCoord, splitmix64, pick } from "./prng.js";
 import { DIR_OFFSETS, oppositeDir, neighborPath, pathKey, parsePathKey, descentDepth } from "./coords.js";
-import { loadSixAxisTables } from "./six-axis.js";
+import { buildAreaSixAxis } from "./six-axis.js";
 import { getAreaState, setAreaState, getRoomArea, getRoomPath, setRoomArea, setRoomPath } from "./area-state.js";
 import { getRunState, setRunState } from "./run-state.js";
 import { soloAreaBiomePalette, type Roster } from "./roster.js";
@@ -152,6 +152,10 @@ function ensureAreaContext(roomId: string): string | undefined {
         setRunState(runStateKey, { roomsSinceLastBoss: 0 });
         const theme = typeof area.theme === "string" ? area.theme : "";
         const themeDir = theme.toLowerCase().indexOf("underdeep") !== -1 ? "endless-underdeep" : "";
+        // Frozen prose + scars tables reloaded from the side-cars at boot - rebuild the
+        // assembled six-axis so a reloaded area is six-axis just like at creation.
+        const proseTable = (tapestry as any).oracle.table(areaId + ":prose");
+        const scarsTable = (tapestry as any).oracle.table(areaId + ":scars");
         setAreaState(areaId, {
             areaId,
             areaSeed: seed,
@@ -162,7 +166,7 @@ function ensureAreaContext(roomId: string): string | undefined {
             areaSlug: areaId,
             runStateKey,
             roster: EMPTY_ROSTER,
-            sixAxis: loadSixAxisTables(themeDir),
+            sixAxis: buildAreaSixAxis(themeDir, proseTable ? proseTable.entries : [], scarsTable ? scarsTable.entries : []),
         });
     }
 

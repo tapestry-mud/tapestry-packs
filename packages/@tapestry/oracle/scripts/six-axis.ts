@@ -219,3 +219,80 @@ export function loadSixAxisTables(areaThemeDir: string): Record<string, SixAxisT
     }
     return SIX_AXIS_CACHE[areaThemeDir] || {};
 }
+
+// Shared mechanics tables (ROOM-1 bands + ROOM-3 taxonomy) used by EVERY area. Theme-agnostic
+// game logic the LLM never touches. Eager-loaded at module init, same posture as SIX_AXIS_CACHE.
+const DEFAULT_MECHANICS: Record<string, SixAxisTable> = ((): Record<string, SixAxisTable> => {
+    const out: Record<string, SixAxisTable> = {};
+    const ids = ["ROOM-1", "ROOM-3"];
+    for (let i = 0; i < ids.length; i++) {
+        const path = "data/six-axis/_default/" + ids[i] + ".yaml";
+        try {
+            const raw: any = (tapestry as any).data.loadYaml(path);
+            if (raw && raw.table) {
+                const t = parseSixAxisTable(raw);
+                out[t.id] = t;
+            }
+        } catch (_err) {
+            // graceful: missing/invalid default mechanics file is skipped.
+        }
+    }
+    return out;
+})();
+
+// PURE: build a per-area ROOM-2 DRESSING table from the area's frozen prose + scars oracle
+// entries (name = tag/kind, desc = line). subtables come from the prose table
+// (openers/details/atmosphere); stateOverrides (the consequence scar prose) from the scars
+// table. This is how an LLM-themed area gets six-axis dressing without authored YAML.
+export function assembleRoom2(proseEntries: any[], scarEntries: any[]): SixAxisTable {
+    const subtables: Record<string, string[]> = { openers: [], details: [], atmosphere: [] };
+    // The prose table tags are SINGULAR (opener/detail/atmosphere); composeRoomProse reads the
+    // PLURAL subtable keys (openers/details/atmosphere). Map singular tag -> plural key.
+    const TAG_TO_SUB: Record<string, string> = { opener: "openers", detail: "details", atmosphere: "atmosphere" };
+    const prose = Array.isArray(proseEntries) ? proseEntries : [];
+    for (let i = 0; i < prose.length; i++) {
+        const e = prose[i];
+        const subKey = TAG_TO_SUB[String((e && e.name) || "")];
+        if (subKey) {
+            subtables[subKey].push(String((e && e.desc) || ""));
+        }
+    }
+    const stateOverrides: Record<string, string[]> = {};
+    const scars = Array.isArray(scarEntries) ? scarEntries : [];
+    for (let i = 0; i < scars.length; i++) {
+        const e = scars[i];
+        const kind = String((e && e.name) || "");
+        if (kind === "") { continue; }
+        if (!stateOverrides[kind]) { stateOverrides[kind] = []; }
+        stateOverrides[kind].push(String((e && e.desc) || ""));
+    }
+    return {
+        id: "ROOM-2", axis: "DRESSING", name: "Composition (generated)",
+        dice: "", degree: "", bands: [], subtables, stateOverrides,
+        consequences: [], cascades: [], signatures: [], inputs: [],
+    };
+}
+
+// Build the full six-axis table set for an area: shared mechanics + dressing.
+// An AUTHORED theme (e.g. endless-underdeep) uses its full authored set (its ROOM-2 wins).
+// Any other area (LLM-themed or flat baked) gets the shared mechanics + a ROOM-2 assembled
+// from its frozen prose + scars tables - so every area is six-axis, not just authored themes.
+export function buildAreaSixAxis(
+    themeDir: string,
+    proseEntries: any[],
+    scarEntries: any[]
+): Record<string, SixAxisTable> {
+    const out: Record<string, SixAxisTable> = {};
+    for (const k in DEFAULT_MECHANICS) {
+        if (Object.prototype.hasOwnProperty.call(DEFAULT_MECHANICS, k)) { out[k] = DEFAULT_MECHANICS[k]; }
+    }
+    const authored = themeDir ? (SIX_AXIS_CACHE[themeDir] || null) : null;
+    if (authored && authored["ROOM-2"]) {
+        for (const k in authored) {
+            if (Object.prototype.hasOwnProperty.call(authored, k)) { out[k] = authored[k]; }
+        }
+    } else {
+        out["ROOM-2"] = assembleRoom2(proseEntries, scarEntries);
+    }
+    return out;
+}

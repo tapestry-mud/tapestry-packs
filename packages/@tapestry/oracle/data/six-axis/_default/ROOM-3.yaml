@@ -1,0 +1,21 @@
+# Shared ROOM-3 CONSEQUENCE mechanics - used by EVERY solo area (theme-agnostic).
+# The consequence KINDS and their LIFESPANS are fixed game logic (looted is ephemeral,
+# boss-slain is persistent, collapsed is succession-seed in any theme). Only the scar
+# PROSE for each kind is themed - that lives in the per-area ROOM-2 stateOverrides, which
+# the LLM generates. The effect text here is design documentation, never player-facing.
+table: ROOM-3
+axis: CONSEQUENCE
+name: Room State (shared)
+tiers:
+  minor:
+    - { id: looted,    effect: "containers empty, the room reads picked-clean",        lifespan: ephemeral }
+    - { id: scorched,  effect: "fire passed through; charred prose, ash-scavenger shift", lifespan: succession-seed }
+    - { id: haunted,   effect: "a death or lore-touch left an unnerving chill",         lifespan: ephemeral }
+  moderate:
+    - { id: flooded,   effect: "water broke in; a hazard, footing slick",                lifespan: succession-seed }
+    - { id: claimed,   effect: "a faction or tamed mob holds it; a guard, a marker",      lifespan: ephemeral }
+    - { id: lore-read, effect: "a record was read here; a one-time fragment, then spent",  lifespan: persistent }
+  severe:
+    - { id: collapsed, effect: "a cave-in; an exit becomes rubble (the room graph changes)", lifespan: succession-seed }
+    - { id: warded,    effect: "an old ward re-lit; a safe pocket",                         lifespan: persistent }
+    - { id: boss-slain,effect: "the arena's keeper is dead for good; the field quiets",     lifespan: persistent }
