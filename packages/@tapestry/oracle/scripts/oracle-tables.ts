@@ -41,12 +41,18 @@ export interface OracleTableData {
 }
 
 // ---------------------------------------------------------------------------
-// Parsing helpers - all parsing is now in oracle-parse.ts (hardened, zero engine imports,
-// golden-tested with node --test). Re-export so existing importers keep working.
+// Mapping + schemas live in oracle-structured.ts (pure, zero engine imports, golden-tested).
+// The recommend seam returns JSON constrained by the per-kind schemas; the mappers JSON.parse
+// + map to OracleEntry (and []-on-failure -> the caller falls back to baked entries).
+// slug is re-exported so existing importers keep working.
 // ---------------------------------------------------------------------------
 
-export { slug, parseList, parsePipeLines, pushLines } from "./oracle-parse.js";
-import { parseList, parsePipeLines, pushLines, slug } from "./oracle-parse.js";
+export { slug } from "./oracle-structured.js";
+import {
+    slug,
+    mapPlaces, mapMobs, mapBoss, mapItems, mapProse,
+    SCHEMA_PLACES, SCHEMA_MOBS, SCHEMA_BOSS, SCHEMA_ITEMS, SCHEMA_PROSE,
+} from "./oracle-structured.js";
 
 // ---------------------------------------------------------------------------
 // recommend call wrapper
@@ -58,10 +64,11 @@ function call(
     recommend: Recommend,
     promptKey: string,
     vars: Record<string, string>,
+    schema: string,
     cb: (r: string | null) => void
 ): void {
     const pr = getPrompt(promptKey);
-    recommend({ field: promptKey, template: pr.template, system: pr.system, vars }, cb);
+    recommend({ field: promptKey, template: pr.template, system: pr.system, vars, schema }, cb);
 }
 
 // ---------------------------------------------------------------------------
@@ -90,12 +97,12 @@ export function fillTables(
     };
 
     // Step 1: fill places first - prose fills key off the place list.
-    call(recommend, "fill_places", vars, (placesRaw) => {
-        const places = parseList(placesRaw);
+    call(recommend, "fill_places", vars, SCHEMA_PLACES, (placesRaw) => {
+        const places = mapPlaces(placesRaw);
         const placeList = places.length > 0 ? places : ["hall", "passage", "chamber", "corner", "threshold", "alcove"];
         tables.push({
             kind: "places",
-            entries: placeList.map((p, i) => ({ w: 10, id: slug(p), name: p, desc: "" })),
+            entries: placeList.map((p) => ({ w: 10, id: slug(p), name: p, desc: "" })),
         });
 
         // Step 2: mobs, boss, items in a batch of 3.
@@ -115,22 +122,22 @@ export function fillTables(
         const fireItems = () => {
             if (itemsFired) { return; }
             itemsFired = true;
-            call(recommend, "fill_items", vars, (raw) => {
-                const entries = parsePipeLines(raw, "weapon", true);
+            call(recommend, "fill_items", vars, SCHEMA_ITEMS, (raw) => {
+                const entries = mapItems(raw);
                 tables.push({ kind: "items", entries: entries.length > 0 ? entries : fallbackItems() });
                 done();
             });
         };
-        call(recommend, "fill_mobs", vars, (raw) => {
-            const entries = parsePipeLines(raw, "mob", false);
+        call(recommend, "fill_mobs", vars, SCHEMA_MOBS, (raw) => {
+            const entries = mapMobs(raw);
             tables.push({ kind: "mobs", entries: entries.length > 0 ? entries : fallbackMobs() });
             done();
             // mobs slot freed - now fire items (boss may still be in-flight: 1 -> 2).
             fireItems();
         });
-        call(recommend, "fill_boss", vars, (raw) => {
-            const entries = parsePipeLines(raw, "boss", false);
-            tables.push({ kind: "boss", entries: entries.length > 0 ? [entries[0]] : fallbackBoss() });
+        call(recommend, "fill_boss", vars, SCHEMA_BOSS, (raw) => {
+            const entries = mapBoss(raw);
+            tables.push({ kind: "boss", entries: entries.length > 0 ? entries : fallbackBoss() });
             done();
             // boss slot freed - fire items if mobs hasn't already triggered it.
             fireItems();
@@ -176,16 +183,19 @@ function fillProse(
     const fireAtmosphere = () => {
         if (atmosphereFired) { return; }
         atmosphereFired = true;
-        call(recommend, "fill_prose_atmosphere", proseVars, (raw) => { pushLines(proseEntries, raw, "atmosphere"); done(); });
+        call(recommend, "fill_prose_atmosphere", proseVars, SCHEMA_PROSE, (raw) => {
+            for (const e of mapProse(raw, "atmosphere")) { proseEntries.push(e); }
+            done();
+        });
     };
-    call(recommend, "fill_prose_openers", proseVars, (raw) => {
-        pushLines(proseEntries, raw, "opener");
+    call(recommend, "fill_prose_openers", proseVars, SCHEMA_PROSE, (raw) => {
+        for (const e of mapProse(raw, "opener")) { proseEntries.push(e); }
         done();
         // openers slot freed - now fire atmosphere (details may still be in-flight: 1 -> 2).
         fireAtmosphere();
     });
-    call(recommend, "fill_prose_details", proseVars, (raw) => {
-        pushLines(proseEntries, raw, "detail");
+    call(recommend, "fill_prose_details", proseVars, SCHEMA_PROSE, (raw) => {
+        for (const e of mapProse(raw, "detail")) { proseEntries.push(e); }
         done();
         // details slot freed - fire atmosphere if openers hasn't already triggered it.
         fireAtmosphere();
