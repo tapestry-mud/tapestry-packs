@@ -22,7 +22,7 @@
 // is min(N * slope, 1.0). Room 0 = 0% (structurally boss-free). Resets cold on spawn.
 
 import * as tapestry from "@tapestry/engine";
-import { hashCoord, splitmix64, weightedPick } from "./prng.js";
+import { hashCoord, splitmix64, weightedPick, pick } from "./prng.js";
 import { placeholder } from "./prompts.js";
 import { type Roster } from "./roster.js";
 import { type RunState } from "./run-state.js";
@@ -272,10 +272,23 @@ export function materializeRoom(
     const sixAxisProse = composeRoomProse(sixAxis, composeRng);
     const prose = sixAxisProse !== "" ? sixAxisProse : composeProse(areaId, areaSeed, coordKey, biome);
 
-    // Banded room name: prefix the band when composition is active; else legacy theme-name.
-    const roomName = composition
-        ? titleCase(composition.band) + " - " + titleCase(biome)
-        : (theme ? theme + " - " + titleCase(biome) : titleCase(biome));
+    // Room name: a themed place word (deterministic per room), NO biome suffix - the generic
+    // terrain biome clashes with the area theme ("Cavern" on a circus). Falls back to the band
+    // or theme if the places table is empty.
+    const placesTable = (tapestry as any).oracle.table(areaId + ":places");
+    const placePool: any[] = placesTable && placesTable.entries ? placesTable.entries : [];
+    let roomName: string;
+    if (placePool.length > 0) {
+        const namePick = pick(placePool, rngFor(areaSeed, coordKey + ":name"));
+        roomName = titleCase(String((namePick && namePick.name) || ""));
+    } else if (composition) {
+        roomName = titleCase(composition.band);
+    } else if (theme) {
+        roomName = titleCase(theme);
+    } else {
+        roomName = titleCase(biome);
+    }
+    if (roomName === "") { roomName = titleCase(biome); }
 
     tapestry.authoring.createRoom(areaId, roomId, roomName, prose);
 
