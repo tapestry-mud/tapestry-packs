@@ -21,6 +21,7 @@ import * as tapestry from "@tapestry/engine";
 import { createSoloArea } from "../area-gen.js";
 import { BAKED_SET_IDS } from "../oracle-tables.js";
 import { SIX_AXIS_THEMES } from "../six-axis.js";
+import { buildScenarios, type Scenario } from "../scenarios.js";
 
 function llmOff(): boolean {
     const fn = (tapestry as any).authoring.recommendEnabled;
@@ -29,16 +30,8 @@ function llmOff(): boolean {
 
 // LLM-off scenario picker. With the LLM off there is no idea to theme an area from, so
 // the player picks a pre-baked scenario instead - and that pick drives BOTH the room
-// theme and the mob/item roster. Each six-axis theme is a depth-banded generated
-// scenario (its idea string is the theme dir, which the themeDir resolver matches); each
-// baked set is a flat pre-authored area. The roster always comes from a baked set.
-interface Scenario { id: string; label: string; idea: string; bakedSet: string; }
-
-const SCENARIOS: Scenario[] = SIX_AXIS_THEMES.map(function (t: string): Scenario {
-    return { id: t, label: t + " (depth-banded)", idea: t, bakedSet: BAKED_SET_IDS[0] };
-}).concat(BAKED_SET_IDS.map(function (s: string): Scenario {
-    return { id: "flat:" + s, label: s + " (flat)", idea: "", bakedSet: s };
-}));
+// theme and the mob/item roster (see scenarios.ts - engine-free so it is golden-testable).
+const SCENARIOS: Scenario[] = buildScenarios(SIX_AXIS_THEMES, BAKED_SET_IDS);
 
 function scenarioById(id: string): Scenario | null {
     for (let i = 0; i < SCENARIOS.length; i++) {

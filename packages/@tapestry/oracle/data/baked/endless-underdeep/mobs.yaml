@@ -1,0 +1,7 @@
+oracle_table:
+  kind: mobs
+  entries:
+    - { w: 50, id: gloomfang-stalker, name: "gloomfang stalker", desc: "It hunts the dark on too many legs.", balance_ref: mob }
+    - { w: 50, id: cave-wretch, name: "cave wretch", desc: "A pale thing that flinches from light.", balance_ref: mob }
+    - { w: 50, id: bone-gnawer, name: "bone gnawer", desc: "It cracks the marrow of the lost.", balance_ref: mob }
+    - { w: 40, id: deep-lurker, name: "deep lurker", desc: "Eyes like wet stones in the gloom.", balance_ref: mob }

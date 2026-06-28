@@ -1,0 +1,4 @@
+oracle_table:
+  kind: boss
+  entries:
+    - { w: 100, id: the-hollow-warden, name: "the hollow warden", desc: "It has guarded this deep since before the light.", balance_ref: boss }

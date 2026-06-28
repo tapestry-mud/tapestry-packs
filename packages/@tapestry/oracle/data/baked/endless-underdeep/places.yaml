@@ -1,0 +1,9 @@
+oracle_table:
+  kind: places
+  entries:
+    - { w: 10, id: gallery, name: gallery, desc: "" }
+    - { w: 10, id: shaft, name: shaft, desc: "" }
+    - { w: 10, id: hollow, name: hollow, desc: "" }
+    - { w: 10, id: chasm, name: chasm, desc: "" }
+    - { w: 10, id: cavern, name: cavern, desc: "" }
+    - { w: 10, id: crawlway, name: crawlway, desc: "" }

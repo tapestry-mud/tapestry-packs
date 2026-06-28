@@ -1,0 +1,5 @@
+oracle_table:
+  kind: rooms
+  entries:
+    - { w: 60, id: deep-gallery, name: "deep gallery", desc: "" }
+    - { w: 40, id: collapsed-shaft, name: "collapsed shaft", desc: "" }

@@ -1,0 +1,9 @@
+oracle_table:
+  kind: prose
+  entries:
+    - { w: 10, id: opener-0, name: opener, desc: "The dark presses close on every side." }
+    - { w: 10, id: opener-1, name: opener, desc: "Your torch gutters in the still, cold air." }
+    - { w: 10, id: detail-0, name: detail, desc: "Water ticks somewhere out in the black." }
+    - { w: 10, id: detail-1, name: detail, desc: "Old scratches score the stone, shoulder-high." }
+    - { w: 10, id: atmosphere-0, name: atmosphere, desc: "Nothing down here has seen the sun." }
+    - { w: 10, id: atmosphere-1, name: atmosphere, desc: "The deep swallows the sound of your steps." }

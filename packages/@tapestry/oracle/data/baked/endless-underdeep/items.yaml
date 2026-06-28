@@ -1,0 +1,6 @@
+oracle_table:
+  kind: items
+  entries:
+    - { w: 60, id: chipped-pick, name: "chipped pick", desc: "A miner's tool, still keen enough.", balance_ref: weapon, rarity: common }
+    - { w: 60, id: stone-scale-vest, name: "stone-scale vest", desc: "Plates of cold slate sewn to leather.", balance_ref: armor, rarity: common }
+    - { w: 8, id: gloomglass-shard, name: "gloomglass shard", desc: "It drinks the torchlight and hums.", balance_ref: weapon, rarity: rare }
