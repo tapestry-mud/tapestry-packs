@@ -9,7 +9,8 @@
 import type { OracleEntry } from "./oracle-tables.js"; // type-only: erased at compile, no engine pull
 
 const RARITY_WEIGHTS: Record<string, number> = { common: 60, uncommon: 30, rare: 8, epic: 2 };
-const MAX_FRAGMENT = 120;
+const MAX_NAME = 60;
+const MAX_DESC = 200;
 
 export function slug(name: string): string {
     return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "item";
@@ -27,9 +28,30 @@ function asciiFold(s: string): string {
         .trim();
 }
 
-function clean(s: unknown): string {
-    const t = asciiFold(typeof s === "string" ? s : "");
-    return t.length > MAX_FRAGMENT ? t.slice(0, MAX_FRAGMENT).trim() : t;
+// Normalize a player-facing value: ASCII-fold, turn LLM snake_case identifiers back into
+// spaces (abyssal_trench -> abyssal trench), and collapse whitespace.
+function normalize(s: unknown): string {
+    return asciiFold(typeof s === "string" ? s : "").replace(/_/g, " ").replace(/\s+/g, " ").trim();
+}
+
+// Names stay short - a hard char cap is fine (a 60+ char "name" is junk).
+function cleanName(s: unknown): string {
+    const t = normalize(s);
+    return t.length > MAX_NAME ? t.slice(0, MAX_NAME).trim() : t;
+}
+
+// Descriptions cap on a SENTENCE boundary, not mid-word: keep whole sentences up to the soft
+// cap, always keeping at least the first (so a single long sentence survives intact).
+function cleanDesc(s: unknown): string {
+    const t = normalize(s);
+    if (t.length <= MAX_DESC) { return t; }
+    const sentences = t.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [t];
+    let out = "";
+    for (let i = 0; i < sentences.length; i++) {
+        if (out.length > 0 && (out + sentences[i]).length > MAX_DESC) { break; }
+        out += sentences[i];
+    }
+    return out.trim();
 }
 
 function junk(name: string): boolean {
@@ -58,7 +80,7 @@ export function mapPlaces(raw: string | null): string[] {
     const j = parseJson(raw);
     const arr = j && Array.isArray(j.places) ? j.places : (Array.isArray(j) ? j : null);
     if (!arr) { return []; }
-    return arr.map((p: unknown) => clean(p)).filter((s: string) => !junk(s)).slice(0, 8);
+    return arr.map((p: unknown) => cleanName(p)).filter((s: string) => !junk(s)).slice(0, 8);
 }
 
 export function mapMobs(raw: string | null): OracleEntry[] {
@@ -69,9 +91,9 @@ export function mapBoss(raw: string | null): OracleEntry[] {
     const j = parseJson(raw);
     const rec = j && j.name != null ? j : (j && Array.isArray(j.boss) ? j.boss[0] : null);
     if (!rec) { return []; }
-    const name = clean(rec.name);
+    const name = cleanName(rec.name);
     if (junk(name)) { return []; }
-    return [{ w: 100, id: slug(name), name, desc: clean(rec.desc), balance_ref: "boss" }];
+    return [{ w: 100, id: slug(name), name, desc: cleanDesc(rec.desc), balance_ref: "boss" }];
 }
 
 function mapRecords(raw: string | null, key: string, w: number, balanceRef: string): OracleEntry[] {
@@ -80,9 +102,9 @@ function mapRecords(raw: string | null, key: string, w: number, balanceRef: stri
     if (!arr) { return []; }
     const out: OracleEntry[] = [];
     for (const rec of arr) {
-        const name = clean(rec && rec.name);
+        const name = cleanName(rec && rec.name);
         if (junk(name)) { continue; }
-        out.push({ w, id: slug(name), name, desc: clean(rec && rec.desc), balance_ref: balanceRef });
+        out.push({ w, id: slug(name), name, desc: cleanDesc(rec && rec.desc), balance_ref: balanceRef });
     }
     return out;
 }
@@ -93,11 +115,11 @@ export function mapItems(raw: string | null): OracleEntry[] {
     if (!arr) { return []; }
     const out: OracleEntry[] = [];
     for (const rec of arr) {
-        const name = clean(rec && rec.name);
+        const name = cleanName(rec && rec.name);
         if (junk(name)) { continue; }
         const rarity = normalizeRarity(rec && rec.rarity);
         const balanceRef = normalizeKind(rec && rec.kind);
-        out.push({ w: RARITY_WEIGHTS[rarity] || 60, id: slug(name), name, desc: clean(rec && rec.desc), balance_ref: balanceRef, rarity });
+        out.push({ w: RARITY_WEIGHTS[rarity] || 60, id: slug(name), name, desc: cleanDesc(rec && rec.desc), balance_ref: balanceRef, rarity });
     }
     return out;
 }
@@ -109,7 +131,7 @@ export function mapProse(raw: string | null, tag: string): OracleEntry[] {
     const out: OracleEntry[] = [];
     let i = 0;
     for (const line of arr) {
-        const t = clean(line);
+        const t = cleanDesc(line);
         if (junk(t)) { continue; }
         out.push({ w: 10, id: tag + "-" + i, name: tag, desc: t });
         i++;

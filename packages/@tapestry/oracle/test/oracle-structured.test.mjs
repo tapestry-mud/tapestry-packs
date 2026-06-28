@@ -70,3 +70,29 @@ test("schemas are strict-valid JSON objects", () => {
 test("slug kebabs and caps", () => {
   assert.equal(slug("The Forgotten Hollow"), "the-forgotten-hollow");
 });
+
+test("place names normalize snake_case underscores to spaces", () => {
+  const out = mapPlaces(JSON.stringify({ places: ["abyssal_trench", "gloomy_cavern"] }));
+  assert.deepEqual(out, ["abyssal trench", "gloomy cavern"]);
+});
+
+test("mob names also de-underscore", () => {
+  const out = mapMobs(JSON.stringify({ mobs: [{ name: "cave_wight", desc: "x" }] }));
+  assert.equal(out[0].name, "cave wight");
+});
+
+test("desc caps on a sentence boundary, keeping whole sentences (no mid-word chop)", () => {
+  const s1 = "A pale and gangling wretch lurks in the gloom here, watching you with wet, unblinking eyes from somewhere back in the dark.";
+  const s2 = "It has waited down in the cold and the silence for a very long time indeed, and does not intend to let you leave alive at all.";
+  const out = mapMobs(JSON.stringify({ mobs: [{ name: "X", desc: s1 + " " + s2 }] }));
+  const d = out[0].desc;
+  assert.ok(d.length <= 200, `expected <=200 chars, got ${d.length}`);
+  assert.ok(/[.!?]$/.test(d), `should end on sentence punctuation: "${d}"`);
+  assert.equal(d, s1); // first whole sentence kept, second dropped whole
+});
+
+test("a single long sentence survives whole, not chopped mid-word", () => {
+  const one = "This is one long unbroken sentence that runs on and on for well past two hundred characters without any internal period so the sentence cap must keep it intact rather than slicing it mid word at an arbitrary index here";
+  const out = mapMobs(JSON.stringify({ mobs: [{ name: "X", desc: one }] }));
+  assert.equal(out[0].desc, one);
+});

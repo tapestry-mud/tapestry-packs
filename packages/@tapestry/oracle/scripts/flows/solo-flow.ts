@@ -115,7 +115,10 @@ tapestry.flows.register({
         const rawMin = entity.getProperty("__solo_min_level") || "";
         const rawMax = entity.getProperty("__solo_max_level") || "";
         const rawDest = entity.getProperty("__solo_dest_pack") || "";
-        const rawScenario = entity.getProperty("__solo_scenario") || "";
+        // Scenario is an LLM-OFF-only concept. The scenario step is skipped when the LLM is on,
+        // so a value here is stale from a prior LLM-off run - ignore it, or it overrides the typed
+        // idea (the "typed Haunted Circus, generated endless-underdeep" bug).
+        const rawScenario = llmOff() ? (entity.getProperty("__solo_scenario") || "") : "";
         const scenario = (String(rawScenario).trim() !== "") ? scenarioById(String(rawScenario).trim()) : null;
 
         // Parse min level.
