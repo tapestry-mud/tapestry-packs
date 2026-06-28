@@ -22,7 +22,7 @@
 // is min(N * slope, 1.0). Room 0 = 0% (structurally boss-free). Resets cold on spawn.
 
 import * as tapestry from "@tapestry/engine";
-import { hashCoord, splitmix64 } from "./prng.js";
+import { hashCoord, splitmix64, weightedPick } from "./prng.js";
 import { placeholder } from "./prompts.js";
 import { type Roster } from "./roster.js";
 import { type RunState } from "./run-state.js";
@@ -47,8 +47,17 @@ const MAX_AMBIENT_MOBS = 2;
 // and drops to the room when the mob dies. Floor loot is deferred to a later slice.
 const LOOT_DROP_CHANCE = 0.35;
 
-/** Probability any one direction becomes an exit (per direction). */
-const EXIT_CHANCE = 0.55;
+/** Weighted exit-count distribution (the "sliding scale"): roll a target exit count,
+ *  then take that many directions. Skews toward 2-3 so most rooms branch lightly and
+ *  6-exit hubs stay rare (~2%). value = exit count, w = weight. */
+const EXIT_COUNT_WEIGHTS: { w: number; value: number }[] = [
+    { w: 2, value: 1 },
+    { w: 6, value: 2 },
+    { w: 6, value: 3 },
+    { w: 2, value: 4 },
+    { w: 0.8, value: 5 },
+    { w: 0.3, value: 6 },
+];
 
 /** Minimum exits in any rolled room. */
 const MIN_EXITS = 1;
@@ -115,28 +124,22 @@ export function rollRoomFacts(areaSeed: number, roomPath: string, _roster: Roste
     // we guarantee at least MIN_EXITS by forcing the highest-roll direction.
     // -------------------------------------------------------------------------
 
+    // Give every direction a random roll - the tie-break for WHICH directions become exits.
     const exitCandidates: Array<{ direction: string; roll: number }> = [];
     for (let i = 0; i < ALL_DIRECTIONS.length; i++) {
         exitCandidates.push({ direction: ALL_DIRECTIONS[i], roll: rng() });
     }
 
-    const chosenDirs: string[] = [];
-    for (let i = 0; i < exitCandidates.length; i++) {
-        if (exitCandidates[i].roll < EXIT_CHANCE) {
-            chosenDirs.push(exitCandidates[i].direction);
-        }
-    }
+    // Roll the exit COUNT from the weighted distribution, then take that many of the
+    // lowest-roll directions. Clamp to [MIN_EXITS, ALL_DIRECTIONS.length] for safety.
+    let targetCount = weightedPick(EXIT_COUNT_WEIGHTS, rng);
+    if (targetCount < MIN_EXITS) { targetCount = MIN_EXITS; }
+    if (targetCount > ALL_DIRECTIONS.length) { targetCount = ALL_DIRECTIONS.length; }
 
-    // Guarantee at least MIN_EXITS.
-    if (chosenDirs.length < MIN_EXITS) {
-        // Sort by roll ascending so the lowest-roll (most likely) direction is first.
-        exitCandidates.sort(function (a, b) { return a.roll - b.roll; });
-        for (let i = 0; i < exitCandidates.length && chosenDirs.length < MIN_EXITS; i++) {
-            const dir = exitCandidates[i].direction;
-            if (chosenDirs.indexOf(dir) === -1) {
-                chosenDirs.push(dir);
-            }
-        }
+    exitCandidates.sort(function (a, b) { return a.roll - b.roll; });
+    const chosenDirs: string[] = [];
+    for (let i = 0; i < targetCount; i++) {
+        chosenDirs.push(exitCandidates[i].direction);
     }
 
     // Roll exit labels (placeholder-based, deterministic from rng - no engine calls).
