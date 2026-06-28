@@ -96,3 +96,15 @@ test("a single long sentence survives whole, not chopped mid-word", () => {
   const out = mapMobs(JSON.stringify({ mobs: [{ name: "X", desc: one }] }));
   assert.equal(out[0].desc, one);
 });
+
+test("strips leading list numbering the model bakes into array items", () => {
+  const out = mapProse(JSON.stringify({ lines: ["1. Eerie music echoes here.", "2) A cold mist clings.", "- Ghostly laughter fades."] }), "detail");
+  assert.equal(out[0].desc, "Eerie music echoes here.");
+  assert.equal(out[1].desc, "A cold mist clings.");
+  assert.equal(out[2].desc, "Ghostly laughter fades.");
+});
+
+test("keeps mid-sentence numbers; only leading enumeration is stripped", () => {
+  const out = mapProse(JSON.stringify({ lines: ["The big top rises 30 feet overhead."] }), "opener");
+  assert.equal(out[0].desc, "The big top rises 30 feet overhead.");
+});

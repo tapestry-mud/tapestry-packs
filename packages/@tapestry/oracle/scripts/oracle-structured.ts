@@ -29,9 +29,13 @@ function asciiFold(s: string): string {
 }
 
 // Normalize a player-facing value: ASCII-fold, turn LLM snake_case identifiers back into
-// spaces (abyssal_trench -> abyssal trench), and collapse whitespace.
+// spaces (abyssal_trench -> abyssal trench), collapse whitespace, and strip leading list
+// numbering the model sometimes bakes into array items ("1.", "2)", "- "). Leading-only, so
+// mid-sentence numbers (e.g. "30 feet tall") survive.
 function normalize(s: unknown): string {
-    return asciiFold(typeof s === "string" ? s : "").replace(/_/g, " ").replace(/\s+/g, " ").trim();
+    let t = asciiFold(typeof s === "string" ? s : "").replace(/_/g, " ").replace(/\s+/g, " ").trim();
+    t = t.replace(/^\d+\s*[.)]\s*/, "").replace(/^[-*]\s+/, "").trim();
+    return t;
 }
 
 // Names stay short - a hard char cap is fine (a 60+ char "name" is junk).
