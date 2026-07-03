@@ -7,8 +7,8 @@ body: |
   flags plus a Strength penalty to the target for an extended
   duration. The target makes a spell saving throw; on a successful
   save the spell has no effect. While poisoned, the target cannot
-  be healed by cure spells. The no_heal flag prevents active healing
-  (spells, potions) but does not suppress passive HP regeneration.
+  be healed by cure spells. The no_heal flag prevents healing spells
+  but does not affect potions or passive HP regeneration.
   Can be cast on NPCs or other players.
 keywords: [poison, debuff, strength, no_heal, spell, combat]
 see_also: [cast, spells, combat, affects]
