@@ -9,7 +9,7 @@ syntax:
 body: |
   Open a guided editor for the room you are standing in. Pick a field
   by number. The list always includes Room name and Room description,
-  plus any room properties your world defines (terrain, healing rate,
+  plus any room properties your world defines (terrain, rest bonus,
   and so on) and a Biome selector when biomes are available.
 
   Text fields (name, description, free properties) show the full
