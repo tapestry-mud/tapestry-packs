@@ -1,7 +1,7 @@
 id: "tapestry-example-pack:wooden-chest"
 name: "a wooden chest"
 type: "item"
-tags: [container, fixture, no_get]
+tags: [container, fixture]
 keywords: [chest, wooden]
 properties:
   container_capacity: 20

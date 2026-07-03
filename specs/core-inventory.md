@@ -24,8 +24,8 @@ access to loot on player corpses. All commands live in
 - With no container argument and a literal `all` or `all.<keyword>` token, picks up
   every matching item from the room via `tapestry.inventory.getAll`.
   (packages/@tapestry/core/scripts/commands/get.ts:50-61)
-- Items tagged `no_get` in the world entity are blocked: the actor receives "You can't
-  pick that up."  (packages/@tapestry/core/scripts/commands/get.ts:68-71)
+- Items tagged `no_get` or `fixture` in the world entity are blocked: the actor receives
+  "You can't pick that up."  (packages/@tapestry/core/scripts/commands/get.ts:68-72)
 - When a carry-weight or capacity limit is exceeded, `tapestry.inventory.pickUp` returns
   falsy and the actor receives "You can't carry that."
   (packages/@tapestry/core/scripts/commands/get.ts:73-79)

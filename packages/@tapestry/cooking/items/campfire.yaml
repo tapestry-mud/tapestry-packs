@@ -1,7 +1,7 @@
 id: "tapestry-cooking:campfire"
 name: "a crackling campfire"
 type: "item"
-tags: [fixture, no_get]
+tags: [fixture]
 keywords: [campfire, fire, flame]
 properties:
   heat_source: true

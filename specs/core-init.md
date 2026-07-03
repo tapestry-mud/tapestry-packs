@@ -138,7 +138,7 @@ flavor text, and seeds the engine with MOTD data files and a two-room core area
   fixture.
   (packages/@tapestry/core/areas/core/rooms/donation-pit.yaml:1)
 - The stone fountain item (`tapestry-core:fountain`) is tagged `fixture`,
-  `fill_source`, `no_get`, and `drinkable`, and provides `fill_type: water`.
+  `fill_source`, and `drinkable`, and provides `fill_type: water`.
   (packages/@tapestry/core/areas/core/items/fountain.yaml:4)
 
 ### MOTD data files

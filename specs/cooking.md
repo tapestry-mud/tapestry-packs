@@ -127,7 +127,7 @@ with `@tapestry/survival ^0.1.1`, declared as an `optional_dependency`.
   `heat_source`, so a separate heat source must be present in the room when using
   the pan. (packages/@tapestry/cooking/items/pan.yaml:1-12)
 
-- `tapestry-cooking:campfire` -- a crackling campfire. Tagged `fixture, no_get`
+- `tapestry-cooking:campfire` -- a crackling campfire. Tagged `fixture`
   (cannot be picked up). Carries `heat_source: true` only -- it is not a cooking
   tool by itself and will not satisfy the `can_cook` check.
   (packages/@tapestry/cooking/items/campfire.yaml:1-13)
@@ -139,7 +139,7 @@ with `@tapestry/survival ^0.1.1`, declared as an `optional_dependency`.
   will consume it after producing the cooked result.
   (packages/@tapestry/cooking/items/campfire-portable.yaml:1-18)
 
-- `tapestry-cooking:microwave` -- a humming microwave. Tagged `fixture, no_get`.
+- `tapestry-cooking:microwave` -- a humming microwave. Tagged `fixture`.
   Carries both `can_cook: true` and `heat_source: true` -- self-contained, no
   separate heat source required. Its `cook_text` is "You put {item} in the
   microwave... DING!" (packages/@tapestry/cooking/items/microwave.yaml:1-14)

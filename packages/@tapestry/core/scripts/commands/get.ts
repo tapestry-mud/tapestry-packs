@@ -66,7 +66,7 @@ tapestry.commands.register({
             return;
         }
         var tags = tapestry.world.getEntityTags(roomItem.id);
-        if (tags && tags.indexOf('no_get') !== -1) {
+        if (tags && (tags.indexOf('no_get') !== -1 || tags.indexOf('fixture') !== -1)) {
             actor.send("You can't pick that up.\r\n");
             return;
         }

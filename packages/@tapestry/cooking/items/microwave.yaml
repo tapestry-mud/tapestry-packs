@@ -1,7 +1,7 @@
 id: "tapestry-cooking:microwave"
 name: "a humming microwave"
 type: "item"
-tags: [fixture, no_get]
+tags: [fixture]
 keywords: [microwave, oven]
 properties:
   can_cook: true
