@@ -20,3 +20,8 @@ properties:
   description: "A broad-shouldered man hammering at an anvil. His arms are thick with muscle."
   dialogue: "tapestry-example-pack:blacksmith-intro"
 equipment: []
+shop_sells:
+  - "tapestry-example-pack:iron-sword"
+  - "tapestry-example-pack:wooden-shield"
+  - "tapestry-example-pack:rusty-dagger"
+  - "tapestry-example-pack:leather-helm"
