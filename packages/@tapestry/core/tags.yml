@@ -44,6 +44,9 @@ tags:
   alignment_evil:
     description: "Entity's alignment is in the evil range"
     applies_to: [npc, player]
+  no_heal:
+    description: "Prevents healing from spells and potions; suppresses active/incoming healing only (not passive regeneration)"
+    applies_to: [npc, player]
   readable:
     description: "Item can be read to display text content"
     applies_to: [item]

@@ -5,7 +5,8 @@ brief: "Cast a healing spell that restores a small amount of HP."
 body: |
   Cure Light is a healing spell that restores HP to yourself or
   another player. Healing is rolled from a 2d8+5 base and scaled by
-  your proficiency. It cannot heal targets with the no_heal flag.
-  Cast it on yourself in emergencies or support an ally during combat.
+  your proficiency. It cannot heal targets with the no_heal flag
+  (which blocks all healing spells and potions). Cast it on yourself
+  in emergencies or support an ally during combat.
 keywords: [cure_light, cure, heal, hp, spell, combat]
 see_also: [cast, spells, combat, affects]
