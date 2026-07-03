@@ -5,9 +5,6 @@ tags:
   furniture:
     description: "Item provides rest bonus when used"
     applies_to: [item]
-  drink:
-    description: "Item is a drinkable beverage or liquid container"
-    applies_to: [item]
   quest:
     description: "NPC is involved in quest interactions"
     applies_to: [npc]

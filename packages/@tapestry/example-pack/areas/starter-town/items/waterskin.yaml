@@ -1,7 +1,7 @@
 id: "tapestry-example-pack:waterskin"
 name: "a leather waterskin"
 type: "item"
-tags: [drink, fillable]
+tags: [drinkable, fillable]
 keywords: [waterskin, skin, leather]
 properties:
   consume_method: drink
