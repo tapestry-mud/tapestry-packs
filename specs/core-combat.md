@@ -121,9 +121,10 @@ there is no standalone aggro behavior.
 - `entity.vital.depleted` (hp, player only): on player death, creates a tagged
   corpse container with a 600-tick decay timer, silently unequips all gear and
   transfers inventory to the corpse, places the corpse in the death room, restores
-  the player's vitals, teleports them to their recall room (defaulting to
-  `tapestry-core:recall`), sends `<death>`-tagged messages, auto-describes the
-  recall room, and publishes a `player.death` event for pack extensions.
+  the player's vitals, teleports them to their recall room (read from the
+  `recall_room_id` property if set, else `tapestry-core:recall`), sends
+  `<death>`-tagged messages, auto-describes the recall room, and publishes a
+  `player.death` event for pack extensions.
   (packages/@tapestry/core/scripts/combat/output.ts:131-185)
 
 ### Swell combat content (boss slice 1)

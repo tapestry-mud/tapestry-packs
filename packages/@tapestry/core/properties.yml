@@ -20,6 +20,11 @@ properties:
     type: bool
     applies_to: [player]
 
+  recall_room_id:
+    description: "Room ID where the player recalls to on death (defaults to tapestry-core:recall)"
+    type: string
+    applies_to: [player]
+
   # Swell clock dials - declared in core so any pack can build a swell boss on the
   # core-registered telegraph-rung validator and sidestep/brace counters. The seal accepts
   # these on npc entities in core and in any pack that depends on core.
