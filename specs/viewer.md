@@ -32,9 +32,9 @@ rules. (packages/@tapestry/viewer/pack.yaml:15-17)
   (packages/@tapestry/viewer/scripts/commands/tell.ts:7-9;
   packages/@tapestry/viewer/scripts/commands/reply.ts:5-7)
 
-- Before sending, `tell` checks three world-property guards: `notell` on the sender
-  blocks the command with "You cannot send tells right now."; `nochannels` on the sender
-  blocks it with "You cannot use channels right now."; `notell` on the target blocks it
+- Before sending, `tell` checks three world-property guards: `no_tell` on the sender
+  blocks the command with "You cannot send tells right now."; `no_channels` on the sender
+  blocks it with "You cannot use channels right now."; `no_tell` on the target blocks it
   with "[target.name] is not accepting tells right now." All three guard lines go through
   plain `actor.send`, not `sendPrivate`, so spectators can see them -- they are not DM
   content.
@@ -64,8 +64,8 @@ rules. (packages/@tapestry/viewer/pack.yaml:15-17)
   (packages/@tapestry/viewer/scripts/commands/reply.ts:18-36;
   packages/@tapestry/viewer/help/reply.yaml:13-16)
 
-- `reply` checks `notell` on the actor before sending. It does NOT re-check `nochannels`
-  or `notell` on the target at reply time; those checks are only in `tell`.
+- `reply` checks `no_tell` on the actor before sending. It does NOT re-check `no_channels`
+  or `no_tell` on the target at reply time; those checks are only in `tell`.
   (packages/@tapestry/viewer/scripts/commands/reply.ts:38-41)
 
 - The two DM-content writes in `reply` use `sendPrivate` with the same suppression

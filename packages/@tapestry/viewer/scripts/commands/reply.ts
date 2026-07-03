@@ -34,7 +34,7 @@ tapestry.commands.register({
             return;
         }
 
-        if (tapestry.world.getProperty(actor.entityId, 'notell')) {
+        if (tapestry.world.getProperty(actor.entityId, 'no_tell')) {
             actor.send('You cannot send tells right now.\r\n');
             return;
         }

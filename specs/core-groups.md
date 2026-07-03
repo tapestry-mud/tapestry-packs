@@ -205,7 +205,7 @@ not clan management (create/join/leave have no implementation in this file).
 - At send time the command scans all of the actor's tags for the first one that
   starts with `'clan:'` and then broadcasts to all online players who share that
   exact tag. (packages/@tapestry/core/scripts/commands/clan.ts:12-36)
-- The actor must not have the `nochannels` property set.
+- The actor must not have the `no_channels` property set.
   (packages/@tapestry/core/scripts/commands/clan.ts:26-29)
 - Messages are formatted as `<clan>[Clan] Name: "text"</clan>` and also trigger
   a `Comm.Channel` GMCP event with `channel: 'clan'`.

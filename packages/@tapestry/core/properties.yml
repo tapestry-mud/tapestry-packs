@@ -7,15 +7,15 @@ properties:
     description: "Readable text content for items like letters and signs"
     type: string
     applies_to: [item]
-  notell:
+  no_tell:
     description: "Player is silenced from sending/receiving tells"
     type: bool
     applies_to: [player]
-  nochannels:
+  no_channels:
     description: "Player is silenced from all chat channels"
     type: bool
     applies_to: [player]
-  noemote:
+  no_emote:
     description: "Player is silenced from emotes"
     type: bool
     applies_to: [player]

@@ -9,7 +9,7 @@ tapestry.commands.register({
         message: { type: 'text', required: true }
     },
     handler: function(actor, resolved) {
-        if (tapestry.world.getProperty(actor.entityId, 'noemote')) {
+        if (tapestry.world.getProperty(actor.entityId, 'no_emote')) {
             actor.send('You cannot emote right now.\r\n');
             return;
         }

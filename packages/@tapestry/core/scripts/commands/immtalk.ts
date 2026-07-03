@@ -8,7 +8,7 @@ tapestry.commands.register({
         message: { type: 'text', required: true }
     },
     handler: function(actor, resolved) {
-        if (tapestry.world.getProperty(actor.entityId, 'nochannels')) {
+        if (tapestry.world.getProperty(actor.entityId, 'no_channels')) {
             actor.send('You cannot use channels right now.\r\n');
             return;
         }

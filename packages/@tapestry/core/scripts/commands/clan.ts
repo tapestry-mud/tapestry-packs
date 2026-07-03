@@ -23,7 +23,7 @@ tapestry.commands.register({
             return;
         }
 
-        if (tapestry.world.getProperty(actor.entityId, 'nochannels')) {
+        if (tapestry.world.getProperty(actor.entityId, 'no_channels')) {
             actor.send('You cannot use channels right now.\r\n');
             return;
         }

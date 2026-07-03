@@ -15,8 +15,8 @@ player-to-player tells and replies, game-wide gossip, area-scoped yell, and an
 admin-only immortal channel (immtalk). All channels relay a `Comm.Channel` GMCP
 event to relevant recipients, either directly in the command handler or via the
 `communication.message` event listener in `communication-gmcp.js`. Channel
-access is guarded by per-entity mute properties (`nochannels`, `notell`,
-`noemote`). The `say` command is aliased to `'`; `emote` is aliased to `:`;
+access is guarded by per-entity mute properties (`no_channels`, `no_tell`,
+`no_emote`). The `say` command is aliased to `'`; `emote` is aliased to `:`;
 `immtalk` is aliased to `;`.
 
 ## Behavior
@@ -44,7 +44,7 @@ access is guarded by per-entity mute properties (`nochannels`, `notell`,
 
 - `emote` is registered with alias `:`, category `communication`, and roles
   `player` and `mob`. (packages/@tapestry/core/scripts/commands/emote.ts:2-6)
-- The actor is blocked if the entity property `noemote` is truthy; they receive
+- The actor is blocked if the entity property `no_emote` is truthy; they receive
   `You cannot emote right now.` (packages/@tapestry/core/scripts/commands/emote.ts:12-15)
 - Both the actor and all other room occupants see `<Name> <message>` -- no
   quotation marks are added. (packages/@tapestry/core/scripts/commands/emote.ts:17-22)
@@ -62,11 +62,11 @@ access is guarded by per-entity mute properties (`nochannels`, `notell`,
 - `tell` is registered with alias `t`, category `social`, roles `player` only.
   The `target` arg type is `player`, resolving to an online player.
   (packages/@tapestry/core/scripts/commands/tell.ts:2-9)
-- Blocked if the sender has property `notell`; error: `You cannot send tells
+- Blocked if the sender has property `no_tell`; error: `You cannot send tells
   right now.` (packages/@tapestry/core/scripts/commands/tell.ts:15-18)
-- Blocked if the sender has property `nochannels`; error: `You cannot use
+- Blocked if the sender has property `no_channels`; error: `You cannot use
   channels right now.` (packages/@tapestry/core/scripts/commands/tell.ts:20-23)
-- Blocked if the target has property `notell`; error: `<Name> is not accepting
+- Blocked if the target has property `no_tell`; error: `<Name> is not accepting
   tells right now.` (packages/@tapestry/core/scripts/commands/tell.ts:25-28)
 - Sender sees `<tell>You tell <Name>: "<message>"</tell>`; target sees
   `<tell><Name> tells you: "<message>"</tell>`.
@@ -87,19 +87,19 @@ access is guarded by per-entity mute properties (`nochannels`, `notell`,
 - Validates that the stored player ID is still online via
   `tapestry.world.getOnlinePlayers()`. If not found, sends `That player is no
   longer online.` (packages/@tapestry/core/scripts/commands/reply.ts:19-31)
-- Blocked if the sender has `notell`; error: `You cannot send tells right now.`
+- Blocked if the sender has `no_tell`; error: `You cannot send tells right now.`
   (packages/@tapestry/core/scripts/commands/reply.ts:33-36)
 - On success, sends the same tell formatting and GMCP event as `tell`, and
   updates `last_tell_from` / `last_tell_to` on both parties.
   (packages/@tapestry/core/scripts/commands/reply.ts:38-43)
-- Note: `reply` does not check `nochannels` on the sender, unlike `tell`.
+- Note: `reply` does not check `no_channels` on the sender, unlike `tell`.
   (packages/@tapestry/core/scripts/commands/reply.ts:33-36 vs packages/@tapestry/core/scripts/commands/tell.ts:20-23)
 
 ### gossip
 
 - `gossip` is registered with no alias, category `social`, roles `player` and
   `mob`. (packages/@tapestry/core/scripts/commands/gossip.ts:2-5)
-- Blocked if the actor has `nochannels`; error: `You cannot use channels right
+- Blocked if the actor has `no_channels`; error: `You cannot use channels right
   now.` (packages/@tapestry/core/scripts/commands/gossip.ts:12-15)
 - Sender sees `<gossip>You gossip: "<message>"</gossip>`; all other online
   players see `<gossip><Name> gossips: "<message>"</gossip>` via
@@ -127,7 +127,7 @@ access is guarded by per-entity mute properties (`nochannels`, `notell`,
 - A `Comm.Channel` GMCP event with `{ channel: 'yell', sender, text }` (using
   the original, un-uppercased text) is sent to every online player.
   (packages/@tapestry/core/scripts/commands/yell.ts:17-19)
-- `yell` has no `nochannels` gate; no mute property check is performed.
+- `yell` has no `no_channels` gate; no mute property check is performed.
   (packages/@tapestry/core/scripts/commands/yell.ts:1-21)
 
 ### immtalk
@@ -135,7 +135,7 @@ access is guarded by per-entity mute properties (`nochannels`, `notell`,
 - `immtalk` is registered with alias `;`, category `social`, and `admin: true`;
   no explicit `roles` array is declared, so role access is handled by the admin
   flag. (packages/@tapestry/core/scripts/commands/immtalk.ts:2-7)
-- Blocked if the actor has `nochannels`; error: `You cannot use channels right
+- Blocked if the actor has `no_channels`; error: `You cannot use channels right
   now.` (packages/@tapestry/core/scripts/commands/immtalk.ts:11-14)
 - Delivery iterates all online players and sends only to those where
   `tapestry.world.hasRole(target.id, 'admin')` is true. The sender receives the

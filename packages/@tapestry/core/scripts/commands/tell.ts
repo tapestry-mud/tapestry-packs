@@ -12,17 +12,17 @@ tapestry.commands.register({
         var target = resolved.target;
         var message = resolved.message;
 
-        if (tapestry.world.getProperty(actor.entityId, 'notell')) {
+        if (tapestry.world.getProperty(actor.entityId, 'no_tell')) {
             actor.send('You cannot send tells right now.\r\n');
             return;
         }
 
-        if (tapestry.world.getProperty(actor.entityId, 'nochannels')) {
+        if (tapestry.world.getProperty(actor.entityId, 'no_channels')) {
             actor.send('You cannot use channels right now.\r\n');
             return;
         }
 
-        if (tapestry.world.getProperty(target.id, 'notell')) {
+        if (tapestry.world.getProperty(target.id, 'no_tell')) {
             actor.send(target.name + ' is not accepting tells right now.\r\n');
             return;
         }

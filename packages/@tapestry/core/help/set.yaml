@@ -2,12 +2,12 @@ id: "set"
 title: "Set"
 category: "admin"
 role: "admin"
-keywords: [modify, edit, field, property, player, npc, item, noemote, notell, nochannels, hp, mana, admin]
+keywords: [modify, edit, field, property, player, npc, item, no_emote, no_tell, no_channels, hp, mana, admin]
 brief: "Modify player, NPC, or item fields directly."
 syntax:
   - "set [kind] [attr] [target] [value]"
   - "set player hp [player] [value]"
-  - "set player noemote [player] true|false"
+  - "set player no_emote [player] true|false"
 body: |
   Set modifies a specific attribute on a player, NPC, or item. The
   attribute comes BEFORE the target: "set player str Bob 14", not
@@ -20,8 +20,8 @@ body: |
   base you set. "set npc hp" sets an NPC's hp and max hp together.
 
   Mutes and flags: declared properties are settable by name, e.g.
-  "set player notell Bob true", "set player nochannels Bob true",
-  "set player noemote Bob true".
+  "set player no_tell Bob true", "set player no_channels Bob true",
+  "set player no_emote Bob true".
 
   Changes take effect immediately. Use inspect to see current values
   on a target, and restore to refill vitals after changing caps.
