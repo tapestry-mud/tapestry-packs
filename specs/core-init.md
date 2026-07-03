@@ -1,6 +1,6 @@
 ---
 capability: core-init
-last-updated: 2026-06-13
+last-updated: 2026-07-03
 ---
 
 # core-init
@@ -89,11 +89,22 @@ flavor text, and seeds the engine with MOTD data files and a two-room core area
 - Weighted transition tables are defined for every state-to-state pair; for
   example `clear` transitions to itself 70%, cloudy 25%, rain 5%.
   (packages/@tapestry/core/areas/weather_zones.yaml:5)
-- Terrain-specific flavor messages are provided for three terrain types:
-  `forest`, `city`, and `road`. Each terrain covers `start`, optional
-  `ongoing`, and `end` messages for each weather state, plus time-of-day
-  transition messages for `dawn`, `day`, `dusk`, and `night`.
-  (packages/@tapestry/core/areas/weather_zones.yaml:9)
+- Flavor messages are provided for a single key, `forest`, matched biome-first: the
+  engine's `WeatherService` tries the room's biome tag against this map before falling
+  back to the room's `terrain` value, so any room tagged `biome: forest` gets this
+  flavor regardless of its `terrain` property (which, since the terrain closed-set
+  migration, is one of `indoors`, `outdoors`, or `underground` only -- never a place
+  name). The `forest` entry covers `start`, optional `ongoing`, and `end` messages for
+  each weather state, plus time-of-day transition messages for `dawn`, `day`, `dusk`,
+  and `night`. The zone previously also carried `city` and `road` terrain-message
+  entries; those had no biome equivalent, so they moved to room-level
+  `weather_messages`/`time_messages` on the specific rooms that carried those terrain
+  values (`example-pack`'s `town-square`/`example-room` for city flavor,
+  `west-road` for road flavor) rather than staying on the zone or moving to an
+  area-level block, which would shadow the biome lookup for sibling rooms with a
+  different biome in the same area. See world-simulation.md in the tapestry engine repo
+  for the full resolution chain.
+  (packages/@tapestry/core/areas/weather_zones.yaml:9-30)
 
 ### Decay events (decay-events.js)
 

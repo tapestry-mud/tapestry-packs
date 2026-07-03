@@ -9,7 +9,7 @@ biome: forest
 exits:
   north: "tapestry-example-pack:wilderness-path"
 properties:
-  terrain: forest
+  terrain: outdoors
 spawns:
   - mob: "tapestry-example-pack:grizzled-scout"
     count: 1

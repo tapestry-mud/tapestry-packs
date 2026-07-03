@@ -1,6 +1,6 @@
 ---
 capability: example-pack
-last-updated: 2026-06-21
+last-updated: 2026-07-03
 ---
 
 # example-pack
@@ -116,17 +116,22 @@ to NPC entities) -- used to attach dialogue script references to vendor and ques
   (packages/@tapestry/example-pack/areas/starter-town/area.yaml;
   packages/@tapestry/example-pack/areas/example-area/area.yaml)
 
-- The `example-area` contains a single room, `example-room` ("Example Town Square"), which
-  spawns the guide mob (persistent) and fixtures a shiny-coin. It exits north to
-  `tapestry-example-pack:town-square`.
+- The `example-area` contains a single room, `example-room` ("Example Town Square",
+  terrain: outdoors), which spawns the guide mob (persistent) and fixtures a shiny-coin.
+  It exits north to `tapestry-example-pack:town-square`. Carries the same room-level
+  `weather_messages`/`time_messages` city flavor as `town-square` (see below).
   (packages/@tapestry/example-pack/areas/example-area/rooms/example-room.yaml)
 
 ### starter-town Rooms and Spawns
 
-- `town-square` is the hub and recall point (tags: safe, recall_point). It connects north to
-  the inn, south to training-grounds, east to the general-store, west to west-road, and down
-  to mine-entrance. Persistent spawns: town-guard and blacksmith. Fixtures include the
-  fountain, town-sign, brass-ring, travel-ration, and a `@tapestry/cooking` raw-meat item.
+- `town-square` (terrain: outdoors) is the hub and recall point (tags: safe, recall_point).
+  It connects north to the inn, south to training-grounds, east to the general-store, west
+  to west-road, and down to mine-entrance. Persistent spawns: town-guard and blacksmith.
+  Fixtures include the fountain, town-sign, brass-ring, travel-ration, and a
+  `@tapestry/cooking` raw-meat item. Carries room-level `weather_messages`/`time_messages`
+  (city flavor -- previously the core weather zone's `city` terrain-message key, now
+  room-level per the vocabulary-consolidation ruling; see world-simulation.md in the
+  tapestry engine repo).
   (packages/@tapestry/example-pack/areas/starter-town/rooms/town-square.yaml)
 
 - `training-grounds` (terrain: outdoors, south of town-square) spawns 2 goblins, 1
@@ -134,12 +139,18 @@ to NPC entities) -- used to attach dialogue script references to vendor and ques
   iron-sword, leather-helm, wooden-shield.
   (packages/@tapestry/example-pack/areas/starter-town/rooms/training-grounds.yaml)
 
-- `wilderness-path` (terrain: forest) spawns 2 goblins, 1 goblin-chief, and 1 drowsy-wolf.
-  Fixtures: gnarled-staff.
+- `wilderness-path` (terrain: outdoors, biome: forest) spawns 2 goblins, 1 goblin-chief,
+  and 1 drowsy-wolf. Fixtures: gnarled-staff. The `biome: forest` tag (added for the
+  vocabulary-consolidation terrain closed-set migration) makes this room newly eligible
+  for any `@tapestry/tinkers` content that spawns on a `forest` biome tag, a deliberate
+  side effect flagged for playtest, not a bug.
   (packages/@tapestry/example-pack/areas/starter-town/rooms/wilderness-path.yaml)
 
-- `deep-woods` (terrain: forest, biome: forest) spawns 1 grizzled-scout. Fixtures:
+- `deep-woods` (terrain: outdoors, biome: forest) spawns 1 grizzled-scout. Fixtures:
   wolfskin-gloves. This is the room where the onLook/onAttack/onDeath hook demo fires.
+  Forest weather/time flavor now resolves biome-first against `zone.TerrainMessages` in
+  `@tapestry/core`'s `weather_zones.yaml` (see world-simulation.md in the tapestry engine
+  repo), not off the room's `terrain` value.
   (packages/@tapestry/example-pack/areas/starter-town/rooms/deep-woods.yaml)
 
 - The `inn` ("The Wanderer's Rest", tags: safe, no_wander) spawns a persistent old-hermit

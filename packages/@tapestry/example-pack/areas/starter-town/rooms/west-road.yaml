@@ -12,7 +12,27 @@ tags: [entry_point]
 entry_point_description: "The western road out of Starter Town, open in many directions."
 entry_point_direction: east
 properties:
-  terrain: road
+  terrain: outdoors
+weather_messages:
+  clear:
+    start: "The clouds part. The road ahead is bright and open."
+    end: "Clouds drift in, casting moving shadows across the road."
+  cloudy:
+    start: "The sky turns grey. The road stretches ahead under a heavy ceiling of cloud."
+    end: "The cloud cover starts to thin."
+  rain:
+    start: "Rain begins to fall, darkening the road underfoot."
+    ongoing: "A steady rain falls across the open road."
+    end: "The rain stops. The road steams faintly in the returning warmth."
+  storm:
+    start: "Lightning splits the sky. The storm breaks over the open road."
+    ongoing: "Wind-driven rain lashes the road. Thunder rolls continuously."
+    end: "The storm moves on, leaving the road battered and wet."
+time_messages:
+  dawn: "The horizon brightens ahead of you. A new day begins."
+  day: "The sun beats down on the open road."
+  dusk: "The sun sinks low, painting the sky in orange and red."
+  night: "Stars emerge overhead. The road stretches pale in the moonlight."
 spawns:
   - mob: "tapestry-example-pack:goblin"
     count: 1

@@ -14,7 +14,27 @@ exits:
   down: "tapestry-example-pack:mine-entrance"
 tags: [safe, recall_point]
 properties:
-  terrain: city
+  terrain: outdoors
+weather_messages:
+  clear:
+    start: "The clouds break. Sunlight washes over the streets."
+    end: "Clouds gather, dimming the sunlight."
+  cloudy:
+    start: "Grey clouds settle over the city, muting the light."
+    end: "The overcast begins to thin. A little more light reaches the streets."
+  rain:
+    start: "Rain begins to fall, darkening the cobblestones."
+    ongoing: "Rain drums steadily on rooftops and awnings."
+    end: "The rain lets up. Puddles dot the streets."
+  storm:
+    start: "A crack of thunder shakes the city. Rain hammers the cobblestones."
+    ongoing: "The storm rages over the city. Lightning flickers between the buildings."
+    end: "The storm breaks. The streets shine wet in the returning light."
+time_messages:
+  dawn: "The first light of morning touches the rooftops. Shutters begin to open."
+  day: "The sun climbs high. The streets bustle with activity."
+  dusk: "Lanterns flicker to life along the streets as daylight fades."
+  night: "The city quiets under a dark sky. Lamplight pools on empty cobblestones."
 spawns:
   - mob: "tapestry-example-pack:town-guard"
     count: 1
