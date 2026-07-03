@@ -17,7 +17,7 @@ export interface MobType {
     level: number;
     hp_formula: string;
     damage: string;
-    flee_threshold: number;
+    wimpy_pct: number;
     name: string;
     desc: string;
 }

@@ -26,7 +26,7 @@ properties:
   wander_interval: 45
   wander_chance: 0.4
   wander_boundary: "area"
-  flee_threshold: 0.2
+  wimpy_pct: 20
   corpse_decay: 300
   description: "A creature lurks here."
   ac:

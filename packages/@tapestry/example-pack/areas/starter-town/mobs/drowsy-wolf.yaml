@@ -29,7 +29,7 @@ properties:
   idle_chance: 0.5
   idle_interval: 12
   regen_hp: 1
-  flee_threshold: 0.15
+  wimpy_pct: 15
   corpse_decay: 180
   description: "A lean grey wolf curled nose-to-tail beside the path, its sides rising and falling in slow, even breaths. It is fast asleep."
   ac:

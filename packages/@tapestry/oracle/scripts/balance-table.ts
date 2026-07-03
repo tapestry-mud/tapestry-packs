@@ -43,8 +43,8 @@ export function statsFor(kind: string, level: number, rng: () => number): Record
         const a = data.mob.anchors;
         const count = interpolateNumeric(a, data.mob.hp_count, L);
         const dmgBand = data.mob.damage[nearestAnchor(a, L)];
-        const flee = interpolateNumeric(a, data.mob.flee_threshold.map((f: number) => Math.round(f * 100)), L) / 100;
-        return { hp: count + "d" + data.mob.hp_die, damage: weightedPick(dmgBand, rng), flee_threshold: flee };
+        const wimpyPct = interpolateNumeric(a, data.mob.wimpy_pct, L);
+        return { hp: count + "d" + data.mob.hp_die, damage: weightedPick(dmgBand, rng), wimpy_pct: wimpyPct };
     }
     if (kind === "weapon") {
         const band = data.weapon.damage[nearestAnchor(data.weapon.anchors, L)];

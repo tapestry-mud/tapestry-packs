@@ -55,7 +55,7 @@ there is no standalone aggro behavior.
 
 - Registered as command `wimpy` with no required arguments.
   (packages/@tapestry/core/scripts/combat/commands.ts:48-71)
-- Invoked with no arguments, reports the current `wimpy_threshold` property
+- Invoked with no arguments, reports the current `wimpy_pct` property
   (defaults to 0 if unset). (packages/@tapestry/core/scripts/combat/commands.ts:52-55)
 - Accepts an integer percentage value in the range 0-50 inclusive; values outside
   this range or non-numeric input are rejected with "Wimpy must be between 0 and 50."
@@ -64,10 +64,12 @@ there is no standalone aggro behavior.
   any non-zero value sets the threshold and confirms the percentage.
   (packages/@tapestry/core/scripts/combat/commands.ts:64-69)
 - Threshold is persisted via `tapestry.world.setProperty` under the key
-  `wimpy_threshold`. (packages/@tapestry/core/scripts/combat/commands.ts:64)
-- NOTE: the help file (packages/@tapestry/core/help/wimpy.yaml) describes the
-  argument as "an HP value, not a percentage," but the implementation stores and
-  validates it as a percentage (0-50). The help text appears to be inaccurate.
+  `wimpy_pct`. (packages/@tapestry/core/scripts/combat/commands.ts:64)
+- The engine reads this property via `CombatManager.ShouldFlee`, the single flee
+  predicate shared by the player wimpy pulse phase and mob AI auto-flee -- see
+  the tapestry engine repo's combat-resolution.md. The legacy `wimpy_threshold`
+  key is retired; saves carrying it are migrated to `wimpy_pct` on load.
+  (packages/@tapestry/core/help/wimpy.yaml)
 
 ### consider command
 

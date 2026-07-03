@@ -48,7 +48,7 @@ tapestry.commands.register({
     name: "wimpy",
     handler: function(player, args) {
         if (!args || args.length === 0) {
-            var current = tapestry.world.getProperty(player.entityId, "wimpy_threshold") || 0;
+            var current = tapestry.world.getProperty(player.entityId, "wimpy_pct") || 0;
             player.send("Your wimpy is set to " + current + "%.\r\n");
             return;
         }
@@ -59,7 +59,7 @@ tapestry.commands.register({
             return;
         }
 
-        tapestry.world.setProperty(player.entityId, "wimpy_threshold", value);
+        tapestry.world.setProperty(player.entityId, "wimpy_pct", value);
         if (value === 0) {
             player.send("Wimpy disabled. You will fight to the death.\r\n");
         } else {

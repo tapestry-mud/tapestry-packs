@@ -10,7 +10,7 @@ mob:
     20: [{ w: 60, value: "5d8" }, { w: 40, value: "4d10" }]
     40: [{ w: 60, value: "8d10" }, { w: 40, value: "6d12" }]
     60: [{ w: 60, value: "12d10" }, { w: 40, value: "10d12" }]
-  flee_threshold: [0.20, 0.20, 0.18, 0.15, 0.12]
+  wimpy_pct: [20, 20, 18, 15, 12]
 weapon:
   anchors: [1, 10, 20, 40, 60]
   damage:
