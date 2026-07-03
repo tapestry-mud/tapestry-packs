@@ -1,8 +1,4 @@
 properties:
-  wimpy_pct:
-    description: "Wimpy threshold as a percentage (0-100)"
-    type: int
-    applies_to: [player, npc]
   xp_value:
     description: "Experience points awarded when this mob is defeated"
     type: int
