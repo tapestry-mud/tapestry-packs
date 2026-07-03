@@ -21,7 +21,7 @@ shop commands) or "player" and "mob" (open/close).
 ### Shop -- Shopkeeper Identity
 
 - An NPC is recognized as a shopkeeper by carrying the `shop` tag. The tag description
-  is "NPC operates as a vendor with shop.sells inventory".
+  is "NPC operates as a vendor with shop_sells inventory".
   (packages/@tapestry/core/tags.yml:50-52)
 
 - A shopkeeper's stock is defined via the `shop_sells` property on the NPC template, as
@@ -83,7 +83,7 @@ shop commands) or "player" and "mob" (open/close).
   (packages/@tapestry/core/scripts/commands/shop.ts:133-142)
 
 - UNVERIFIED: buy prices are computed as the item's base value multiplied by a
-  per-shopkeeper `buy_markup` (default 1.2x). The fixture comments document this
+  per-shopkeeper `shop_buy_modifier` (default 1.2x). The fixture comments document this
   relationship but the field is not confirmed in engine source within this repo.
   (packages/@tapestry/example-pack/tests/fixtures/shop-test-fixtures.yaml:5-15)
 
@@ -113,7 +113,7 @@ shop commands) or "player" and "mob" (open/close).
   (packages/@tapestry/core/scripts/commands/shop.ts:168-177)
 
 - UNVERIFIED: sell prices are computed as the item's base value multiplied by a
-  per-shopkeeper `sell_discount` (default 0.5x). The fixture comments document this
+  per-shopkeeper `shop_sell_modifier` (default 0.5x). The fixture comments document this
   relationship but the field is not confirmed in engine source within this repo.
   (packages/@tapestry/example-pack/tests/fixtures/shop-test-fixtures.yaml:5-19)
 
@@ -201,4 +201,8 @@ shop commands) or "player" and "mob" (open/close).
 
 ## Change Log
 
-- None on record.
+- 2026-07-03: Vocabulary consolidation (Slice 3, Task 3.2). Fixed the `shop` tag
+  description in `tags.yml` to say `shop_sells` (was stale `shop.sells`, a retired
+  dotted key). The engine's per-entity shop markup/discount override keys renamed
+  from `shop.buy_markup` / `shop.sell_discount` to `shop_buy_modifier` /
+  `shop_sell_modifier`; updated the UNVERIFIED buy/sell price notes below to match.

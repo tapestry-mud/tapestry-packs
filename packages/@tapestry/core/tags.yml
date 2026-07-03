@@ -48,7 +48,7 @@ tags:
     description: "Exempt from HP/resource/movement regeneration"
     applies_to: [mob, player]
   shop:
-    description: "NPC operates as a vendor with shop.sells inventory"
+    description: "NPC operates as a vendor with shop_sells inventory"
     applies_to: [npc]
   skill_trainer:
     description: "NPC can teach abilities from TrainerConfig"
