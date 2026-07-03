@@ -110,8 +110,8 @@ to NPC entities) -- used to attach dialogue script references to vendor and ques
 
 ### Areas
 
-- Two areas ship: `starter-town` (level range 1-5, flags: city, safe_recall) and
-  `example-area` (level range 1-5, flag: safe_recall, no city flag). Both use a
+- Two areas ship: `starter-town` (level range 1-5, flags: city) and
+  `example-area` (level range 1-5, no flags). Both use a
   1800-second reset interval and temperate weather zone.
   (packages/@tapestry/example-pack/areas/starter-town/area.yaml;
   packages/@tapestry/example-pack/areas/example-area/area.yaml)
@@ -197,7 +197,7 @@ to NPC entities) -- used to attach dialogue script references to vendor and ques
   wandering and idle commands; combat auto-wakes it. This demonstrates the posture gate.
   (packages/@tapestry/example-pack/areas/starter-town/mobs/drowsy-wolf.yaml:17-23)
 
-- The blacksmith (tags: vendor, quest, no_kill) references a `dialogue` property
+- The blacksmith (tags: shop, quest, no_kill) references a `dialogue` property
   (`tapestry-example-pack:blacksmith-intro`), exercising the custom pack property registered
   in `properties.yml`. (packages/@tapestry/example-pack/areas/starter-town/mobs/blacksmith.yaml)
 
