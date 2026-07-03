@@ -1,7 +1,7 @@
 id: "tapestry-example-pack:blacksmith"
 name: "the village blacksmith"
 type: "npc"
-tags: [vendor, quest, no_kill]
+tags: [shop, quest, no_kill]
 base_disposition: friendly
 keywords: [blacksmith, smith, vendor]
 behavior: stationary
