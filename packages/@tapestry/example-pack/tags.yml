@@ -11,6 +11,3 @@ tags:
   lair:
     description: "Boss lair room with special spawn rules"
     applies_to: [room]
-  safe_recall:
-    description: "Room is a safe recall destination with no combat"
-    applies_to: [room]

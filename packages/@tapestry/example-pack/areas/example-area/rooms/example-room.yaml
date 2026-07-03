@@ -9,7 +9,7 @@ exits:
   north: "tapestry-example-pack:town-square"
 properties:
   terrain: outdoors
-tags: [safe, safe_recall]
+tags: [safe, recall_point]
 weather_messages:
   clear:
     start: "The clouds break. Sunlight washes over the streets."
