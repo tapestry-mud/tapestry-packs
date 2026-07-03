@@ -1,6 +1,6 @@
 ---
 capability: core-combat
-last-updated: 2026-06-21
+last-updated: 2026-07-03
 ---
 
 # core-combat
@@ -166,4 +166,5 @@ any pack can build a swell boss as data.
 
 ## Change Log
 
+- 2026-07-03 [vocabulary-consolidation](changes/2026-07-03-vocabulary-consolidation.md) - mob flee content on wimpy_pct (int 0-100); flee_threshold doubles converted x100; wimpy command and help read percentage
 - 2026-06-21 [swell-combat-graduation](changes/2026-06-21-swell-combat-graduation.md) - the telegraph-rung validator, sidestep/brace counters, the tune dial editor, and the swell_* dial declarations graduated into core from example-pack

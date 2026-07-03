@@ -173,4 +173,5 @@ flavor text, and seeds the engine with MOTD data files and a two-room core area
 
 ## Change Log
 
+- 2026-07-03 [vocabulary-consolidation](changes/2026-07-03-vocabulary-consolidation.md) - weather-zone forest flavor matched biome-first; terrain closed to indoors/outdoors/underground
 - None on record.

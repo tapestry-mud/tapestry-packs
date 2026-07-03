@@ -1,6 +1,6 @@
 ---
 capability: core-progression
-last-updated: 2026-06-20
+last-updated: 2026-07-03
 ---
 
 # core-progression
@@ -222,4 +222,5 @@ the track's `on_level_up` callback.
 
 ## Change Log
 
+- 2026-07-03 [vocabulary-consolidation](changes/2026-07-03-vocabulary-consolidation.md) - victim mob level read from the level.combat map instead of the scalar mob_level
 - 2026-06-20 [pack-script-esm](changes/2026-06-20-pack-script-esm.md)

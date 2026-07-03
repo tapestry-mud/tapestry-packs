@@ -1,6 +1,6 @@
 ---
 capability: core-economy
-last-updated: 2026-06-13
+last-updated: 2026-07-03
 ---
 
 # core-economy
@@ -201,6 +201,7 @@ shop commands) or "player" and "mob" (open/close).
 
 ## Change Log
 
+- 2026-07-03 [vocabulary-consolidation](changes/2026-07-03-vocabulary-consolidation.md) - flat shop_sells plus shop_buy_modifier/shop_sell_modifier replace the dotted shop keys; the value declaration is dropped (engine owns it)
 - 2026-07-03: Vocabulary consolidation (Slice 3, Task 3.2). Fixed the `shop` tag
   description in `tags.yml` to say `shop_sells` (was stale `shop.sells`, a retired
   dotted key). The engine's per-entity shop markup/discount override keys renamed

@@ -1,6 +1,6 @@
 ---
 capability: cooking
-last-updated: 2026-06-20
+last-updated: 2026-07-03
 ---
 
 # Cooking
@@ -154,4 +154,5 @@ with `@tapestry/survival ^0.1.1`, declared as an `optional_dependency`.
 
 ## Change Log
 
+- 2026-07-03 [vocabulary-consolidation](changes/2026-07-03-vocabulary-consolidation.md) - campfire and microwave drop the redundant no_get tag now that fixture implies it
 - 2026-06-20 [pack-script-esm](changes/2026-06-20-pack-script-esm.md)

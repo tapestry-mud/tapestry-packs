@@ -1,6 +1,6 @@
 ---
 capability: viewer
-last-updated: 2026-06-13
+last-updated: 2026-07-03
 ---
 
 # viewer
@@ -103,4 +103,5 @@ rules. (packages/@tapestry/viewer/pack.yaml:15-17)
 
 ## Change Log
 
+- 2026-07-03 [vocabulary-consolidation](changes/2026-07-03-vocabulary-consolidation.md) - tell and reply read the renamed no_tell key
 - None on record.

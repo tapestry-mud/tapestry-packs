@@ -234,4 +234,5 @@ to NPC entities) -- used to attach dialogue script references to vendor and ques
 
 ## Change Log
 
+- 2026-07-03 [vocabulary-consolidation](changes/2026-07-03-vocabulary-consolidation.md) - terrain closed-set plus biome, recall_room_id, safe plus recall_point compose, blacksmith vendor tag becomes a shop with a smithing inventory
 - 2026-06-21 [swell-combat-graduation](changes/2026-06-21-swell-combat-graduation.md) - dropped the local swell validator/counters/tune/dials in favor of the core-provided versions; the swell-warden now builds on @tapestry/core 0.1.21

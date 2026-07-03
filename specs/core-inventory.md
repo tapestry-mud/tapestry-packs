@@ -1,6 +1,6 @@
 ---
 capability: core-inventory
-last-updated: 2026-06-13
+last-updated: 2026-07-03
 ---
 
 # core-inventory
@@ -214,4 +214,5 @@ access to loot on player corpses. All commands live in
 
 ## Change Log
 
+- 2026-07-03 [vocabulary-consolidation](changes/2026-07-03-vocabulary-consolidation.md) - fill sources carry liquid on fill_type; fill_source property removed (tag stays); drink retired for drinkable; redundant no_get dropped where fixture implies it
 - None on record.

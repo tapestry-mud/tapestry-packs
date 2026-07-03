@@ -1,6 +1,6 @@
 ---
 capability: core-mobs
-last-updated: 2026-06-13
+last-updated: 2026-07-03
 ---
 
 # core-mobs
@@ -190,4 +190,5 @@ movement behavior and still be hostile.
 
 ## Change Log
 
+- 2026-07-03 [vocabulary-consolidation](changes/2026-07-03-vocabulary-consolidation.md) - mob strength read from level.combat; mob_level survives as authoring key and corpse metadata; flee on wimpy_pct
 - None on record.

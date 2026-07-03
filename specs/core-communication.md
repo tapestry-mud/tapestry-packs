@@ -1,6 +1,6 @@
 ---
 capability: core-communication
-last-updated: 2026-06-13
+last-updated: 2026-07-03
 ---
 
 # core-communication
@@ -171,4 +171,5 @@ access is guarded by per-entity mute properties (`no_channels`, `no_tell`,
 
 ## Change Log
 
+- 2026-07-03 [vocabulary-consolidation](changes/2026-07-03-vocabulary-consolidation.md) - ROM negation trio renamed to no_tell/no_channels/no_emote across declarations, readers, and help
 - None on record.
