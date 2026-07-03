@@ -26,9 +26,6 @@ tags:
   emits_light:
     description: "Emits light, improving visibility in dark rooms"
     applies_to: [item]
-  persistent:
-    description: "Respawns immediately on death or removal"
-    applies_to: [npc]
   shop:
     description: "NPC operates as a vendor with shop_sells inventory"
     applies_to: [npc]

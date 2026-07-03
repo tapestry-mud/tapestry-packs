@@ -22,7 +22,7 @@ shop commands) or "player" and "mob" (open/close).
 
 - An NPC is recognized as a shopkeeper by carrying the `shop` tag. The tag description
   is "NPC operates as a vendor with shop_sells inventory".
-  (packages/@tapestry/core/tags.yml:50-52)
+  (packages/@tapestry/core/tags.yml:29-31)
 
 - A shopkeeper's stock is defined via the `shop_sells` property on the NPC template, as
   a list of item template IDs.
@@ -105,7 +105,7 @@ shop commands) or "player" and "mob" (open/close).
 
 - Items tagged `no_sell` cannot be sold; the tag description is "Cannot be sold to
   shops".
-  (packages/@tapestry/core/tags.yml:23-25)
+  (packages/@tapestry/core/tags.yml:17-19)
 
 - On success, the player receives "You sell <item> for <amount> gold." A GMCP
   `Response.Shop.Sell` payload is sent with status, message, item name, earnings, and
