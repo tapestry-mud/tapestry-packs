@@ -115,7 +115,12 @@ movement behavior and still be hostile.
 - A corpse container is created with the name `"the corpse of <mobName>"` and
   tagged `corpse`, `container`, and `no_get`. The corpse receives `corpse_decay`
   (default 300 seconds), `corpse_created_tick`, `template_id`, and `mob_level`
-  properties. (packages/@tapestry/core/scripts/mobs/death.ts:20-27)
+  properties. `mob_level` on the corpse is read from the dying mob's
+  `level.combat` property (defaulting to 1 if the map or the `combat` key is
+  absent) and stamped onto the corpse as a scalar -- a live mob no longer
+  carries a scalar `mob_level` property, but the corpse deliberately keeps one
+  as stable post-death metadata for `sac` and `admin-inspect` to read after the
+  mob entity is gone. (packages/@tapestry/core/scripts/mobs/death.ts:20-28)
 
 - All inventory and equipped items are transferred from the mob to the corpse
   before the mob entity is removed from the world.

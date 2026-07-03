@@ -25,7 +25,8 @@ tapestry.events.on("entity.vital.depleted", function(event) {
     tapestry.world.setProperty(corpseId, "corpse_decay", corpseDecay);
     tapestry.world.setProperty(corpseId, "corpse_created_tick", tapestry.world.getCurrentTick());
     tapestry.world.setProperty(corpseId, "template_id", templateId);
-    tapestry.world.setProperty(corpseId, "mob_level", entity.properties ? (entity.properties.mob_level || 1) : 1);
+    var deadLevel = (entity.properties && entity.properties.level && entity.properties.level.combat) || 1;
+    tapestry.world.setProperty(corpseId, "mob_level", deadLevel);
 
     // Transfer equipment and inventory to corpse
     tapestry.inventory.transferAll(event.sourceEntityId, corpseId);

@@ -77,8 +77,11 @@ there is no standalone aggro behavior.
   (packages/@tapestry/core/scripts/combat/commands.ts:74-79)
 - Computes `delta = playerLevel - targetLevel` where player level is the
   `combat` skill via `tapestry.progression.getLevel` (defaults to 1) and target
-  level is the `mob_level` property (defaults to 1).
-  (packages/@tapestry/core/scripts/combat/commands.ts:83-85)
+  level is read directly off the target's `level` map property (`level.combat`,
+  defaults to 1 if the map or the `combat` key is absent). This is a pure read via
+  `tapestry.world.getProperty` -- it does not go through `tapestry.progression.getLevel`,
+  which would initialize a `level`/`xp` track as a side effect on a level-less NPC.
+  (packages/@tapestry/core/scripts/combat/commands.ts:79-82)
 - Five message buckets based on delta:
   - delta >= 5: "You could squash [name] like a bug."
     (packages/@tapestry/core/scripts/combat/commands.ts:88-89)

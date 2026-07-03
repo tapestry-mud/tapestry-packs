@@ -51,9 +51,10 @@ the track's `on_level_up` callback.
   (`victim.type === "player"` guard). (packages/@tapestry/core/scripts/progression/progression.ts:73-83)
 
 - Base XP for a kill uses the mob's `xp_value` property if set; otherwise falls back to
-  `Math.floor(30 + (mobLevel * mobLevel * 2))` where `mobLevel` comes from the mob's
-  `mob_level` property (defaulting to 1 if absent).
-  (packages/@tapestry/core/scripts/progression/progression.ts:66-69; packages/@tapestry/core/scripts/progression/progression.ts:86-87)
+  `Math.floor(30 + (mobLevel * mobLevel * 2))` where `mobLevel` is read directly off the
+  victim's `level` map property (`level.combat`, defaulting to 1 if the map or the
+  `combat` key is absent). A live mob no longer carries a scalar `mob_level` property.
+  (packages/@tapestry/core/scripts/progression/progression.ts:66-69; packages/@tapestry/core/scripts/progression/progression.ts:87-88)
 
 - All player entities actively in combat with the killed mob are collected via
   `tapestry.combat.getCombatants(victimId)`; if none are found the killer is used as the
