@@ -1,6 +1,19 @@
+# Place-word pool for the test-kitchen set. 12 entries: room names are the
+# qualifier x place product, so the pool needs enough words that a school-sized
+# area does not repeat names wall to wall (pools over 4 also enable the
+# neighbor-exclusion shift).
 oracle_table:
   kind: places
   entries:
     - { w: 10, id: hearth, name: hearth, desc: "" }
     - { w: 10, id: pantry, name: pantry, desc: "" }
     - { w: 10, id: cold-room, name: cold room, desc: "" }
+    - { w: 10, id: larder, name: larder, desc: "" }
+    - { w: 10, id: scullery, name: scullery, desc: "" }
+    - { w: 10, id: storeroom, name: storeroom, desc: "" }
+    - { w: 10, id: cellar, name: cellar, desc: "" }
+    - { w: 10, id: prep-hall, name: prep hall, desc: "" }
+    - { w: 10, id: spice-row, name: spice row, desc: "" }
+    - { w: 10, id: gallery, name: gallery, desc: "" }
+    - { w: 10, id: landing, name: landing, desc: "" }
+    - { w: 10, id: passage, name: passage, desc: "" }

@@ -51,3 +51,30 @@ test("descentDepth measures downward distance from entry", () => {
 test("formatCoord composes a signed triple", () => {
     assert.equal(formatCoord(-1, 0, -2), "-1,0,-2");
 });
+
+// ---------------------------------------------------------------------------
+// v3: parseOracleRoomId (the non-greedy split that fixes negative-x rooms)
+// ---------------------------------------------------------------------------
+import { parseOracleRoomId } from "../dist/scripts/coords.js";
+
+test("parseOracleRoomId: REGRESSION - negative leading coordinate splits correctly", () => {
+    // Greedy matching split "...bdb29--1_-1_0" as areaId "...bdb29-" + path "1,-1,0",
+    // which sent every post-reboot lookup for negative-x rooms to a nonexistent area.
+    assert.deepEqual(parseOracleRoomId("scratch-oracle-run:scratch-oracle-run-bdb29--1_-1_0"), {
+        namespace: "scratch-oracle-run",
+        areaId: "scratch-oracle-run-bdb29",
+        path: "-1,-1,0",
+    });
+    assert.deepEqual(parseOracleRoomId("scratch-oracle-run:scratch-oracle-run-bdb29--2_-3_-1"), {
+        namespace: "scratch-oracle-run",
+        areaId: "scratch-oracle-run-bdb29",
+        path: "-2,-3,-1",
+    });
+});
+
+test("parseOracleRoomId: entry, positive coords, junk", () => {
+    assert.deepEqual(parseOracleRoomId("ns:area-abc-entry"), { namespace: "ns", areaId: "area-abc", path: "0,0,0" });
+    assert.deepEqual(parseOracleRoomId("ns:area-abc-2_3_0"), { namespace: "ns", areaId: "area-abc", path: "2,3,0" });
+    assert.equal(parseOracleRoomId("no-colon-here"), null);
+    assert.equal(parseOracleRoomId("ns:not-a-grid-room"), null);
+});

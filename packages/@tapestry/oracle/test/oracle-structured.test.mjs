@@ -187,3 +187,17 @@ test("v3 schemas are strict root objects", () => {
     assert.ok(Array.isArray(j.required) && j.required.length > 0);
   }
 });
+
+test("mapSector sentence-cases pool lines and lints direction talk", () => {
+  const raw = JSON.stringify({
+    qualifier: "twisted",
+    openers: ["cracked stage curtains", "Mirrored maze shadows stretch far and wide in north"],
+    details: ["a discarded rubber chicken"],
+    sensory: [], hooks: [],
+    landmark_lines: ["the big top is visible to the {dir}"],
+  });
+  const s = mapSector(raw);
+  assert.deepEqual(s.openers, ["Cracked stage curtains."]); // compass line dropped
+  assert.deepEqual(s.details, ["A discarded rubber chicken."]);
+  assert.deepEqual(s.landmarkLines, ["The big top is visible to the {dir}."]);
+});

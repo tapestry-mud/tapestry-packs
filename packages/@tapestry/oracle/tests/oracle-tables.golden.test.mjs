@@ -90,3 +90,17 @@ test("normalizeTables keeps a filled sector but replaces an empty one", () => {
     assert.deepEqual(sectors[0].openers, ["Real LLM line."]);
     assert.ok(sectors[1].openers.length > 0, "hole synthesized");
 });
+
+test("REGRESSION: normalizeTables never mutates the baked cache across runs", () => {
+    // First run: school-sized k=2 truncates its own landmark view.
+    const firstRun = normalizeTables(bakedTables("test-kitchen"), 2, 424242);
+    assert.equal(parseLandmarksTable(kindOf(firstRun, "landmarks").entries).length, 2);
+    // Second run in the same session: the full 8-record deck must still be there.
+    const second = bakedTables("test-kitchen");
+    const deck = parseLandmarksTable(kindOf(second, "landmarks").entries);
+    assert.equal(deck.length, 8, "baked landmark deck was mutated by a prior normalize");
+    const normalized = normalizeTables(second, 5, 777001);
+    const names = parseLandmarksTable(kindOf(normalized, "landmarks").entries).map((l) => l.name);
+    assert.deepEqual(names, ["great hearth", "butcher block", "walk-in freezer", "spice vault", "scullery falls"],
+        "k=5 run must draw all five from the authored deck, not the fallback");
+});

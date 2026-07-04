@@ -269,12 +269,23 @@ function fillSectors(
 // ---------------------------------------------------------------------------
 
 export function normalizeTables(tables: OracleTableData[], k: number, areaSeed: number): OracleTableData[] {
+    // COPY-ON-WRITE: never mutate an input table object - the caller may hand
+    // us tables aliased to a long-lived cache.
     const out = tables.slice();
     const byKind = function (kind: string): OracleTableData | null {
         for (let i = 0; i < out.length; i++) {
             if (out[i].kind === kind) { return out[i]; }
         }
         return null;
+    };
+    const replaceKind = function (kind: string, entries: OracleEntry[]): void {
+        for (let i = 0; i < out.length; i++) {
+            if (out[i].kind === kind) {
+                out[i] = { kind, entries };
+                return;
+            }
+        }
+        out.push({ kind, entries });
     };
 
     // 1. prose first (sector synthesis reads it).
@@ -318,12 +329,7 @@ export function normalizeTables(tables: OracleTableData[], k: number, areaSeed: 
         used[fill.name.toLowerCase()] = true;
         finalLm[i] = fill;
     }
-    const lmEntries = encodeLandmarksTable(finalLm);
-    if (lmTable) {
-        lmTable.entries = lmEntries;
-    } else {
-        out.push({ kind: "landmarks", entries: lmEntries });
-    }
+    replaceKind("landmarks", encodeLandmarksTable(finalLm) as OracleEntry[]);
 
     // 3. sectors: exactly k pool-sets; empty ones synthesize from prose.
     const secTable = byKind("sectors");
@@ -340,12 +346,7 @@ export function normalizeTables(tables: OracleTableData[], k: number, areaSeed: 
             finalSec.push(s);
         }
     }
-    const secEntries = encodeSectorsTable(finalSec);
-    if (secTable) {
-        secTable.entries = secEntries;
-    } else {
-        out.push({ kind: "sectors", entries: secEntries });
-    }
+    replaceKind("sectors", encodeSectorsTable(finalSec) as OracleEntry[]);
 
     // 4. scars: always present.
     if (!byKind("scars")) {
@@ -410,7 +411,16 @@ const BAKED: Record<string, OracleTableData[]> = ((): Record<string, OracleTable
 })();
 
 export function bakedTables(setId: string): OracleTableData[] {
-    const t = (BAKED[setId] || BAKED["test-kitchen"] || []).slice();
+    // Per-call copies down to the entries ARRAY (entry objects are never
+    // mutated downstream): callers like normalizeTables must never be able to
+    // reach the module-level cache through the returned tables. A shared table
+    // object bit once - the first run's k=2 normalization truncated the cached
+    // landmark deck for every later run in the session.
+    const src = BAKED[setId] || BAKED["test-kitchen"] || [];
+    const t: OracleTableData[] = [];
+    for (let i = 0; i < src.length; i++) {
+        t.push({ kind: src[i].kind, entries: src[i].entries.slice() });
+    }
     // Ensure a scars table so consequences are visible on LLM-off areas too (an authored
     // six-axis theme like underdeep uses its own state_overrides and ignores this).
     let hasScars = false;

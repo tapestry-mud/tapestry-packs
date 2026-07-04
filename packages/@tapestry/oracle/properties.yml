@@ -4,9 +4,3 @@ properties:
       The per-player seed for this player's current solo run. Persists across logout/login.
     type: int
     applies_to: [player]
-  oracle_populated:
-    description: >
-      Set once a room's first-visit population (ambient spawns + boss clock advance) has
-      run. Persists in the room side-car so a reboot never double-populates a room.
-    type: bool
-    applies_to: [room]

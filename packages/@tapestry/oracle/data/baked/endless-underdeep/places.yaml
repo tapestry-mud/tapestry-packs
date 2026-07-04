@@ -1,3 +1,5 @@
+# Place-word pool for the endless-underdeep set. 12 entries (see test-kitchen
+# note: name variety needs a pool bigger than the exclusion threshold).
 oracle_table:
   kind: places
   entries:
@@ -7,3 +9,9 @@ oracle_table:
     - { w: 10, id: chasm, name: chasm, desc: "" }
     - { w: 10, id: cavern, name: cavern, desc: "" }
     - { w: 10, id: crawlway, name: crawlway, desc: "" }
+    - { w: 10, id: grotto, name: grotto, desc: "" }
+    - { w: 10, id: vault, name: vault, desc: "" }
+    - { w: 10, id: undercroft, name: undercroft, desc: "" }
+    - { w: 10, id: fissure, name: fissure, desc: "" }
+    - { w: 10, id: ledge, name: ledge, desc: "" }
+    - { w: 10, id: sump, name: sump, desc: "" }

@@ -8,8 +8,16 @@
 // the envelope closes the map by construction.
 //
 // Per-room laziness was a vestige of hiding per-room LLM latency; the P-E
-// rework made materialization pure math, so 40-150 createRoom calls of pure
-// composition run sub-second at creation. Spawns stay lazy (population.ts).
+// rework made materialization pure math. Spawns stay lazy (population.ts).
+//
+// CHUNKED ACROSS TICKS: the engine caps every top-level Jint entry at 5s wall
+// clock (JintRuntime TimeoutInterval) and each createRoom/setRoomExit writes a
+// side-car synchronously - a 70-room area is ~500 file writes, which can blow
+// the cap inside one call (the constraint interrupt surfaces as bogus
+// ReferenceErrors mid-function). The mint therefore runs CHUNK_ROOMS per
+// engine tick via tapestry.schedule: still whole-area at creation, just
+// spread over ~1-2s that the flavor-wait loop already covers. The completion
+// callback fires when the last exit is wired.
 //
 // Prose assembly per composed room: sector-pool cadence composition + the
 // appended landmark direction line (the mint-time twin of the scar append
@@ -40,13 +48,17 @@ const EMPTY_POOLS: SectorPools = {
     qualifier: "", openers: [], details: [], sensory: [], hooks: [], landmarkLines: [],
 };
 
+/** Rooms minted (pass 1) or exit-wired (pass 2) per engine tick. Sized so each
+ *  chunk's synchronous side-car writes stay far under the 5s Jint entry cap. */
+const CHUNK_ROOMS = 12;
+
 /** Room id for a grid path: the entry cell keeps the historical "-entry" suffix. */
 export function roomIdFor(namespace: string, areaSlug: string, path: string): string {
     const suffix = path === "0,0,0" ? "entry" : pathKey(path);
     return namespace + ":" + areaSlug + "-" + suffix;
 }
 
-export function mintAreaGeometry(areaState: AreaState): MintResult {
+export function mintAreaGeometry(areaState: AreaState, onDone: (result: MintResult) => void): void {
     const areaId = areaState.areaId;
     const areaSeed = areaState.areaSeed;
     const room1 = areaState.sixAxis["ROOM-1"];
@@ -79,15 +91,19 @@ export function mintAreaGeometry(areaState: AreaState): MintResult {
     }
 
     // -----------------------------------------------------------------------
-    // Pass 1: create every reachable room (sorted order - deterministic bytes).
+    // Pass 1 (chunked): create every reachable room (sorted order -
+    // deterministic bytes). Pass 2 (chunked): wire real two-way exits, each
+    // endpoint setting its own side in the fixed direction order, so exit
+    // insertion order (and the side-car bytes) is deterministic. Reciprocity
+    // holds because edgeExists(a,b) == edgeExists(b,a).
     // -----------------------------------------------------------------------
 
     const landmarkRoomIds: string[] = [];
-    for (let r = 0; r < structure.rooms.length; r++) {
-        const path = structure.rooms[r];
+
+    const mintOne = function (path: string): void {
         const roomId = roomIdFor(areaState.targetNamespace, areaState.areaSlug, path);
         const coords = parseCoord(path);
-        if (!coords) { continue; }
+        if (!coords) { return; }
 
         let name: string;
         let prose: string;
@@ -128,16 +144,9 @@ export function mintAreaGeometry(areaState: AreaState): MintResult {
         tapestry.authoring.createRoom(areaId, roomId, name, prose);
         setRoomArea(roomId, areaId);
         setRoomPath(roomId, path);
-    }
+    };
 
-    // -----------------------------------------------------------------------
-    // Pass 2: wire real two-way exits. Each endpoint sets its own side in the
-    // fixed direction order, so exit insertion order (and the side-car bytes)
-    // is deterministic. Reciprocity holds because edgeExists(a,b)==edgeExists(b,a).
-    // -----------------------------------------------------------------------
-
-    for (let r = 0; r < structure.rooms.length; r++) {
-        const path = structure.rooms[r];
+    const wireOne = function (path: string): void {
         const roomId = roomIdFor(areaState.targetNamespace, areaState.areaSlug, path);
         for (let d = 0; d < ALL_DIRECTIONS.length; d++) {
             const dir = ALL_DIRECTIONS[d];
@@ -147,7 +156,35 @@ export function mintAreaGeometry(areaState: AreaState): MintResult {
             const neighborId = roomIdFor(areaState.targetNamespace, areaState.areaSlug, neighbor);
             tapestry.authoring.setRoomExit(roomId, dir, neighborId);
         }
-    }
+    };
 
-    return { roomCount: structure.rooms.length, landmarkRoomIds };
+    // Tick-driven chunk loop: phase 1 mints, phase 2 wires, then completion.
+    let phase = 1;
+    let idx = 0;
+    let handle: string;
+    const step = function (): void {
+        try {
+            const work = phase === 1 ? mintOne : wireOne;
+            const end = Math.min(idx + CHUNK_ROOMS, structure.rooms.length);
+            for (; idx < end; idx++) {
+                work(structure.rooms[idx]);
+            }
+            if (idx < structure.rooms.length) { return; }
+            if (phase === 1) {
+                phase = 2;
+                idx = 0;
+                return;
+            }
+            tapestry.schedule.cancel(handle);
+            onDone({ roomCount: structure.rooms.length, landmarkRoomIds });
+        } catch (err) {
+            // Defensive: never leave the loop armed after a failure. The area
+            // may be partially minted; completing lets the caller land the
+            // player in what exists rather than stranding them.
+            tapestry.schedule.cancel(handle);
+            (tapestry as any).system?.warn("[oracle] mintAreaGeometry failed at phase " + phase + " index " + idx + ": " + ((err as any) && (err as any).message ? (err as any).message : String(err)));
+            onDone({ roomCount: idx, landmarkRoomIds });
+        }
+    };
+    handle = tapestry.schedule.every(1, step);
 }

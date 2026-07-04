@@ -42,13 +42,15 @@ import { EMPTY_ROSTER } from "./area-context.js";
 const FLAVOR_INTERVAL = 15;
 
 /**
- * Hard abort ceiling for the flavor-wait loop (~90s). Generous because the teleport is
- * tied to room READINESS (onReadyTables), not to this timer - a slow LLM burst completes
- * and teleports whenever it lands. This ceiling only fires on a true hang, and on expiry
- * it aborts gracefully (a message, no teleport) rather than stranding the player in a
- * room that does not exist yet.
+ * Hard abort ceiling for the flavor-wait loop (~5 min). Generous because the teleport is
+ * tied to room READINESS (mint completion), not to this timer - a slow LLM burst completes
+ * and teleports whenever it lands. The v3 burst is 6+K calls (K = landmark count), which
+ * on a slow local model runs 3-4 minutes for a school area - the old ~90s ceiling fired
+ * mid-burst. This ceiling only fires on a true hang, and on expiry it aborts gracefully
+ * (a message, no teleport) rather than stranding the player in a room that does not
+ * exist yet.
  */
-const MAX_TICKS = 900;
+const MAX_TICKS = 3000;
 
 // ---------------------------------------------------------------------------
 // Flavor messages shown while tables are being filled.
@@ -249,23 +251,22 @@ export function createSoloArea(
         }
 
         // -------------------------------------------------------------------
-        // Step 6: Area state + eager geometry mint + entry population.
+        // Step 6: Area state + eager geometry mint (CHUNKED across ticks -
+        // the engine caps a Jint entry at 5s and side-car writes are
+        // synchronous) + entry population, then Step 7 teleports on the mint
+        // completion callback (tied to readiness, never to the flavor timer).
         // -------------------------------------------------------------------
 
-        buildArea(actor, areaSlug, areaSeed, levelRange, biomePalette, ideaHint, targetNamespace, targetRooms);
-
-        // -------------------------------------------------------------------
-        // Step 7: Teleport into the built entry room (tied to readiness).
-        // -------------------------------------------------------------------
-
-        const gen = pending[playerId];
-        if (gen) {
-            tapestry.schedule.cancel(handle);
-            delete pending[playerId];
-            tapestry.world.teleportEntity(playerId, gen.entryRoomId);
-            tapestry.world.send(playerId, "The pattern settles into place around you.");
-            tapestry.admin.executeAs(playerId, "look");
-        }
+        buildArea(actor, areaSlug, areaSeed, levelRange, biomePalette, ideaHint, targetNamespace, targetRooms, function (): void {
+            const gen = pending[playerId];
+            if (gen) {
+                tapestry.schedule.cancel(handle);
+                delete pending[playerId];
+                tapestry.world.teleportEntity(playerId, gen.entryRoomId);
+                tapestry.world.send(playerId, "The pattern settles into place around you.");
+                tapestry.admin.executeAs(playerId, "look");
+            }
+        });
     }
 }
 
@@ -285,7 +286,8 @@ function buildArea(
     biomePalette: string[],
     ideaHint: string,
     targetNamespace: string,
-    targetRooms: number
+    targetRooms: number,
+    onBuilt: () => void
 ): void {
     const entryRoomId = targetNamespace + ":" + areaSlug + "-entry";
 
@@ -313,12 +315,14 @@ function buildArea(
     });
 
     // Eager geometry: every reachable room + real two-way exits. No stubs.
+    // Chunked across ticks; entry population + the caller's teleport ride the
+    // completion callback (teleport does not fire the population trigger).
     const state = getAreaState(areaSlug);
     if (!state) { return; }
-    mintAreaGeometry(state);
-
-    // Entry population happens NOW (teleport does not fire the trigger).
-    populateEntry(areaSlug, entryRoomId);
+    mintAreaGeometry(state, function (): void {
+        populateEntry(areaSlug, entryRoomId);
+        onBuilt();
+    });
 }
 
 // ---------------------------------------------------------------------------

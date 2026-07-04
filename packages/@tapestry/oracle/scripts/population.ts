@@ -8,11 +8,15 @@
 // short "stirs" line to the mover for each spawn, which reads as the room
 // noticing you.
 //
-// First-visit tracking: an in-memory per-area set (fast path) PLUS the
-// persisted room property `oracle_populated` (declared in properties.yml,
-// written via authoring.setRoomAttribute -> room side-car, read back via
-// world.getRoomProperties). After a reboot the in-memory set is empty and the
-// property check rebuilds knowledge lazily per room - the ensureAreaContext
+// First-visit tracking: an in-memory per-area set of visited pathKeys,
+// persisted as the frozen "visited" ORACLE TABLE (one writeOracleTable per
+// first visit, entries kept sorted). Rooms belong to the runtime-created
+// destination pack, which has no loaded manifest on reboot and therefore
+// validates STRICT - a pack-declared room property on generated rooms fails
+// the boot (and the docker deployment cannot even write the pack scaffold).
+// Oracle table side-cars ride AuthoredOracleLoader instead: no entity
+// properties, no validator surface, reload-safe everywhere. After a reboot
+// the set rehydrates lazily from the frozen table - the ensureAreaContext
 // way. spawnMob mobs are transient (lost on reboot, never repopped by the
 // engine), so a marker-persisted room stays as the player left it - the same
 // outcome shipped 0.3.x had for materialized rooms.
@@ -33,6 +37,7 @@ import { ensureAreaContext, getMintedSet } from "./area-context.js";
 import { getRunState } from "./run-state.js";
 import { pureDegree, DEFAULT_SPAN } from "./structure.js";
 import { diceSpan, resolveBands } from "./six-axis.js";
+import { pathKey } from "./coords.js";
 
 // ---------------------------------------------------------------------------
 // Tuning constants (unchanged in kind from 0.3.x room-gen.ts)
@@ -58,42 +63,63 @@ export function bossClockFires(roomsSinceLastBoss: number, rng: () => number): b
 }
 
 // ---------------------------------------------------------------------------
-// First-visit tracking
+// First-visit tracking (keyed by room pathKey; persisted as the "visited"
+// oracle table, hydrated once per area per session)
 // ---------------------------------------------------------------------------
 
 const _populated = new Map<string, Set<string>>();
 
-function sessionSet(areaId: string): Set<string> {
+function visitedSet(areaId: string): Set<string> {
     let s = _populated.get(areaId);
     if (!s) {
         s = new Set<string>();
+        // Reload path: hydrate from the frozen visited table (restored at boot
+        // by AuthoredOracleLoader). A fresh area simply has no table yet.
+        try {
+            const t = (tapestry as any).oracle.table(areaId + ":visited");
+            if (t && t.entries) {
+                for (let i = 0; i < t.entries.length; i++) {
+                    const id = String((t.entries[i] && t.entries[i].id) || "");
+                    if (id !== "") { s.add(id); }
+                }
+            }
+        } catch (_err) {
+            // graceful: an unreadable table never blocks population.
+        }
         _populated.set(areaId, s);
     }
     return s;
 }
 
+function visitKey(roomId: string): string | null {
+    const path = getRoomPath(roomId);
+    if (!path) { return null; }
+    return pathKey(path);
+}
+
 export function isPopulated(areaId: string, roomId: string): boolean {
-    if (sessionSet(areaId).has(roomId)) {
-        return true;
-    }
-    // Reload path: the persisted room property survives reboot; rebuild lazily.
-    try {
-        const props = (tapestry as any).world.getRoomProperties(roomId);
-        const v = props && props["oracle_populated"];
-        if (v === true || v === "true" || v === "True" || v === "1") {
-            sessionSet(areaId).add(roomId);
-            return true;
-        }
-    } catch (_err) {
-        // graceful: unreadable properties never block population.
-    }
-    return false;
+    const key = visitKey(roomId);
+    if (!key) { return false; }
+    return visitedSet(areaId).has(key);
 }
 
 export function markPopulated(areaId: string, roomId: string): void {
-    sessionSet(areaId).add(roomId);
+    const key = visitKey(roomId);
+    if (!key) { return; }
+    const s = visitedSet(areaId);
+    if (s.has(key)) { return; }
+    s.add(key);
+    // Persist: rewrite the visited table with SORTED entries so the side-car
+    // bytes depend only on the set, not the visit order.
     try {
-        (tapestry as any).authoring.setRoomAttribute(roomId, "oracle_populated", "true");
+        const keys: string[] = [];
+        s.forEach(function (k: string): void { keys.push(k); });
+        keys.sort();
+        const entries: Array<{ w: number; id: string; name: string; desc: string }> = [];
+        for (let i = 0; i < keys.length; i++) {
+            entries.push({ w: 1, id: keys[i], name: "visited", desc: "" });
+        }
+        (tapestry as any).authoring.writeOracleTable({ areaId, kind: "visited", entries });
     } catch (_err) {
         // graceful: the in-memory set still guards this session.
     }

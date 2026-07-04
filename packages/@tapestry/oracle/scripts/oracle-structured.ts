@@ -91,7 +91,7 @@ export function mapPlaces(raw: string | null): string[] {
     const j = parseJson(raw);
     const arr = j && Array.isArray(j.places) ? j.places : (Array.isArray(j) ? j : null);
     if (!arr) { return []; }
-    return arr.map((p: unknown) => cleanName(p)).filter((s: string) => !junk(s)).slice(0, 8);
+    return arr.map((p: unknown) => cleanName(p)).filter((s: string) => !junk(s)).slice(0, 12);
 }
 
 export function mapMobs(raw: string | null): OracleEntry[] {
@@ -312,11 +312,24 @@ function canonicalSlots(s: string): string {
     return s.replace(/\{\s*dir\s*\}/gi, "{dir}").replace(/\{\s*landmark\s*\}/gi, "{landmark}");
 }
 
+/** Sentence-case a prose fragment: capitalize the first letter and close with a
+ *  period when terminal punctuation is missing. Small local models return bare
+ *  noun phrases ("cracked stage curtains"); composed prose needs sentences. */
+export function ensureSentence(s: string): string {
+    let t = s.trim();
+    if (t === "") { return ""; }
+    t = t.charAt(0).toUpperCase() + t.slice(1);
+    if (!/[.!?]$/.test(t)) { t = t + "."; }
+    return t;
+}
+
 /**
  * Map one fill_sector JSON to a SectorPools record, or null on parse failure
- * (the caller synthesizes that sector instead). landmark_lines MUST carry the
- * literal {dir} slot - a line without it is dropped (it would claim a direction
- * the dice did not compute).
+ * (the caller synthesizes that sector instead). Pool lines are sentence-cased
+ * and DIRECTION-LINTED (a compass claim in a pool line lies about geometry the
+ * same way it would in landmark prose - the model leaks them despite the
+ * prompt). landmark_lines MUST carry the literal {dir} slot - a line without
+ * it is dropped (it would claim a direction the dice did not compute).
  */
 export function mapSector(raw: string | null): SectorPools | null {
     const j = parseJson(raw);
@@ -325,7 +338,7 @@ export function mapSector(raw: string | null): SectorPools | null {
         if (!Array.isArray(arr)) { return []; }
         const out: string[] = [];
         for (const line of arr) {
-            const t = cleanDesc(line);
+            const t = ensureSentence(stripDirectionTalk(cleanDesc(line)));
             if (!junk(t)) { out.push(t); }
         }
         return out;
@@ -335,7 +348,7 @@ export function mapSector(raw: string | null): SectorPools | null {
     const landmarkLines: string[] = [];
     if (Array.isArray(j.landmark_lines)) {
         for (const line of j.landmark_lines) {
-            const t = canonicalSlots(cleanDesc(line));
+            const t = ensureSentence(canonicalSlots(cleanDesc(line)));
             if (junk(t)) { continue; }
             if (t.indexOf("{dir}") === -1) { continue; }
             landmarkLines.push(t);

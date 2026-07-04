@@ -10,7 +10,7 @@
 // ASCII; braces on all control flow.
 
 import * as tapestry from "@tapestry/engine";
-import { parsePathKey } from "./coords.js";
+import { parseOracleRoomId } from "./coords.js";
 import { buildAreaSixAxis } from "./six-axis.js";
 import { getAreaState, setAreaState, getRoomArea, setRoomArea, setRoomPath } from "./area-state.js";
 import { setRunState } from "./run-state.js";
@@ -107,14 +107,10 @@ export function ensureAreaContext(roomId: string): string | undefined {
         return mapped; // fully live this session - fast path.
     }
 
-    const colon = roomId.indexOf(":");
-    if (colon < 0) { return undefined; }
-    const ns = roomId.slice(0, colon);
-    const rest = roomId.slice(colon + 1);
-    const m = rest.match(/^(.+)-(entry|-?\d+_-?\d+_-?\d+)$/);
-    if (!m) { return undefined; }
-    const areaId = m[1];
-    const pathKeyStr = m[2];
+    const parsed = parseOracleRoomId(roomId);
+    if (!parsed) { return undefined; }
+    const ns = parsed.namespace;
+    const areaId = parsed.areaId;
 
     // Only reconstruct for a real oracle area (a persisted seed is the marker).
     const area = (tapestry as any).area && (tapestry as any).area.get(areaId);
@@ -164,6 +160,6 @@ export function ensureAreaContext(roomId: string): string | undefined {
     }
 
     setRoomArea(roomId, areaId);
-    setRoomPath(roomId, parsePathKey(pathKeyStr) || "0,0,0");
+    setRoomPath(roomId, parsed.path);
     return areaId;
 }

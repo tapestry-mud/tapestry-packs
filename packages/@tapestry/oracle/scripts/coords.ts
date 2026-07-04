@@ -79,3 +79,26 @@ export function descentDepth(path: string): number {
     if (!coords) { return 0; }
     return Math.max(0, -coords[2]);
 }
+
+/**
+ * Parse an oracle room id "<namespace>:<areaId>-<pathKey>" into its parts.
+ * PathKey is "entry" or "<x>_<y>_<z>" (signed).
+ *
+ * The areaId/pathKey split MUST be non-greedy: a negative leading coordinate
+ * makes the tail "--1_-1_0", and a greedy (.+) backtracks into the WRONG split
+ * (areaId "...-", pathKey "1_-1_0") - which silently broke every post-reboot
+ * lookup for negative-x rooms (latent since 0.3.x). Non-greedy takes the
+ * leftmost valid split; the rigid pathKey tail cannot false-match earlier
+ * because area slugs never contain underscores.
+ */
+export function parseOracleRoomId(roomId: string): { namespace: string; areaId: string; path: string } | null {
+    const colon = roomId.indexOf(":");
+    if (colon < 0) { return null; }
+    const namespace = roomId.slice(0, colon);
+    const rest = roomId.slice(colon + 1);
+    const m = rest.match(/^(.+?)-(entry|-?\d+_-?\d+_-?\d+)$/);
+    if (!m) { return null; }
+    const path = parsePathKey(m[2]);
+    if (!path) { return null; }
+    return { namespace, areaId: m[1], path };
+}

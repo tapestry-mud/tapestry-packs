@@ -383,7 +383,12 @@ export function landmarkRefLine(
         return "The " + landmark.name + " lies somewhere " + dir + ".";
     }
     if (variant < 0.5 && landmark.afar !== "") {
-        return landmark.afar + " It lies to the " + dir + " of here.";
+        const tails = [
+            " It lies to the " + dir + " of here.",
+            " It stands " + dir + " of here.",
+            " From here, it is " + dir + ".",
+        ];
+        return landmark.afar + tails[Math.floor(lineRoll * tails.length)];
     }
     const lines = pools && pools.landmarkLines && pools.landmarkLines.length > 0
         ? pools.landmarkLines
@@ -438,6 +443,8 @@ export function composeRoomV3(
 /**
  * qualifier x place-word room name. z-levels override the sector qualifier with
  * Upper/Lower so vertical rooms read as vertical. Neighbor-excluded place pick.
+ * A place word that already contains the qualifier drops it ("cold" x
+ * "cold room" names "Cold Room", never "Cold Cold Room").
  */
 export function roomNameV3(areaSeed: number, path: string, qualifier: string, places: string[]): string {
     const coords = parseCoord(path);
@@ -448,6 +455,16 @@ export function roomNameV3(areaSeed: number, path: string, qualifier: string, pl
     const place = places && places.length > 0
         ? pickExcluding(places, areaSeed, path, "name")
         : "";
-    const joined = (qual !== "" && place !== "") ? qual + " " + place : (place !== "" ? place : qual);
-    return titleCase(joined);
+    // Word-boundary containment via space padding (no regex, no block-scoped
+    // locals: a Jint quirk threw "placeWords is not defined" on the previous
+    // split()-based form when a second area generated in the same session).
+    const padded = " " + place.toLowerCase() + " ";
+    const needle = " " + qual.toLowerCase() + " ";
+    if (qual !== "" && place !== "" && padded.indexOf(needle) !== -1) {
+        return titleCase(place);
+    }
+    if (qual !== "" && place !== "") {
+        return titleCase(qual + " " + place);
+    }
+    return titleCase(place !== "" ? place : qual);
 }

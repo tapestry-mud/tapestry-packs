@@ -211,3 +211,12 @@ test("fallback decks are well-formed", () => {
     }
     assert.equal(titleCase("walk-in freezer"), "Walk-In Freezer");
 });
+
+test("roomNameV3 never stutters the qualifier against the place word", () => {
+    const places = ["cold room", "hearth"];
+    for (let x = -3; x <= 3; x++) {
+        const name = roomNameV3(5, `${x},0,0`, "cold", places);
+        assert.ok(!/^Cold Cold/.test(name), name);
+        assert.ok(name === "Cold Room" || name === "Cold Hearth", name);
+    }
+});

@@ -155,7 +155,7 @@ loot_name:
 
 fill_places:
   system: "You name places. 7-bit ASCII only."
-  template: "List 6 to 8 distinct places found in {idea}. Lowercase nouns."
+  template: "List 8 to 12 distinct places found in {idea}. Lowercase nouns, one or two words each."
 
 fill_mobs:
   system: "You name creatures and foes. ASCII only."
