@@ -1,6 +1,6 @@
 id: "solo"
 title: "Solo"
-category: "general"
+category: "world"
 role: "player"
 brief: "Generate a solo oracle area and enter it."
 body: |
