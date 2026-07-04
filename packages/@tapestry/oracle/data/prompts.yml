@@ -176,9 +176,12 @@ fill_landmarks:
     spatial wording is added by the game, not by you.
   template: >
     Invent {count} distinct landmark locations found in {idea}. For each give:
-    a short name of 2 to 4 words with no leading article, a room description of
-    2 to 3 sentences as the player stands there, and one afar line describing
-    how it looks from a distance.
+    a short name of 2 to 4 words with no leading article; a room description of
+    2 to 3 sentences as the player stands there; three different one-sentence
+    afar lines describing how it looks from a distance, each with a different
+    focus; and the single fearsome denizen that guards it - boss_name as a
+    short title starting with the word the, like the cage-master, plus
+    boss_desc, one menacing sentence.
 
 fill_sector:
   system: >

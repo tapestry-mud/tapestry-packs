@@ -323,11 +323,24 @@ export function normalizeTables(tables: OracleTableData[], k: number, areaSeed: 
             fill = {
                 name: "waypoint " + (i + 1),
                 desc: "Something about this spot draws the eye and holds it. Travelers have marked it before you; their signs are half-worn but legible.",
-                afar: "A marked waypoint interrupts the landscape.",
+                afars: [
+                    "A marked waypoint interrupts the landscape.",
+                    "A traveler's mark stands out against the ground.",
+                    "Old signs cluster around a marked spot.",
+                ],
+                bossName: "",
+                bossDesc: "",
             };
         }
         used[fill.name.toLowerCase()] = true;
         finalLm[i] = fill;
+    }
+    // Every frozen landmark keeps at least one afar variant so reference lines
+    // never go silent on a weak fill (parse/mapper may have dropped them all).
+    for (let i = 0; i < k; i++) {
+        if (!finalLm[i].afars || finalLm[i].afars.length === 0) {
+            finalLm[i].afars = ["The " + finalLm[i].name + " shows itself in the distance."];
+        }
     }
     replaceKind("landmarks", encodeLandmarksTable(finalLm) as OracleEntry[]);
 

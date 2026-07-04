@@ -251,6 +251,15 @@ function stripArticle(s: string): string {
     return s.replace(/^(the|a|an)\s+/i, "");
 }
 
+/** Normalize a miniboss title: force the "the <title>" shape, lowercase, "" on junk. */
+function normalizeBossTitle(s: unknown): string {
+    const t = cleanName(s);
+    if (junk(t)) { return ""; }
+    const stripped = t.replace(/^the\s+/i, "").trim();
+    if (stripped === "") { return ""; }
+    return "the " + stripped.toLowerCase();
+}
+
 /**
  * Map the fill_landmarks JSON to EXACTLY k dressing records. Names dedupe like a
  * no-replacement deck (a duplicate or junk record is replaced from the fallback
@@ -276,7 +285,14 @@ export function mapLandmarks(raw: string | null, k: number, fallback: LandmarkDr
         const rec = arr[i];
         const name = stripArticle(cleanName(rec && rec.name)).toLowerCase();
         const desc = stripDirectionTalk(capOnSentence(normalize(rec && rec.desc), MAX_LANDMARK_DESC));
-        const afar = stripDirectionTalk(cleanDesc(rec && rec.afar));
+        const afars: string[] = [];
+        const rawAfars = rec && Array.isArray(rec.afars) ? rec.afars : [];
+        for (let a = 0; a < rawAfars.length && afars.length < 3; a++) {
+            const t = stripDirectionTalk(cleanDesc(rawAfars[a]));
+            if (!junk(t)) { afars.push(t); }
+        }
+        const bossName = normalizeBossTitle(rec && rec.boss_name);
+        const bossDesc = bossName === "" ? "" : stripDirectionTalk(cleanDesc(rec && rec.boss_desc));
         if (junk(name) || used[name] || desc === "") {
             const fb = nextFallback();
             if (fb) {
@@ -286,7 +302,7 @@ export function mapLandmarks(raw: string | null, k: number, fallback: LandmarkDr
             continue;
         }
         used[name] = true;
-        out.push({ name, desc, afar });
+        out.push({ name, desc, afars, bossName, bossDesc });
     }
     while (out.length < k) {
         const fb = nextFallback();
@@ -301,7 +317,13 @@ export function mapLandmarks(raw: string | null, k: number, fallback: LandmarkDr
         out.push({
             name: "waypoint " + n,
             desc: "Something about this spot draws the eye and holds it. Travelers have marked it before you; their signs are half-worn but legible.",
-            afar: "A marked waypoint interrupts the landscape.",
+            afars: [
+                "A marked waypoint interrupts the landscape.",
+                "A traveler's mark stands out against the ground.",
+                "Old signs cluster around a marked spot.",
+            ],
+            bossName: "",
+            bossDesc: "",
         });
     }
     return out.slice(0, k);
@@ -374,9 +396,11 @@ export const SCHEMA_LANDMARKS = JSON.stringify({
                 properties: {
                     name: { type: "string" },
                     desc: { type: "string" },
-                    afar: { type: "string" },
+                    afars: { type: "array", items: { type: "string" } },
+                    boss_name: { type: "string" },
+                    boss_desc: { type: "string" },
                 },
-                required: ["name", "desc", "afar"], additionalProperties: false,
+                required: ["name", "desc", "afars", "boss_name", "boss_desc"], additionalProperties: false,
             },
         },
     },

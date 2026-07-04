@@ -37,7 +37,14 @@ test("bakedTables returns a landmarks table for both authored sets", () => {
         const parsed = parseLandmarksTable(lm.entries);
         assert.equal(parsed.length, 8, `${setId} deck must hold 8 records`);
         for (const rec of parsed) {
-            assert.ok(rec.name.length > 0 && rec.desc.length > 40 && rec.afar.length > 10);
+            assert.ok(rec.name.length > 0 && rec.desc.length > 40);
+            assert.equal(rec.afars.length, 3, `${setId}/${rec.name} needs 3 afar variants`);
+            for (const af of rec.afars) {
+                assert.ok(af.length > 10, `short afar on ${rec.name}: ${af}`);
+                assert.ok(!/\b(north|south|east|west|exit|exits)\b/i.test(af), `direction talk in afar of ${rec.name}`);
+            }
+            assert.ok(rec.bossName.startsWith("the "), `${setId}/${rec.name} miniboss title: ${rec.bossName}`);
+            assert.ok(rec.bossDesc.length > 10, `${setId}/${rec.name} miniboss desc`);
             assert.ok(!/\b(north|south|east|west|exit|exits)\b/i.test(rec.desc), `direction talk in ${rec.name}`);
         }
     }

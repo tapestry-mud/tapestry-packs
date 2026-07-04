@@ -1,25 +1,50 @@
 # Baked landmark deck for the test-kitchen set (a vast, half-abandoned kitchen).
 # Encoded rows (the id-prefix codec in sector-compose.ts): "lm-<i>" carries the full
-# bespoke room description, "afar-<i>" carries the seen-from-afar line; name = the
-# landmark's display name WITHOUT a leading article. 8 records so an epic-K area
-# never runs the deck dry. NO direction or exit talk - spatial wording is appended
-# geometry, never authored prose.
+# bespoke room description, "afar-<i>-<v>" the seen-from-afar variants (3 per
+# landmark - the 0.4.0 single-afar repetition class), "boss-<i>" the landmark's
+# frozen miniboss identity (name = title, desc = one line). 8 records so an epic-K
+# area never runs the deck dry. NO direction or exit talk - spatial wording is
+# appended geometry, never authored prose.
 oracle_table:
   kind: landmarks
   entries:
     - { w: 10, id: lm-0, name: great hearth, desc: "A hearth tall enough to walk into dominates the room, its firebed banked to a dull orange glow. Spits the size of fence rails hang in their cradles. The heat presses against you like a hand." }
-    - { w: 10, id: afar-0, name: great hearth, desc: "A red glow pulses over everything, breathing with the coals." }
+    - { w: 10, id: afar-0-0, name: great hearth, desc: "A red glow pulses over everything, breathing with the coals." }
+    - { w: 10, id: afar-0-1, name: great hearth, desc: "Firelight breathes slow against the distant walls." }
+    - { w: 10, id: afar-0-2, name: great hearth, desc: "A wash of banked heat rolls out across the kitchen." }
+    - { w: 10, id: boss-0, name: the head roaster, desc: "A hulking cook turns a spit that never empties, and its eyes are on you." }
     - { w: 10, id: lm-1, name: butcher block, desc: "A scarred slab of end-grain oak stands waist high, wide as a bed. Cleaver cuts crosshatch every inch of it, and the drains along its rim are stained dark. Something was worked here for years without rest." }
-    - { w: 10, id: afar-1, name: butcher block, desc: "A dark, squat mass of a table looms over the counters." }
+    - { w: 10, id: afar-1-0, name: butcher block, desc: "A dark, squat mass of a table looms over the counters." }
+    - { w: 10, id: afar-1-1, name: butcher block, desc: "Cleaver light glints off a distant slab." }
+    - { w: 10, id: afar-1-2, name: butcher block, desc: "The smell of old iron drifts from a heavy table." }
+    - { w: 10, id: boss-1, name: the block-butcher, desc: "An aproned bulk works its cleaver with terrible patience." }
     - { w: 10, id: lm-2, name: walk-in freezer, desc: "Frost furs the walls of this iron-doored vault. Hooked shapes hang in rows under canvas shrouds, and your breath comes out in ropes of fog. The cold has a weight to it, an intent." }
-    - { w: 10, id: afar-2, name: walk-in freezer, desc: "Fog seeps from the seams of a rimed iron door." }
+    - { w: 10, id: afar-2-0, name: walk-in freezer, desc: "Fog seeps from the seams of a rimed iron door." }
+    - { w: 10, id: afar-2-1, name: walk-in freezer, desc: "A breath of cold cuts through the kitchen heat." }
+    - { w: 10, id: afar-2-2, name: walk-in freezer, desc: "Frost creeps across the floor from an iron door." }
+    - { w: 10, id: boss-2, name: the frost-warden, desc: "It hangs its meat in rows and counts you among the stock." }
     - { w: 10, id: lm-3, name: spice vault, desc: "Shelves climb out of sight, crowded with jars in a hundred colors. The air is so thick with pepper and clove that your eyes water. Some of the jars hold things that shift when you look away." }
-    - { w: 10, id: afar-3, name: spice vault, desc: "Towering shelves glitter with jars of every color." }
+    - { w: 10, id: afar-3-0, name: spice vault, desc: "Towering shelves glitter with jars of every color." }
+    - { w: 10, id: afar-3-1, name: spice vault, desc: "A hundred colors wink from crowded shelves." }
+    - { w: 10, id: afar-3-2, name: spice vault, desc: "The air stings faintly with drifting pepper." }
+    - { w: 10, id: boss-3, name: the spice-hoarder, desc: "A wizened thing with too many hands guards every jar." }
     - { w: 10, id: lm-4, name: scullery falls, desc: "Wash-water pours endlessly over a cliff of stacked basins, foam sliding between mountains of crockery. The roar of it fills your chest. No hands have touched these dishes in a long time, yet the water keeps coming." }
-    - { w: 10, id: afar-4, name: scullery falls, desc: "A white mist of soap and spray hangs over the basins." }
+    - { w: 10, id: afar-4-0, name: scullery falls, desc: "A white mist of soap and spray hangs over the basins." }
+    - { w: 10, id: afar-4-1, name: scullery falls, desc: "The roar of falling wash-water carries this far." }
+    - { w: 10, id: afar-4-2, name: scullery falls, desc: "Suds drift like snow off tumbling water." }
+    - { w: 10, id: boss-4, name: the dish-tender, desc: "It scrubs endlessly and hates every speck you track in." }
     - { w: 10, id: lm-5, name: bread ovens, desc: "Brick ovens line the wall like a row of kilns, doors ajar on chambers big enough to crawl into. A few still radiate warmth, and the smell of scorched flour is everywhere. Peels lean against the brick like abandoned oars." }
-    - { w: 10, id: afar-5, name: bread ovens, desc: "A rank of brick mouths glows faintly in the gloom." }
+    - { w: 10, id: afar-5-0, name: bread ovens, desc: "A rank of brick mouths glows faintly in the gloom." }
+    - { w: 10, id: afar-5-1, name: bread ovens, desc: "Warm air and scorched flour ride the draft." }
+    - { w: 10, id: afar-5-2, name: bread ovens, desc: "Rows of oven doors gape like sleeping mouths." }
+    - { w: 10, id: boss-5, name: the oven-stoker, desc: "Soot-black and glowing at the seams, it feeds the fires anything it catches." }
     - { w: 10, id: lm-6, name: pot rack forest, desc: "Copper pots hang from the ceiling in their hundreds, low enough to brush your hair. Every step sets off a soft chiming that travels away through the metal. Somewhere in the thicket of copper, something else is moving." }
-    - { w: 10, id: afar-6, name: pot rack forest, desc: "A ceiling of hanging copper glints and sways." }
+    - { w: 10, id: afar-6-0, name: pot rack forest, desc: "A ceiling of hanging copper glints and sways." }
+    - { w: 10, id: afar-6-1, name: pot rack forest, desc: "A soft chiming of copper carries on the air." }
+    - { w: 10, id: afar-6-2, name: pot rack forest, desc: "Hundreds of hanging pots catch what light there is." }
+    - { w: 10, id: boss-6, name: the rack-lurker, desc: "It moves through the hanging copper without a single chime." }
     - { w: 10, id: lm-7, name: head chef's station, desc: "A raised brass counter overlooks the whole floor, its surface laid out with knives in perfect order. A ledger sits open, the last entry half-finished. Whoever commanded this kitchen meant to come back." }
-    - { w: 10, id: afar-7, name: head chef's station, desc: "A raised brass counter catches what little light there is." }
+    - { w: 10, id: afar-7-0, name: head chef's station, desc: "A raised brass counter catches what little light there is." }
+    - { w: 10, id: afar-7-1, name: head chef's station, desc: "A brass rail gleams above the clutter." }
+    - { w: 10, id: afar-7-2, name: head chef's station, desc: "One island of order and polish stands out amid the mess." }
+    - { w: 10, id: boss-7, name: the sous of the station, desc: "It keeps the last order the chef ever gave, at knife-point." }

@@ -26,9 +26,36 @@ function pools(overrides = {}) {
 test("landmark table codec round-trips", () => {
     const landmarks = fallbackLandmarks().slice(0, 3);
     const rows = encodeLandmarksTable(landmarks);
-    assert.equal(rows.length, 6); // lm + afar per landmark
+    assert.equal(rows.length, 15); // lm + 3 afar variants + boss per landmark
     const back = parseLandmarksTable(rows);
     assert.deepEqual(back, landmarks);
+});
+
+test("landmarks codec: afar variants + boss identity rows", () => {
+    const lm = [{
+        name: "old well", desc: "A well of note.",
+        afars: ["A ring.", "A low ring.", "A stone lip."],
+        bossName: "the well-keeper", bossDesc: "It waits below.",
+    }];
+    const rows = encodeLandmarksTable(lm);
+    assert.ok(rows.find((r) => r.id === "afar-0-0" && r.desc === "A ring."));
+    assert.ok(rows.find((r) => r.id === "afar-0-2" && r.desc === "A stone lip."));
+    assert.ok(rows.find((r) => r.id === "boss-0" && r.name === "the well-keeper" && r.desc === "It waits below."));
+    const back = parseLandmarksTable(rows);
+    assert.deepEqual(back, lm);
+});
+
+test("parseLandmarksTable reads the 0.4.0 shape (single afar-<i>, no boss rows)", () => {
+    const old = [
+        { w: 10, id: "lm-0", name: "great hearth", desc: "A hearth." },
+        { w: 10, id: "afar-0", name: "great hearth", desc: "A red glow." },
+    ];
+    const back = parseLandmarksTable(old);
+    assert.equal(back.length, 1);
+    assert.equal(back[0].name, "great hearth");
+    assert.deepEqual(back[0].afars, ["A red glow."]);
+    assert.equal(back[0].bossName, "");
+    assert.equal(back[0].bossDesc, "");
 });
 
 test("sector table codec round-trips", () => {
@@ -48,7 +75,8 @@ test("parseLandmarksTable tolerates junk and gaps", () => {
     assert.equal(back.length, 2);
     assert.equal(back[0].name, "");     // gap at index 0
     assert.equal(back[1].name, "arch");
-    assert.equal(back[1].afar, "");
+    assert.deepEqual(back[1].afars, []);
+    assert.equal(back[1].bossName, "");
 });
 
 test("synthesizeSectors: k distinct qualifiers, pools from prose tags", () => {
@@ -138,28 +166,52 @@ test("fillSlots replaces every slot occurrence", () => {
     );
 });
 
-test("landmarkRefLine: gate is seeded, always bypasses, vertical uses fixed template", () => {
-    const lm = { name: "broken tower", desc: "d", afar: "A snapped tower juts at the sky." };
+test("landmarkRefLine: distance-banded gate, afar variants + tail deck, vertical fixed", () => {
+    const lm = {
+        name: "broken tower", desc: "d",
+        afars: ["A snapped tower juts at the sky.", "A broken fang of masonry rises far off.", "The tower's stump leans in the haze."],
+        bossName: "", bossDesc: "",
+    };
     // determinism
-    const a = landmarkRefLine(77, "1,2,0", pools(), lm, "east", false);
-    assert.equal(a, landmarkRefLine(77, "1,2,0", pools(), lm, "east", false));
+    const a = landmarkRefLine(77, "1,2,0", pools(), lm, "east", false, 2);
+    assert.equal(a, landmarkRefLine(77, "1,2,0", pools(), lm, "east", false, 2));
     // always yields a non-empty line
-    const forced = landmarkRefLine(77, "1,2,0", pools(), lm, "east", true);
+    const forced = landmarkRefLine(77, "1,2,0", pools(), lm, "east", true, 1);
     assert.ok(forced.length > 0);
     assert.ok(forced.includes("east"));
     assert.ok(!forced.includes("{dir}") && !forced.includes("{landmark}"));
-    // gate produces both outcomes across paths
-    let quiet = 0, loud = 0;
-    for (let i = 0; i < 200; i++) {
-        const line = landmarkRefLine(77, `${i},0,0`, pools(), lm, "east", false);
-        if (line === "") { quiet++; } else { loud++; }
+    // distance band: near sits at the 0.45 gate, far at 0.25, far strictly quieter
+    let nearLoud = 0, farLoud = 0;
+    for (let i = 0; i < 400; i++) {
+        if (landmarkRefLine(77, `${i},1,0`, pools(), lm, "east", false, 2) !== "") { nearLoud++; }
+        if (landmarkRefLine(77, `${i},1,0`, pools(), lm, "east", false, 6) !== "") { farLoud++; }
     }
-    assert.ok(quiet > 40 && loud > 40, `gate skew: quiet ${quiet} loud ${loud}`);
+    assert.ok(nearLoud > 120 && nearLoud < 240, `near ${nearLoud}/400 should sit near the 0.45 gate`);
+    assert.ok(farLoud > 50 && farLoud < 150, `far ${farLoud}/400 should sit near the 0.25 gate`);
+    assert.ok(farLoud < nearLoud, "far rooms must reference less often");
+    // afar VARIANTS: across many always-on rooms every variant appears
+    const seen = new Set();
+    const tails = new Set();
+    for (let i = 0; i < 300; i++) {
+        const line = landmarkRefLine(77, `${i},2,0`, pools(), lm, "east", true, 1);
+        for (let v = 0; v < lm.afars.length; v++) {
+            if (line.indexOf(lm.afars[v]) === 0) {
+                seen.add(v);
+                tails.add(line.slice(lm.afars[v].length));
+            }
+        }
+    }
+    assert.equal(seen.size, 3, "all three afar variants should appear");
+    assert.ok(tails.size >= 3, `tail variety too low: ${[...tails].join(" | ")}`);
     // vertical
-    const vert = landmarkRefLine(77, "0,0,-1", pools(), lm, "above", true);
+    const vert = landmarkRefLine(77, "0,0,-1", pools(), lm, "above", true, 1);
     assert.equal(vert, "The broken tower lies somewhere above.");
     // no dir -> silent
-    assert.equal(landmarkRefLine(77, "0,0,0", pools(), lm, "", true), "");
+    assert.equal(landmarkRefLine(77, "0,0,0", pools(), lm, "", true, 1), "");
+    // empty afars -> still works via pool/{dir} lines
+    const noAfar = { name: "broken tower", desc: "d", afars: [], bossName: "", bossDesc: "" };
+    const line2 = landmarkRefLine(77, "3,3,0", pools(), noAfar, "west", true, 1);
+    assert.ok(line2.includes("west") && !line2.includes("{dir}"));
 });
 
 test("composeRoomV3: deterministic, cadence-driven length, blend stays composed", () => {
@@ -202,9 +254,14 @@ test("fallback decks are well-formed", () => {
     const dirWords = /\b(north|south|east|west|exit|exits)\b/i;
     for (const l of lms) {
         assert.ok(!l.name.startsWith("the "), `name carries article: ${l.name}`);
-        assert.ok(l.desc.length > 40 && l.afar.length > 10);
+        assert.ok(l.desc.length > 40);
+        assert.equal(l.afars.length, 3, `${l.name} needs 3 afar variants`);
+        for (const af of l.afars) {
+            assert.ok(af.length > 10 && !dirWords.test(af), `afar problem on ${l.name}: ${af}`);
+        }
+        assert.ok(l.bossName.startsWith("the "), `boss name should be a title: ${l.bossName}`);
+        assert.ok(l.bossDesc.length > 10 && !dirWords.test(l.bossDesc), `bossDesc problem on ${l.name}`);
         assert.ok(!dirWords.test(l.desc), `direction talk in desc: ${l.name}`);
-        assert.ok(!dirWords.test(l.afar), `direction talk in afar: ${l.name}`);
     }
     for (const line of FALLBACK_LANDMARK_LINES) {
         assert.ok(line.includes("{landmark}") && line.includes("{dir}"), line);

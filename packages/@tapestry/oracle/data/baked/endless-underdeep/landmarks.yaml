@@ -1,23 +1,48 @@
 # Baked landmark deck for the endless-underdeep set. Encoded rows (id-prefix codec
-# in sector-compose.ts): "lm-<i>" = bespoke room description, "afar-<i>" = the
-# seen-from-afar line; name = display name, no leading article. 8 records. NO
-# direction or exit talk - spatial wording is appended geometry only.
+# in sector-compose.ts): "lm-<i>" = bespoke room description, "afar-<i>-<v>" = the
+# seen-from-afar variants (3 per landmark), "boss-<i>" = the landmark's frozen
+# miniboss identity. 8 records. NO direction or exit talk - spatial wording is
+# appended geometry only.
 oracle_table:
   kind: landmarks
   entries:
     - { w: 10, id: lm-0, name: drowned cathedral, desc: "Columns of living stone rise out of black water into a vault your light cannot find. Every drip returns as a chord, as if the dark were singing back. Pale fish move between the pillars like slow candles." }
-    - { w: 10, id: afar-0, name: drowned cathedral, desc: "Vast columns glimmer over a sheet of black water." }
+    - { w: 10, id: afar-0-0, name: drowned cathedral, desc: "Vast columns glimmer over a sheet of black water." }
+    - { w: 10, id: afar-0-1, name: drowned cathedral, desc: "Pale light plays over pillars rising from still water." }
+    - { w: 10, id: afar-0-2, name: drowned cathedral, desc: "A drowned vault gleams wetly in the dark." }
+    - { w: 10, id: boss-0, name: the drowned cantor, desc: "It leads a hymn only the water remembers." }
     - { w: 10, id: lm-1, name: bone garden, desc: "Ribs of something enormous arch out of the cave floor, furred with white lichen. Smaller skeletons nest between them, arranged with unsettling care. Nothing here died where it lies." }
-    - { w: 10, id: afar-1, name: bone garden, desc: "A stand of pale, curving shapes breaks the cavern floor." }
+    - { w: 10, id: afar-1-0, name: bone garden, desc: "A stand of pale, curving shapes breaks the cavern floor." }
+    - { w: 10, id: afar-1-1, name: bone garden, desc: "White ribs arch out of the dark like a fence." }
+    - { w: 10, id: afar-1-2, name: bone garden, desc: "Pale spurs of bone catch your light and hold it." }
+    - { w: 10, id: boss-1, name: the bone-arranger, desc: "Many-jointed and careful, it tends its white garden." }
     - { w: 10, id: lm-2, name: dwarf gate, desc: "A door of fused granite stands twice your height, its runes worn to shadows. The seam down its middle has never been forced. Cold air breathes through it in a slow rhythm, in and out." }
-    - { w: 10, id: afar-2, name: dwarf gate, desc: "A monolithic slab of worked stone stands where no stone should." }
+    - { w: 10, id: afar-2-0, name: dwarf gate, desc: "A monolithic slab of worked stone stands where no stone should." }
+    - { w: 10, id: afar-2-1, name: dwarf gate, desc: "Worked stone gleams flat and vast in the gloom." }
+    - { w: 10, id: afar-2-2, name: dwarf gate, desc: "A sheer face of granite shoulders out of the dark." }
+    - { w: 10, id: boss-2, name: the gate-watcher, desc: "It has waited at the seam since the last dwarf left." }
     - { w: 10, id: lm-3, name: glowshelf reef, desc: "Fungus builds itself into terraces here, shelf on shelf of cold blue light. The glow pulses when you speak, brightening at consonants. Wading through it leaves your boots luminous for a while." }
-    - { w: 10, id: afar-3, name: glowshelf reef, desc: "A tide of cold blue light laps against the dark." }
+    - { w: 10, id: afar-3-0, name: glowshelf reef, desc: "A tide of cold blue light laps against the dark." }
+    - { w: 10, id: afar-3-1, name: glowshelf reef, desc: "Blue light pools and pulses in the distance." }
+    - { w: 10, id: afar-3-2, name: glowshelf reef, desc: "The dark thins toward a shelf of cold glow." }
+    - { w: 10, id: boss-3, name: the reef-shepherd, desc: "It wades the glowing terraces, herding spores like sheep." }
     - { w: 10, id: lm-4, name: hanging city, desc: "Stone dwellings cling to the underside of the cavern roof like wasp nests, stairs spiraling into them from nowhere. Rope bridges sag between windows that are all dark. Dust falls from them in slow threads, as if something up there still walks." }
-    - { w: 10, id: afar-4, name: hanging city, desc: "Dwellings stud the distant ceiling like barnacles." }
+    - { w: 10, id: afar-4-0, name: hanging city, desc: "Dwellings stud the distant ceiling like barnacles." }
+    - { w: 10, id: afar-4-1, name: hanging city, desc: "Dark windows cluster high on the cavern roof." }
+    - { w: 10, id: afar-4-2, name: hanging city, desc: "Rope lines sag beneath a ceiling of stone houses." }
+    - { w: 10, id: boss-4, name: the city-warden, desc: "It walks the underside streets on too many limbs." }
     - { w: 10, id: lm-5, name: black chasm, desc: "The floor simply ends at a rim of crumbling shale. Pebbles kicked over the edge fall without ever striking bottom. Standing here you feel the pull of it in your knees, patient and impersonal." }
-    - { w: 10, id: afar-5, name: black chasm, desc: "A ragged absence interrupts the floor of the world." }
+    - { w: 10, id: afar-5-0, name: black chasm, desc: "A ragged absence interrupts the floor of the world." }
+    - { w: 10, id: afar-5-1, name: black chasm, desc: "The ground simply stops at a lip of shale." }
+    - { w: 10, id: afar-5-2, name: black chasm, desc: "A cold updraft rises from a great darkness." }
+    - { w: 10, id: boss-5, name: the chasm-caller, desc: "It leans over the edge, whispering down to something that answers." }
     - { w: 10, id: lm-6, name: forge of the deep, desc: "An anvil the size of a cottage sits amid dead furnaces, its face mirror-bright where everything else is rust. Tools too heavy for human arms lean in their racks. The air still tastes of hot iron, decades cold." }
-    - { w: 10, id: afar-6, name: forge of the deep, desc: "Dead furnaces bulk in the gloom around a single gleam of steel." }
+    - { w: 10, id: afar-6-0, name: forge of the deep, desc: "Dead furnaces bulk in the gloom around a single gleam of steel." }
+    - { w: 10, id: afar-6-1, name: forge of the deep, desc: "One bright anvil shines amid rusted hulks." }
+    - { w: 10, id: afar-6-2, name: forge of the deep, desc: "The smell of cold iron sharpens the air." }
+    - { w: 10, id: boss-6, name: the forge-master, desc: "Its hammer arm ends in the hammer." }
     - { w: 10, id: lm-7, name: whisper pool, desc: "A perfectly round pool holds water so still it reads as solid. Lean close and it murmurs in a language you almost know, naming things you have lost. The urge to answer is strong here." }
-    - { w: 10, id: afar-7, name: whisper pool, desc: "A coin of silver water gleams flat and unmoving." }
+    - { w: 10, id: afar-7-0, name: whisper pool, desc: "A coin of silver water gleams flat and unmoving." }
+    - { w: 10, id: afar-7-1, name: whisper pool, desc: "Still water shines like a dropped mirror." }
+    - { w: 10, id: afar-7-2, name: whisper pool, desc: "A perfect circle of silver interrupts the dark." }
+    - { w: 10, id: boss-7, name: the pool's voice, desc: "It wears the faces the water has collected." }

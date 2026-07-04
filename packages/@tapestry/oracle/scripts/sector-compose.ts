@@ -33,8 +33,15 @@ export interface LandmarkDressing {
     name: string;
     /** Full bespoke room description (frozen at creation; no direction/exit talk). */
     desc: string;
-    /** One-line seen-from-afar view, used in landmark reference lines. */
-    afar: string;
+    /** Seen-from-afar variants (target 3), used in landmark reference lines.
+     *  0.4.0 frozen tables carried exactly one (id "afar-<i>"); the parser still
+     *  reads that shape - degraded variety, never a failure. */
+    afars: string[];
+    /** Frozen miniboss identity for the landmark ("the cage-master"). Empty when the
+     *  table predates 0.5.0 or the fill gave nothing - consumers synthesize a
+     *  default via tiers.defaultMinibossFor. */
+    bossName: string;
+    bossDesc: string;
 }
 
 export interface SectorPools {
@@ -67,47 +74,87 @@ export function titleCase(s: string): string {
 
 // ---------------------------------------------------------------------------
 // Landmark table codec (kind: "landmarks")
-// Rows: { id: "lm-<i>",   name: <landmark name>, desc: <full description> }
-//       { id: "afar-<i>", name: <landmark name>, desc: <afar line> }
+// Rows: { id: "lm-<i>",       name: <landmark name>,  desc: <full description> }
+//       { id: "afar-<i>-<v>", name: <landmark name>,  desc: <afar variant v> }
+//       { id: "boss-<i>",     name: <miniboss title>, desc: <miniboss desc> }
+// Legacy (0.4.0) rows "afar-<i>" parse as variant 0; missing boss rows parse as
+// "" (consumers synthesize a default identity).
 // ---------------------------------------------------------------------------
 
 export function encodeLandmarksTable(landmarks: LandmarkDressing[]): EntryRow[] {
     const out: EntryRow[] = [];
     for (let i = 0; i < landmarks.length; i++) {
-        out.push({ w: 10, id: "lm-" + i, name: landmarks[i].name, desc: landmarks[i].desc });
-        out.push({ w: 10, id: "afar-" + i, name: landmarks[i].name, desc: landmarks[i].afar });
+        const lm = landmarks[i];
+        out.push({ w: 10, id: "lm-" + i, name: lm.name, desc: lm.desc });
+        const afars = lm.afars || [];
+        for (let v = 0; v < afars.length; v++) {
+            out.push({ w: 10, id: "afar-" + i + "-" + v, name: lm.name, desc: afars[v] });
+        }
+        if (lm.bossName !== "") {
+            out.push({ w: 10, id: "boss-" + i, name: lm.bossName, desc: lm.bossDesc });
+        }
     }
     return out;
 }
 
+function emptyDressing(): LandmarkDressing {
+    return { name: "", desc: "", afars: [], bossName: "", bossDesc: "" };
+}
+
 export function parseLandmarksTable(entries: any[]): LandmarkDressing[] {
     const byIndex: Record<number, LandmarkDressing> = {};
+    const afarByIndex: Record<number, Record<number, string>> = {};
     let max = -1;
     if (!entries || typeof entries.length !== "number") { return []; }
+    const ensure = function (idx: number): LandmarkDressing {
+        if (!byIndex[idx]) { byIndex[idx] = emptyDressing(); }
+        if (idx > max) { max = idx; }
+        return byIndex[idx];
+    };
     for (let i = 0; i < entries.length; i++) {
         const e = entries[i];
         const id = String((e && e.id) || "");
+        const name = String((e && e.name) || "");
+        const desc = String((e && e.desc) || "");
         let m = id.match(/^lm-(\d+)$/);
         if (m) {
-            const idx = parseInt(m[1], 10);
-            if (!byIndex[idx]) { byIndex[idx] = { name: "", desc: "", afar: "" }; }
-            byIndex[idx].name = String((e && e.name) || "");
-            byIndex[idx].desc = String((e && e.desc) || "");
-            if (idx > max) { max = idx; }
+            const rec = ensure(parseInt(m[1], 10));
+            rec.name = name;
+            rec.desc = desc;
             continue;
         }
-        m = id.match(/^afar-(\d+)$/);
+        m = id.match(/^afar-(\d+)(?:-(\d+))?$/);
         if (m) {
             const idx = parseInt(m[1], 10);
-            if (!byIndex[idx]) { byIndex[idx] = { name: "", desc: "", afar: "" }; }
-            if (!byIndex[idx].name) { byIndex[idx].name = String((e && e.name) || ""); }
-            byIndex[idx].afar = String((e && e.desc) || "");
-            if (idx > max) { max = idx; }
+            const rec = ensure(idx);
+            if (!rec.name) { rec.name = name; }
+            const v = m[2] !== undefined ? parseInt(m[2], 10) : 0;
+            if (!afarByIndex[idx]) { afarByIndex[idx] = {}; }
+            afarByIndex[idx][v] = desc;
+            continue;
         }
+        m = id.match(/^boss-(\d+)$/);
+        if (m) {
+            const rec = ensure(parseInt(m[1], 10));
+            rec.bossName = name;
+            rec.bossDesc = desc;
+        }
+    }
+    for (const k in afarByIndex) {
+        if (!Object.prototype.hasOwnProperty.call(afarByIndex, k)) { continue; }
+        const variants = afarByIndex[k];
+        const vs: number[] = [];
+        for (const v in variants) {
+            if (Object.prototype.hasOwnProperty.call(variants, v)) { vs.push(parseInt(v, 10)); }
+        }
+        vs.sort(function (a, b) { return a - b; });
+        const list: string[] = [];
+        for (let i = 0; i < vs.length; i++) { list.push(variants[vs[i]]); }
+        byIndex[parseInt(k, 10)].afars = list;
     }
     const out: LandmarkDressing[] = [];
     for (let i = 0; i <= max; i++) {
-        out.push(byIndex[i] || { name: "", desc: "", afar: "" });
+        out.push(byIndex[i] || emptyDressing());
     }
     return out;
 }
@@ -224,48 +271,97 @@ export function synthesizeSectors(k: number, proseEntries: any[], areaSeed: numb
     return out;
 }
 
-/** Theme-neutral landmark deck for the LLM-off / short-fill path. 8 records. */
+/** Theme-neutral landmark deck for the LLM-off / short-fill path. 8 records,
+ *  each with 3 afar variants and a frozen miniboss identity. */
 export function fallbackLandmarks(): LandmarkDressing[] {
     return [
         {
             name: "standing stones",
             desc: "A ring of weathered monoliths circles this open ground. Whatever raised them is long gone, but the stones still hold a hush that makes you lower your voice.",
-            afar: "A crown of tall grey stones rises over everything around it.",
+            afars: [
+                "A crown of tall grey stones rises over everything around it.",
+                "Grey monoliths stand in a ring against the sky.",
+                "A circle of standing stones interrupts the horizon.",
+            ],
+            bossName: "the stone-tender",
+            bossDesc: "It circles the stones with a patience older than they are.",
         },
         {
             name: "broken tower",
             desc: "The stump of an old watchtower leans over a spill of its own masonry. You can climb a little way into its cracked shell, where the wind speaks through the gaps.",
-            afar: "A snapped tower juts at the sky like a broken tooth.",
+            afars: [
+                "A snapped tower juts at the sky like a broken tooth.",
+                "The stump of a watchtower leans over its own rubble.",
+                "A ruined tower tilts black against the light.",
+            ],
+            bossName: "the last sentry",
+            bossDesc: "It still keeps a watch that nothing ever relieved.",
         },
         {
             name: "old well",
             desc: "A stone well squats at the center of this clearing, its rope long rotted away. When you lean over the lip, the dark below breathes back cold and damp.",
-            afar: "A low stone ring marks an old well against the ground.",
+            afars: [
+                "A low stone ring marks an old well against the ground.",
+                "A squat stone well crouches alone in open ground.",
+                "The land dips toward a ring of pale stones.",
+            ],
+            bossName: "the well-dweller",
+            bossDesc: "Something wet and patient has made the shaft its home.",
         },
         {
             name: "sunken shrine",
             desc: "Steps descend into a half-drowned shrine. Offerings still crust the altar stone, and the water that laps at your ankles is colder than it has any right to be.",
-            afar: "Tilted pillars mark where a shrine has slumped into the earth.",
+            afars: [
+                "Tilted pillars mark where a shrine has slumped into the earth.",
+                "Broken pillars lean together over sunken ground.",
+                "A drowned roofline breaks the ground like a jaw.",
+            ],
+            bossName: "the shrine-keeper",
+            bossDesc: "It tends the drowned altar and resents the living.",
         },
         {
             name: "great arch",
             desc: "A single freestanding arch dwarfs you, carved with figures worn past recognizing. Passing under it, the air tightens as if the arch remembers being a door.",
-            afar: "A lone arch stands vast and dark against the sky.",
+            afars: [
+                "A lone arch stands vast and dark against the sky.",
+                "A freestanding arch dwarfs everything near it.",
+                "The silhouette of a great arch cuts the distance.",
+            ],
+            bossName: "the arch-warden",
+            bossDesc: "It stands beneath the arch as if that were a door to guard.",
         },
         {
             name: "hollow tree",
             desc: "An enormous dead tree has split open into a chamber of smooth heartwood. Things have denned here over the years; some of the bones are large.",
-            afar: "A colossal dead tree looms, split and blackened.",
+            afars: [
+                "A colossal dead tree looms, split and blackened.",
+                "The husk of a giant tree rises over everything.",
+                "A vast dead trunk stands alone, cracked open.",
+            ],
+            bossName: "the thing in the heartwood",
+            bossDesc: "It denned in the hollow long ago and grew into it.",
         },
         {
             name: "toppled idol",
             desc: "A stone idol lies face-down where it fell, its features pressed into the dirt for an age. The pedestal it left behind is scorched in a perfect circle.",
-            afar: "A fallen bulk of carved stone breaks the ground's line.",
+            afars: [
+                "A fallen bulk of carved stone breaks the ground's line.",
+                "A great carved shape lies face-down in the dirt.",
+                "Something enormous and man-made lies where it fell.",
+            ],
+            bossName: "the idol's mourner",
+            bossDesc: "It circles the fallen stone, keening at trespassers.",
         },
         {
             name: "ashen bonfire",
             desc: "A fire pit wider than a wagon sits cold and grey. The ash never seems to scatter, and here and there it holds the shape of things that burned.",
-            afar: "A wide grey scar of old ash marks a giant's fire pit.",
+            afars: [
+                "A wide grey scar of old ash marks a giant's fire pit.",
+                "A field of dead ash spreads flat and colorless.",
+                "Grey haze hangs over a ring of burnt ground.",
+            ],
+            bossName: "the ember-shepherd",
+            bossDesc: "It rakes the cold ash for coals only it can see.",
         },
     ];
 }
@@ -358,12 +454,23 @@ export function fillSlots(line: string, landmarkName: string, dir: string): stri
     return line.split("{landmark}").join(landmarkName).split("{dir}").join(dir);
 }
 
+/** Inside this 2D distance of the landmark, the reference gate runs at NEAR odds. */
+const NEAR_REF_DIST = 3;
+/** Gate probability for rooms within NEAR_REF_DIST of their landmark. */
+const NEAR_REF_GATE = 0.45;
+/** Gate probability for rooms beyond NEAR_REF_DIST (stage-B ride-along: the 0.4.0
+ *  flat 0.45 gate made one afar sentence appear in 17/41 rooms of a school run). */
+const FAR_REF_GATE = 0.25;
+
 /**
  * The appended landmark reference line for a composed room, or "" when the seeded
  * gate keeps this room quiet (always=true bypasses the gate: entry + rooms adjacent
- * to their landmark). Two variants: the landmark's afar line with a dice-owned
- * direction tail, or a slot-filled pool line. Vertical references (above/below)
- * use a fixed template - "visible to the above" is not a sentence.
+ * to their landmark). The gate is DISTANCE-BANDED: rooms near their landmark
+ * reference it at 0.45, far rooms at 0.25. Two line families: one of the landmark's
+ * afar VARIANTS plus a dice-owned direction tail (4-tail deck), or a slot-filled
+ * pool line. Vertical references (above/below) use a fixed template.
+ * Four rng draws happen unconditionally so the stream shape never depends on
+ * branch outcomes.
  */
 export function landmarkRefLine(
     areaSeed: number,
@@ -371,24 +478,34 @@ export function landmarkRefLine(
     pools: SectorPools,
     landmark: LandmarkDressing,
     dir: string,
-    always: boolean
+    always: boolean,
+    dist: number
 ): string {
     if (dir === "" || !landmark || landmark.name === "") { return ""; }
     const rng = splitmix64(hashCoord(areaSeed, path + ":lmref"));
-    const gate = rng();
+    const gateRoll = rng();
     const variant = rng();
+    const afarPick = rng();
     const lineRoll = rng();
-    if (!always && gate >= 0.45) { return ""; }
+    const gate = dist <= NEAR_REF_DIST ? NEAR_REF_GATE : FAR_REF_GATE;
+    if (!always && gateRoll >= gate) { return ""; }
     if (dir === "above" || dir === "below") {
         return "The " + landmark.name + " lies somewhere " + dir + ".";
     }
-    if (variant < 0.5 && landmark.afar !== "") {
+    const afars: string[] = [];
+    const rawAfars = landmark.afars || [];
+    for (let i = 0; i < rawAfars.length; i++) {
+        if (rawAfars[i] !== "") { afars.push(rawAfars[i]); }
+    }
+    if (variant < 0.5 && afars.length > 0) {
+        const afar = afars[Math.floor(afarPick * afars.length)];
         const tails = [
             " It lies to the " + dir + " of here.",
             " It stands " + dir + " of here.",
             " From here, it is " + dir + ".",
+            " The way " + dir + " leads toward it.",
         ];
-        return landmark.afar + tails[Math.floor(lineRoll * tails.length)];
+        return afar + tails[Math.floor(lineRoll * tails.length)];
     }
     const lines = pools && pools.landmarkLines && pools.landmarkLines.length > 0
         ? pools.landmarkLines

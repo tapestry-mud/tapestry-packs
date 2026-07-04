@@ -129,9 +129,10 @@ export function mintAreaGeometry(areaState: AreaState, onDone: (result: MintResu
                 const lmPathStr = landmarkPath(homeLm);
                 const dx = coords[0] - homeLm.x;
                 const dy = coords[1] - homeLm.y;
-                const nearLandmark = Math.sqrt(dx * dx + dy * dy) <= 1.5;
+                const distToHome = Math.sqrt(dx * dx + dy * dy);
+                const nearLandmark = distToHome <= 1.5;
                 const always = path === "0,0,0" || nearLandmark;
-                const ref = landmarkRefLine(areaSeed, path, pools, homeDress, dirWord(path, lmPathStr), always);
+                const ref = landmarkRefLine(areaSeed, path, pools, homeDress, dirWord(path, lmPathStr), always, distToHome);
                 if (ref !== "") {
                     prose = prose + " " + ref;
                 }
