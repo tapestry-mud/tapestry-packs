@@ -169,6 +169,30 @@ fill_items:
   system: "You name loot. ASCII only."
   template: "List 6 items found in {idea}, levels {level_min} to {level_max}. Mix weapons and armor, mostly common with a couple rare. Give each a name, a short description, a rarity (common, uncommon, rare, or epic), and a kind (weapon or armor)."
 
+fill_landmarks:
+  system: >
+    You invent landmark locations for a text adventure. Second person, present
+    tense, ASCII only. Never mention compass directions, exits, or doorways -
+    spatial wording is added by the game, not by you.
+  template: >
+    Invent {count} distinct landmark locations found in {idea}. For each give:
+    a short name of 2 to 4 words with no leading article, a room description of
+    2 to 3 sentences as the player stands there, and one afar line describing
+    how it looks from a distance.
+
+fill_sector:
+  system: >
+    You write terse room prose fragments for a text adventure. Second person,
+    present tense, ASCII only. Never mention compass directions, exits, or
+    doorways - spatial wording is added by the game, not by you.
+  template: >
+    For the zone of {idea} surrounding the landmark called {landmark}: give a
+    one-word lowercase qualifier naming the zone's character, 8 opening lines,
+    8 short details, 8 sensory lines, 6 hooks (small things a player might poke
+    at), and 4 short lines that mention the {landmark} and use the literal
+    placeholder {dir} exactly where its compass direction belongs, like:
+    The {landmark} is visible to the {dir}.
+
 fill_prose_openers:
   system: "You write room opening lines. Present tense, second person, terse, ASCII only."
   template: "Write 6 opening lines for a {place} in {idea}. One short sentence each."

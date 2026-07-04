@@ -121,3 +121,69 @@ test("keeps mid-sentence numbers; only leading enumeration is stripped", () => {
   const out = mapProse(JSON.stringify({ lines: ["The big top rises 30 feet overhead."] }), "opener");
   assert.equal(out[0].desc, "The big top rises 30 feet overhead.");
 });
+
+// ---------------------------------------------------------------------------
+// v3: landmarks + sectors
+// ---------------------------------------------------------------------------
+import { mapLandmarks, mapSector, stripDirectionTalk, SCHEMA_LANDMARKS, SCHEMA_SECTOR } from "../dist/scripts/oracle-structured.js";
+import { fallbackLandmarks } from "../dist/scripts/sector-compose.js";
+
+test("stripDirectionTalk drops only the offending sentences", () => {
+  const s = "The tent rises high. A canvas arch leads north into the dark. Sawdust coats everything.";
+  assert.equal(stripDirectionTalk(s), "The tent rises high. Sawdust coats everything.");
+  assert.equal(stripDirectionTalk("No exits here."), "");
+  assert.equal(stripDirectionTalk("Clean prose stays."), "Clean prose stays.");
+});
+
+test("mapLandmarks returns exactly k, deduped, linted, article-stripped", () => {
+  const raw = JSON.stringify({ landmarks: [
+    { name: "The Big Top", desc: "Striped canvas soars overhead. A flap opens to the west wind. The ring smells of sawdust.", afar: "A striped peak over the trees." },
+    { name: "big top", desc: "Duplicate should be replaced.", afar: "x" },
+    { name: "Animal Cages", desc: "Iron bars in long rows. Something paces inside.", afar: "Low iron shapes in a row." },
+  ]});
+  const out = mapLandmarks(raw, 3, fallbackLandmarks());
+  assert.equal(out.length, 3);
+  assert.equal(out[0].name, "big top");
+  assert.equal(out[0].desc, "Striped canvas soars overhead. The ring smells of sawdust."); // west sentence linted
+  assert.equal(out[1].name, fallbackLandmarks()[0].name); // duplicate replaced from the deck
+  assert.equal(out[2].name, "animal cages");
+});
+
+test("mapLandmarks pads from the deck and synthesizes past exhaustion", () => {
+  const out = mapLandmarks(null, 3, fallbackLandmarks());
+  assert.equal(out.length, 3);
+  assert.equal(out[0].name, fallbackLandmarks()[0].name);
+  const tiny = mapLandmarks(null, 3, fallbackLandmarks().slice(0, 1));
+  assert.equal(tiny.length, 3);
+  assert.equal(tiny[1].name, "waypoint 2");
+});
+
+test("mapSector maps pools, lowercases qualifier to one word, enforces {dir}", () => {
+  const raw = JSON.stringify({
+    qualifier: "Flooded Midway",
+    openers: ["Water sheets the boards."], details: ["Ticket stubs float past."],
+    sensory: ["Everything smells of wet rope."], hooks: ["A prize booth stands shuttered."],
+    landmark_lines: [
+      "The big top is visible to the {DIR}.",
+      "The big top is that way.",
+      "Past the booths, the big top rises { dir } of here."
+    ],
+  });
+  const s = mapSector(raw);
+  assert.equal(s.qualifier, "flooded");
+  assert.deepEqual(s.openers, ["Water sheets the boards."]);
+  assert.equal(s.landmarkLines.length, 2); // the slotless line dropped
+  assert.ok(s.landmarkLines[0].includes("{dir}"));
+  assert.ok(s.landmarkLines[1].includes("{dir}"));
+  assert.equal(mapSector("garbage"), null);
+  assert.equal(mapSector(null), null);
+});
+
+test("v3 schemas are strict root objects", () => {
+  for (const schema of [SCHEMA_LANDMARKS, SCHEMA_SECTOR]) {
+    const j = JSON.parse(schema);
+    assert.equal(j.type, "object");
+    assert.equal(j.additionalProperties, false);
+    assert.ok(Array.isArray(j.required) && j.required.length > 0);
+  }
+});
