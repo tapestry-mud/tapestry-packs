@@ -1,0 +1,58 @@
+# Behavior-only ELITE template (stage-B threat ladder: the charged-band fight).
+# The oracle's mintEliteInstance override supplies identity + hp/damage (elite row
+# of master-balance); this template carries the LIGHTEST swell dials -- dials are
+# template data because SpawnOverride cannot carry properties. Elite = boss-as-data,
+# lighter-dialed: long gaps, small chunks, generous windows.
+id: "tapestry-oracle:swell-elite"
+name: "an elite foe"
+type: "npc"
+tags: []
+base_disposition: hostile
+keywords: [elite, foe]
+behavior: stationary
+stats:
+  strength: 14
+  dexterity: 12
+  constitution: 14
+  intelligence: 8
+  wisdom: 6
+  luck: 6
+  max_hp: 120
+  max_resource: 0
+  max_movement: 40
+battle_chance: 0.9
+battle_interval: 3
+properties:
+  mob_level: 3
+  regen_hp: 1
+  regen_movement: 2
+  corpse_decay: 600
+  description: "A dangerous foe holds this ground."
+  ac:
+    slash: 3
+    pierce: 3
+    bash: 4
+    exotic: 2
+  xp_value: 120
+  swell_window: "telegraph-rung"
+  swell_tell: "full"
+  swell_baseline_gap_ticks: 90
+  swell_jitter_ticks: 25
+  swell_telegraph_ticks: 22
+  swell_window_ticks: 65
+  swell_mode: "stretch"
+  swell_line1_id: "strike"
+  swell_line1_counter: "sidestep"
+  swell_line1_tell_full: "Your foe winds up a heavy STRIKE -- sidestep it!"
+  swell_line1_tell_shape: "Your foe winds up for something heavy."
+  swell_line2_id: "slam"
+  swell_line2_counter: "brace"
+  swell_line2_tell_full: "Your foe rears back for a crushing SLAM -- brace for it!"
+  swell_line2_tell_shape: "Your foe rears back for something crushing."
+  swell_tell_hidden: "Your foe gathers itself."
+  swell_chunk_pct: 8
+  swell_whiff_pct: 10
+  swell_weather_pct: 8
+  swell_narration_countered: "Clean read. Your counter lands and your foe staggers."
+  swell_narration_whiffed: "Wrong move. The blow crashes through your guard."
+  swell_narration_weathered: "Too slow. The blow lands full force."

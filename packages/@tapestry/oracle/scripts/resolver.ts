@@ -16,6 +16,9 @@
 import * as tapestry from "@tapestry/engine";
 import { splitmix64, hashCoord, weightedPick } from "./prng.js";
 import { statsFor, rarityModifier, clampLevel } from "./balance-table.js";
+import { selectMobEntry, pickEpithet, defaultMinibossFor } from "./tiers.js";
+import { parseLandmarksTable } from "./sector-compose.js";
+import type { SixAxisTable } from "./six-axis.js";
 import type { OracleEntry } from "./oracle-tables.js";
 
 const REUSE_WEIGHT = 0.65;
@@ -68,15 +71,24 @@ function rollFormula(notation: string, rng: () => number): number {
 }
 
 // ---------------------------------------------------------------------------
-// mintMobInstance - roll a mob type from frozen <area>:mobs, roll concrete
-// stats from master-balance at level, return the frozen override blob.
+// mintMobInstance - select a mob type from frozen <area>:mobs (six-axis: the
+// MOB-1 menace roll bent by the room's CONTEXT bump, resolved through the band
+// resolver; a 0.4.0 flat table falls back to the flat weighted pick), roll
+// concrete stats from master-balance at level, return the frozen override blob.
 // Returns null if the table is empty.
 // ---------------------------------------------------------------------------
 
-export function mintMobInstance(areaId: string, level: number, rng: () => number): any {
+export function mintMobInstance(
+    areaId: string,
+    level: number,
+    rng: () => number,
+    mob1?: SixAxisTable,
+    bump: number = 0
+): any {
     const entries = table(areaId, "mobs");
     if (entries.length === 0) { return null; }
-    const type = rollEntry(entries, rng);
+    const type = selectMobEntry(mob1, entries, bump, rng);
+    if (!type) { return null; }
     const stats = statsFor("mob", level, rng);
     const maxHp = rollFormula(stats.hp as string, rng);
     return {
@@ -86,6 +98,76 @@ export function mintMobInstance(areaId: string, level: number, rng: () => number
         maxHp,
         damage: stats.damage,
         items: [],
+        noReroll: true,
+    };
+}
+
+// ---------------------------------------------------------------------------
+// mintEliteInstance - the charged-band tier (stage-B ladder). Selection forces
+// the top of the menace span (apex band preferred; empty slice falls back
+// flat), the SIGNATURE epithet is rolled once here and frozen into the name,
+// and stats come from the elite row of master-balance. Swell dials are
+// template data (swell-elite) - spawn overrides cannot carry properties.
+// ---------------------------------------------------------------------------
+
+export function mintEliteInstance(
+    areaId: string,
+    level: number,
+    rng: () => number,
+    mob1?: SixAxisTable
+): any {
+    const entries = table(areaId, "mobs");
+    if (entries.length === 0) { return null; }
+    const type = selectMobEntry(mob1, entries, 99, rng);
+    if (!type) { return null; }
+    const epithet = pickEpithet(rng);
+    const stats = statsFor("elite", level, rng);
+    const maxHp = rollFormula(stats.hp as string, rng);
+    return {
+        fromType: "elite-" + type.id,
+        name: "the " + epithet + " " + type.name,
+        desc: type.desc,
+        maxHp,
+        damage: stats.damage,
+        items: [],
+        noReroll: true,
+    };
+}
+
+// ---------------------------------------------------------------------------
+// mintMinibossInstance - the landmark tier (stage-B ladder). Identity comes
+// from the frozen landmarks table (boss-<i> rows); a 0.4.0-era table (no boss
+// rows) synthesizes "the keeper of the <landmark>" via defaultMinibossFor.
+// Stats come from the miniboss row of master-balance.
+// Returns null when the landmarks table has no record at that index.
+// ---------------------------------------------------------------------------
+
+export function mintMinibossInstance(
+    areaId: string,
+    landmarkIndex: number,
+    level: number,
+    rng: () => number
+): any {
+    const lm = table(areaId, "landmarks");
+    const parsed = parseLandmarksTable(lm);
+    const dress = parsed[landmarkIndex];
+    if (!dress || dress.name === "") { return null; }
+    let bossName = dress.bossName;
+    let bossDesc = dress.bossDesc;
+    if (bossName === "") {
+        const synth = defaultMinibossFor(dress.name);
+        bossName = synth.bossName;
+        bossDesc = synth.bossDesc;
+    } else if (bossDesc === "") {
+        bossDesc = defaultMinibossFor(dress.name).bossDesc;
+    }
+    const stats = statsFor("miniboss", level, rng);
+    return {
+        fromType: "miniboss-" + landmarkIndex,
+        name: bossName,
+        desc: bossDesc,
+        maxHp: rollFormula(String(stats.hp), rng),
+        damage: stats.damage,
         noReroll: true,
     };
 }

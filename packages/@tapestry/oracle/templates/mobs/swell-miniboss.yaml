@@ -1,0 +1,58 @@
+# Behavior-only MINIBOSS template (stage-B threat ladder: the landmark structural
+# fight -- "the cage-master at the animal cages"). Identity freezes in the area's
+# landmarks table (boss-<i> rows); mintMinibossInstance supplies it plus hp/damage
+# from the miniboss row of master-balance. Dials sit between elite and boss --
+# template data because SpawnOverride cannot carry properties.
+id: "tapestry-oracle:swell-miniboss"
+name: "a champion"
+type: "npc"
+tags: []
+base_disposition: hostile
+keywords: [miniboss, champion]
+behavior: stationary
+stats:
+  strength: 16
+  dexterity: 12
+  constitution: 16
+  intelligence: 9
+  wisdom: 7
+  luck: 6
+  max_hp: 400
+  max_resource: 0
+  max_movement: 40
+battle_chance: 0.9
+battle_interval: 3
+properties:
+  mob_level: 4
+  regen_hp: 2
+  regen_movement: 2
+  corpse_decay: 900
+  description: "A champion of this place bars the way."
+  ac:
+    slash: 4
+    pierce: 4
+    bash: 5
+    exotic: 3
+  xp_value: 200
+  swell_window: "telegraph-rung"
+  swell_tell: "full"
+  swell_baseline_gap_ticks: 70
+  swell_jitter_ticks: 20
+  swell_telegraph_ticks: 18
+  swell_window_ticks: 55
+  swell_mode: "stretch"
+  swell_line1_id: "strike"
+  swell_line1_counter: "sidestep"
+  swell_line1_tell_full: "The champion winds up a heavy STRIKE -- sidestep it!"
+  swell_line1_tell_shape: "The champion winds up for something heavy."
+  swell_line2_id: "slam"
+  swell_line2_counter: "brace"
+  swell_line2_tell_full: "The champion rears back for a crushing SLAM -- brace for it!"
+  swell_line2_tell_shape: "The champion rears back for something crushing."
+  swell_tell_hidden: "The champion gathers some dark energy."
+  swell_chunk_pct: 12
+  swell_whiff_pct: 9
+  swell_weather_pct: 7
+  swell_narration_countered: "Clean read. Your counter lands and the champion staggers."
+  swell_narration_whiffed: "Wrong move. The blow crashes through your guard."
+  swell_narration_weathered: "Too slow. The blow lands full force."

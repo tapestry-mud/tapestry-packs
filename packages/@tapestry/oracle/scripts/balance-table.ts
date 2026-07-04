@@ -60,6 +60,19 @@ export function statsFor(kind: string, level: number, rng: () => number): Record
         const band = data.boss.damage[nearestAnchor(data.boss.anchors, L)];
         return { hp, damage: weightedPick(band, rng) };
     }
+    if (kind === "elite") {
+        // Stage-B charged-band tier: dice-notation hp like mob, its own curve.
+        const a = data.elite.anchors;
+        const count = interpolateNumeric(a, data.elite.hp_count, L);
+        const dmgBand = data.elite.damage[nearestAnchor(a, L)];
+        return { hp: count + "d" + data.elite.hp_die, damage: weightedPick(dmgBand, rng) };
+    }
+    if (kind === "miniboss") {
+        // Stage-B landmark tier: flat hp number like boss, its own curve.
+        const hp = interpolateNumeric(data.miniboss.anchors, data.miniboss.hp, L);
+        const band = data.miniboss.damage[nearestAnchor(data.miniboss.anchors, L)];
+        return { hp, damage: weightedPick(band, rng) };
+    }
     return {};
 }
 

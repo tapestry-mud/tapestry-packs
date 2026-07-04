@@ -37,6 +37,30 @@ boss:
     20: [{ w: 100, value: "5d12" }]
     40: [{ w: 100, value: "8d12" }]
     60: [{ w: 100, value: "12d12" }]
+# Stage-B threat tiers. elite = charged-band swell-capable mob (~2x trash hp,
+# a die-size up on damage); miniboss = the landmark structural fight (between
+# elite and boss). Swell DIALS are template data (swell-elite / swell-miniboss
+# templates) because spawn overrides cannot carry properties; only hp/damage
+# roll from here - balance stays dice-owned.
+elite:
+  anchors: [1, 10, 20, 40, 60]
+  hp_count:   [12, 28, 52, 120, 240]    # NdM with M=10, like mob
+  hp_die: 10
+  damage:
+    1:  [{ w: 100, value: "1d10" }]
+    10: [{ w: 100, value: "3d10" }]
+    20: [{ w: 100, value: "5d10" }]
+    40: [{ w: 100, value: "8d12" }]
+    60: [{ w: 100, value: "12d12" }]
+miniboss:
+  anchors: [1, 10, 20, 40, 60]
+  hp:     [90, 320, 750, 2000, 4200]    # interpolates continuously
+  damage:
+    1:  [{ w: 100, value: "2d8" }]
+    10: [{ w: 100, value: "3d10" }]
+    20: [{ w: 100, value: "4d12" }]
+    40: [{ w: 100, value: "7d12" }]
+    60: [{ w: 100, value: "10d12" }]
 # Boss swell dials: kept as the v1 clamped 5-rank table. The combat spec owns the 1-60 curve.
 boss_swell:
   1: { swell_baseline_gap_ticks: 80, swell_jitter_ticks: 20, swell_telegraph_ticks: 20, swell_window_ticks: 60, swell_chunk_pct: 12, swell_whiff_pct: 8, swell_weather_pct: 6 }

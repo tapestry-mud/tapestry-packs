@@ -1,0 +1,37 @@
+# Behavior-only base template: TIMID trash mob (stage-B disposition axis).
+# No id, name, stats, or fixed identity -- the oracle's override blob supplies those.
+# The engine has NO flee-on-sight seam (documented gap): timid approximates as
+# neutral (never initiates) + wimpy_pct 65 (bolts early once hurt) + restless
+# wandering. Disposition rides TEMPLATE selection; see wary-melee.yaml.
+id: "tapestry-oracle:skittish-melee"
+name: "a creature"
+type: "npc"
+tags: []
+base_disposition: neutral
+keywords: [creature]
+behavior: wander
+stats:
+  strength: 10
+  dexterity: 10
+  constitution: 10
+  intelligence: 4
+  wisdom: 4
+  luck: 6
+  max_hp: 20
+  max_resource: 0
+  max_movement: 80
+properties:
+  mob_level: 1
+  regen_hp: 1
+  regen_movement: 5
+  wander_interval: 45
+  wander_chance: 0.6
+  wander_boundary: "area"
+  wimpy_pct: 65
+  corpse_decay: 300
+  description: "A creature keeps its distance here."
+  ac:
+    slash: 1
+    pierce: 1
+    bash: 1
+    exotic: 0
