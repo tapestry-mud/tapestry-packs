@@ -159,7 +159,7 @@ fill_places:
 
 fill_mobs:
   system: "You name creatures and foes. ASCII only."
-  template: "List 5 common foes that inhabit {idea}, levels {level_min} to {level_max}. Give each a name and one short description."
+  template: "List 8 foes that inhabit {idea}, levels {level_min} to {level_max} - exactly 2 weak skulkers, 3 common foes, 2 dangerous hunters, and 1 apex predator. Give each a name, one short description, and its band (skulker, common, hunter, or apex)."
 
 fill_boss:
   system: "You name a single memorable boss. ASCII only."

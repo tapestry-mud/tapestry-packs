@@ -1,5 +1,13 @@
+# Banded mob deck (stage-B six-axis): id prefix mb-<band>- assigns each creature
+# a MOB-1 menace band (skulker/common/hunter/apex). WHICH one spawns is a banded
+# dice roll bent by the room band; the apex band doubles as the elite pool.
 oracle_table:
   kind: mobs
   entries:
-    - { w: 60, id: angry-cook, name: "angry cook", desc: "Red-faced, ladle raised.", balance_ref: mob }
-    - { w: 40, id: scullion, name: "scullion", desc: "A soot-streaked pot-scrubber.", balance_ref: mob }
+    - { w: 50, id: mb-skulker-pantry-rat, name: "pantry rat", desc: "All whiskers and hunger.", balance_ref: mob }
+    - { w: 50, id: mb-skulker-scullion, name: "scullion", desc: "A soot-streaked pot-scrubber.", balance_ref: mob }
+    - { w: 60, id: mb-common-angry-cook, name: "angry cook", desc: "Red-faced, ladle raised.", balance_ref: mob }
+    - { w: 40, id: mb-common-waiter-wraith, name: "waiter wraith", desc: "It glides with a tray it will never set down.", balance_ref: mob }
+    - { w: 50, id: mb-hunter-sauciers-shade, name: "saucier's shade", desc: "It stirs a pot of something that watches back.", balance_ref: mob }
+    - { w: 50, id: mb-hunter-carving-dervish, name: "carving-knife dervish", desc: "A whirl of edges looking for a roast.", balance_ref: mob }
+    - { w: 40, id: mb-apex-tandoor-beast, name: "tandoor beast", desc: "Heat rolls off it in oven waves.", balance_ref: mob }

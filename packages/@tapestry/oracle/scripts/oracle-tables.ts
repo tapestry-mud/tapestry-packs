@@ -452,7 +452,14 @@ export function bakedTables(setId: string): OracleTableData[] {
 // ---------------------------------------------------------------------------
 
 function fallbackMobs(): OracleEntry[] {
-    return [{ w: 60, id: "wanderer", name: "wanderer", desc: "A wary local.", balance_ref: "mob" }];
+    // Banded ids (mb-<band>-...) so even the fallback table exercises the
+    // MOB-1 menace bands; see tiers.bandOfEntryId.
+    return [
+        { w: 50, id: "mb-skulker-scavenger", name: "scavenger", desc: "It bolts for cover when it can.", balance_ref: "mob" },
+        { w: 60, id: "mb-common-wanderer", name: "wanderer", desc: "A wary local.", balance_ref: "mob" },
+        { w: 50, id: "mb-hunter-prowler", name: "prowler", desc: "It has been following you a while.", balance_ref: "mob" },
+        { w: 40, id: "mb-apex-brute", name: "brute", desc: "The biggest thing that lives here.", balance_ref: "mob" },
+    ];
 }
 
 function fallbackBoss(): OracleEntry[] {

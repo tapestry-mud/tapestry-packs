@@ -94,8 +94,30 @@ export function mapPlaces(raw: string | null): string[] {
     return arr.map((p: unknown) => cleanName(p)).filter((s: string) => !junk(s)).slice(0, 12);
 }
 
+const MOB_BANDS: Record<string, boolean> = { skulker: true, common: true, hunter: true, apex: true };
+
+/** Banded mob mapper (stage-B six-axis): each record carries a MOB-1 menace
+ *  band, encoded into the id as mb-<band>-<slug> (the writeOracleTable field
+ *  whitelist means structure rides the id). Invalid/missing bands -> common. */
 export function mapMobs(raw: string | null): OracleEntry[] {
-    return mapRecords(raw, "mobs", 50, "mob");
+    const j = parseJson(raw);
+    const arr = j && Array.isArray(j.mobs) ? j.mobs : null;
+    if (!arr) { return []; }
+    const out: OracleEntry[] = [];
+    for (const rec of arr) {
+        const name = cleanName(rec && rec.name);
+        if (junk(name)) { continue; }
+        const rawBand = (rec && typeof rec.band === "string" ? rec.band : "").toLowerCase().trim();
+        const band = MOB_BANDS[rawBand] ? rawBand : "common";
+        out.push({
+            w: 50,
+            id: "mb-" + band + "-" + slug(name),
+            name,
+            desc: cleanDesc(rec && rec.desc),
+            balance_ref: "mob",
+        });
+    }
+    return out;
 }
 
 export function mapBoss(raw: string | null): OracleEntry[] {
@@ -185,8 +207,12 @@ export const SCHEMA_MOBS = JSON.stringify({
             type: "array",
             items: {
                 type: "object",
-                properties: { name: { type: "string" }, desc: { type: "string" } },
-                required: ["name", "desc"], additionalProperties: false,
+                properties: {
+                    name: { type: "string" },
+                    desc: { type: "string" },
+                    band: { type: "string", enum: ["skulker", "common", "hunter", "apex"] },
+                },
+                required: ["name", "desc", "band"], additionalProperties: false,
             },
         },
     },

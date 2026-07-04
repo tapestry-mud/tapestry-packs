@@ -18,16 +18,36 @@ test("mapScars returns [] on malformed JSON", () => {
   assert.deepEqual(mapScars(null), []);
 });
 
-test("mapMobs maps wrapped JSON to entries", () => {
-  const raw = JSON.stringify({ mobs: [{ name: "Imp", desc: "small" }, { name: "Ogre", desc: "big" }] });
+test("mapMobs maps wrapped JSON to banded mb- entries", () => {
+  const raw = JSON.stringify({ mobs: [
+    { name: "Imp", desc: "small", band: "skulker" },
+    { name: "Ogre", desc: "big", band: "apex" },
+  ] });
   const out = mapMobs(raw);
   assert.equal(out.length, 2);
-  assert.deepEqual(out[0], { w: 50, id: "imp", name: "Imp", desc: "small", balance_ref: "mob" });
+  assert.deepEqual(out[0], { w: 50, id: "mb-skulker-imp", name: "Imp", desc: "small", balance_ref: "mob" });
+  assert.deepEqual(out[1], { w: 50, id: "mb-apex-ogre", name: "Ogre", desc: "big", balance_ref: "mob" });
+});
+
+test("mapMobs defaults an invalid or missing band to common", () => {
+  const out = mapMobs(JSON.stringify({ mobs: [
+    { name: "Imp", desc: "small", band: "boss" },
+    { name: "Rat", desc: "gray" },
+  ] }));
+  assert.equal(out[0].id, "mb-common-imp");
+  assert.equal(out[1].id, "mb-common-rat");
 });
 
 test("mapMobs returns [] on malformed JSON", () => {
   assert.deepEqual(mapMobs("not json"), []);
   assert.deepEqual(mapMobs(null), []);
+});
+
+test("SCHEMA_MOBS requires the band enum", () => {
+  const j = JSON.parse(SCHEMA_MOBS);
+  const item = j.properties.mobs.items;
+  assert.deepEqual(item.properties.band.enum, ["skulker", "common", "hunter", "apex"]);
+  assert.ok(item.required.includes("band"));
 });
 
 test("mapBoss takes the single record", () => {

@@ -1,7 +1,12 @@
+# Banded mob deck (stage-B six-axis): id prefix mb-<band>- assigns each creature
+# a MOB-1 menace band (skulker/common/hunter/apex). WHICH one spawns is a banded
+# dice roll bent by the room band; the apex band doubles as the elite pool.
 oracle_table:
   kind: mobs
   entries:
-    - { w: 50, id: gloomfang-stalker, name: "gloomfang stalker", desc: "It hunts the dark on too many legs.", balance_ref: mob }
-    - { w: 50, id: cave-wretch, name: "cave wretch", desc: "A pale thing that flinches from light.", balance_ref: mob }
-    - { w: 50, id: bone-gnawer, name: "bone gnawer", desc: "It cracks the marrow of the lost.", balance_ref: mob }
-    - { w: 40, id: deep-lurker, name: "deep lurker", desc: "Eyes like wet stones in the gloom.", balance_ref: mob }
+    - { w: 50, id: mb-skulker-cave-wretch, name: "cave wretch", desc: "A pale thing that flinches from light.", balance_ref: mob }
+    - { w: 50, id: mb-common-gloomfang-stalker, name: "gloomfang stalker", desc: "It hunts the dark on too many legs.", balance_ref: mob }
+    - { w: 50, id: mb-common-bone-gnawer, name: "bone gnawer", desc: "It cracks the marrow of the lost.", balance_ref: mob }
+    - { w: 40, id: mb-hunter-deep-lurker, name: "deep lurker", desc: "Eyes like wet stones in the gloom.", balance_ref: mob }
+    - { w: 40, id: mb-hunter-blind-angler, name: "blind angler", desc: "Its lure glows the exact color of hope.", balance_ref: mob }
+    - { w: 40, id: mb-apex-chasm-maw, name: "chasm maw", desc: "A mouth the dark keeps feeding.", balance_ref: mob }
