@@ -129,19 +129,6 @@ export function mapBoss(raw: string | null): OracleEntry[] {
     return [{ w: 100, id: slug(name), name, desc: cleanDesc(rec.desc), balance_ref: "boss" }];
 }
 
-function mapRecords(raw: string | null, key: string, w: number, balanceRef: string): OracleEntry[] {
-    const j = parseJson(raw);
-    const arr = j && Array.isArray(j[key]) ? j[key] : null;
-    if (!arr) { return []; }
-    const out: OracleEntry[] = [];
-    for (const rec of arr) {
-        const name = cleanName(rec && rec.name);
-        if (junk(name)) { continue; }
-        out.push({ w, id: slug(name), name, desc: cleanDesc(rec && rec.desc), balance_ref: balanceRef });
-    }
-    return out;
-}
-
 export function mapItems(raw: string | null): OracleEntry[] {
     const j = parseJson(raw);
     const arr = j && Array.isArray(j.items) ? j.items : null;
