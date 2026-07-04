@@ -1,6 +1,6 @@
 ---
 capability: core-navigation
-last-updated: 2026-06-18
+last-updated: 2026-07-04
 ---
 
 # core-navigation
@@ -39,19 +39,35 @@ version, width, quit).
 - On successful movement, the room description is sent to the mover, disposition is
   triggered, and bystanders in both the old and new room receive arrival/departure
   messages (sleeping entities are excluded from those broadcasts).
-  (packages/@tapestry/core/scripts/commands/movement.ts:48-61)
+  (packages/@tapestry/core/scripts/commands/movement.ts:48-65)
+
+- The movement-triggered render honors the player's brief preference: when the
+  core-declared `brief` bool player property is true, the handler passes `true` as the
+  second argument to `tapestry.world.sendRoomDescription`, which suppresses only the
+  description body (room name, `[Exits: ...]`, and entity lines are unchanged; engine
+  >=0.1.48). Explicit `look` keeps the always-full one-arg call. Brief mode v1 scope is
+  the six directional commands; enter/recall/leave/group follow renders stay full.
+  (packages/@tapestry/core/scripts/commands/movement.ts:50-54;
+  packages/@tapestry/core/properties.yml:22-25)
+
+
+- The `brief` command (role player, category accessibility) toggles the preference:
+  no argument flips it, `brief on` / `brief off` set it explicitly, anything else
+  prints usage. The property persists on the player like other non-transient prefs.
+  Help topic: help/brief.yaml. (packages/@tapestry/core/scripts/commands/brief.ts;
+  packages/@tapestry/core/help/brief.yaml)
 
 - On successful movement, the engine publishes the "player.direction.moved" event with
   entityId, leaderName, direction, fromRoom, toRoom, and arrivalFrom.
-  (packages/@tapestry/core/scripts/commands/movement.ts:62-69)
+  (packages/@tapestry/core/scripts/commands/movement.ts:66-73)
 
 - On failed movement (no exit in that direction), the player receives "You cannot go
   that way." and the engine publishes "player.move.failed".
-  (packages/@tapestry/core/scripts/commands/movement.ts:71-77)
+  (packages/@tapestry/core/scripts/commands/movement.ts:75-81)
 
 - Arrival messages use opposite-direction labels: arriving from north means the message
   reads "from the south"; arriving from up reads "from below".
-  (packages/@tapestry/core/scripts/commands/movement.ts:10-17; packages/@tapestry/core/scripts/commands/movement.ts:59-61)
+  (packages/@tapestry/core/scripts/commands/movement.ts:10-17; packages/@tapestry/core/scripts/commands/movement.ts:63-65)
 
 ### Look and Examine
 
@@ -260,4 +276,5 @@ version, width, quit).
 
 ## Change Log
 
+- 2026-07-04 [brief-mode-command](changes/2026-07-04-brief-mode-command.md) - brief mode v1 (tapestry#42): `brief` toggle command + core-declared `brief` bool player pref; directional movement renders name/exits/entities only when on (engine >=0.1.48 sendRoomDescription flag); `look` always full
 - 2026-06-18 [command-catalog-display](changes/2026-06-18-command-catalog-display.md)

@@ -47,7 +47,11 @@ directions.forEach(function(entry) {
             var moved = tapestry.world.moveEntity(actor.entityId, dir);
             if (moved) {
                 var newRoomId = tapestry.world.getEntityRoomId(actor.entityId);
-                tapestry.world.sendRoomDescription(actor.entityId);
+                // Brief mode (accessibility, tapestry#42): movement-triggered renders honor
+                // the player's `brief` pref (name + exits + entities only). Explicit `look`
+                // always renders full - it keeps the one-arg call in look.ts.
+                var brief = tapestry.world.getProperty(actor.entityId, 'brief') === true;
+                tapestry.world.sendRoomDescription(actor.entityId, brief);
                 tapestry.world.triggerDisposition(actor.entityId);
                 tapestry.world.sendToRoomExceptSleeping(
                     oldRoomId,

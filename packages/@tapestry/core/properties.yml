@@ -19,6 +19,10 @@ properties:
     description: "Player is silenced from emotes"
     type: bool
     applies_to: [player]
+  brief:
+    description: "Player preference (brief mode): movement-triggered room renders show name, exits, and entities only; explicit look always renders the full description"
+    type: bool
+    applies_to: [player]
 
   recall_room_id:
     description: "Room ID where the player recalls to on death (defaults to tapestry-core:recall)"

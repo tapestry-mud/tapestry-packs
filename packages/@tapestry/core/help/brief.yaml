@@ -1,0 +1,20 @@
+id: "brief"
+title: "Brief"
+category: "accessibility"
+brief: "Show only room name, exits, and occupants when moving."
+role: "player"
+syntax:
+  - "brief"
+  - "brief on"
+  - "brief off"
+body: |
+  Brief mode reduces the text shown when you move between rooms: the
+  room name, the exit list, and who or what is here - the description
+  body is skipped. Type "look" at any time to read the full
+  description of the room you are in; look always shows everything.
+
+  With no argument, brief toggles. The setting persists across
+  sessions and only affects movement output on this connection; web
+  client panels are unchanged.
+keywords: [brief, verbosity, accessibility, screen-reader, movement]
+see_also: [look, width, accessibility]
