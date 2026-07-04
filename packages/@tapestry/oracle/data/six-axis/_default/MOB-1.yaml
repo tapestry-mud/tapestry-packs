@@ -1,0 +1,18 @@
+# Shared MOB-1 DEGREE mechanics - used by EVERY solo area (theme-agnostic).
+# The stage-B mobs six-axis: WHICH creature shows up is a banded menace roll, not a
+# flat weighted pick. The area mob table assigns each creature a band via its id
+# prefix (mb-<band>-<slug>); the room's ROOM-1 band bends the roll BEFORE bands are
+# read (the CONTEXT axis: transit -2, chamber 0, charged +2, landmark +1,
+# threshold +2 - tiers.ts CONTEXT_BUMP). A table with no banded ids (any 0.4.0
+# frozen area) falls back to the flat pick - back-compat by construction.
+# Effect text is design documentation, never shown to the player.
+table: MOB-1
+axis: DEGREE
+name: Mob Menace (shared)
+dice: "1d10"
+degree: "menace roll bent by the room band before bands are read (dice-owned; the LLM only names and describes the creatures in each band)"
+bands:
+  - { min: 1, max: 2,  band: skulker, effect: "weak vermin and scavengers; easy prey.", fires: "-" }
+  - { min: 3, max: 6,  band: common,  effect: "the area's ordinary threat.", fires: "-" }
+  - { min: 7, max: 9,  band: hunter,  effect: "a dangerous prowler; respect it.", fires: "-" }
+  - { min: 10, max: 10, band: apex,   effect: "the area's apex creature - the elite selection pool.", fires: "-" }

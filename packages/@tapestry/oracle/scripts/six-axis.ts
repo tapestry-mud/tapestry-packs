@@ -220,11 +220,12 @@ export function loadSixAxisTables(areaThemeDir: string): Record<string, SixAxisT
     return SIX_AXIS_CACHE[areaThemeDir] || {};
 }
 
-// Shared mechanics tables (ROOM-1 bands + ROOM-3 taxonomy) used by EVERY area. Theme-agnostic
-// game logic the LLM never touches. Eager-loaded at module init, same posture as SIX_AXIS_CACHE.
+// Shared mechanics tables (ROOM-1 bands + ROOM-3 taxonomy + MOB-1 menace bands) used by
+// EVERY area. Theme-agnostic game logic the LLM never touches. Eager-loaded at module
+// init, same posture as SIX_AXIS_CACHE.
 const DEFAULT_MECHANICS: Record<string, SixAxisTable> = ((): Record<string, SixAxisTable> => {
     const out: Record<string, SixAxisTable> = {};
-    const ids = ["ROOM-1", "ROOM-3"];
+    const ids = ["ROOM-1", "ROOM-3", "MOB-1"];
     for (let i = 0; i < ids.length; i++) {
         const path = "data/six-axis/_default/" + ids[i] + ".yaml";
         try {
