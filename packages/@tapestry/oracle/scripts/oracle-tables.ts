@@ -1,19 +1,27 @@
 // oracle-tables.ts - Oracle table schema + table-fill generators.
 //
-// fillTables fires the front-loaded LLM burst (places, mobs, boss, items, prose
-// fragments) within the RecommendMaxInFlight=2 budget, assembles the filled
-// tables, and calls onReady when all resolve (or fall back to deterministic
-// fallbacks when the LLM is off or returns empty data).
+// fillTables fires the front-loaded LLM burst within the RecommendMaxInFlight=2
+// budget, assembles the filled tables, and calls onReady when all resolve (or
+// falls back to deterministic entries when the LLM is off or returns bad data).
 //
-// This is the ONLY LLM work in the table-fill lane. P-C and P-D consume the
-// filled tables deterministically.
+// This is the ONLY LLM work in the table-fill lane. Everything downstream
+// consumes the frozen tables deterministically.
 //
-// Burst sequencing:
+// v3 burst sequencing (K = landmark count, a dice-owned geometry fact):
 //   Round 1 (in flight: 1): fill_places
-//   Round 2 (in flight: up to 2 at once): fill_mobs, fill_boss, fill_items
-//     (fired in pairs to stay under RecommendMaxInFlight=2)
-//   Round 3 (in flight: up to 2 at once): fill_prose_openers, fill_prose_details,
-//     fill_prose_atmosphere (fired after mobs/boss/items complete, also in pairs)
+//   Round 2 (in flight: 1): fill_landmarks (bespoke prose for the K landmarks)
+//   Round 3 (in flight: up to 2): fill_mobs, fill_boss, fill_items (paired)
+//   Round 4 (in flight: up to 2): fill_sector x K (per-sector prose pools that
+//     know their landmark's name), with fill_scars chained in as a slot frees
+//
+// The area "prose" table is the UNION of the sector pools (openers->opener,
+// details->detail, sensory->atmosphere) so assembleRoom2 and the legacy compose
+// fallback keep working with zero extra LLM calls. The old fill_prose_* rounds
+// are deleted - sector pools supersede them.
+//
+// normalizeTables is the single normalization point for BOTH paths (LLM + baked):
+// it guarantees exactly K landmark records, K sector pool-sets (synthesized from
+// the prose table when absent - the baked path), a prose table, and a scars table.
 //
 // bakedTables(setId) returns a hand-authored OracleTableData[] for that set.
 // Tables are eagerly loaded at module init time (P-F) - the engine clears
@@ -21,6 +29,11 @@
 
 import * as tapestry from "@tapestry/engine";
 import { getPrompt } from "./prompts.js";
+import {
+    encodeLandmarksTable, parseLandmarksTable, encodeSectorsTable, parseSectorsTable,
+    synthesizeSectors, fallbackLandmarks,
+    type LandmarkDressing, type SectorPools,
+} from "./sector-compose.js";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -50,8 +63,9 @@ export interface OracleTableData {
 export { slug } from "./oracle-structured.js";
 import {
     slug,
-    mapPlaces, mapMobs, mapBoss, mapItems, mapProse, mapScars,
-    SCHEMA_PLACES, SCHEMA_MOBS, SCHEMA_BOSS, SCHEMA_ITEMS, SCHEMA_PROSE, SCHEMA_SCARS,
+    mapPlaces, mapMobs, mapBoss, mapItems, mapScars, mapLandmarks, mapSector,
+    SCHEMA_PLACES, SCHEMA_MOBS, SCHEMA_BOSS, SCHEMA_ITEMS, SCHEMA_SCARS,
+    SCHEMA_LANDMARKS, SCHEMA_SECTOR,
 } from "./oracle-structured.js";
 
 // ---------------------------------------------------------------------------
@@ -74,18 +88,21 @@ function call(
 // ---------------------------------------------------------------------------
 // fillTables
 //
-// Fires the LLM burst and assembles OracleTableData[] for this area.
+// Fires the v3 LLM burst and assembles OracleTableData[] for this area.
 // Calls onReady once all tables are resolved (LLM or fallback).
 //
-// The burst is sequenced so we never exceed RecommendMaxInFlight=2:
-//   - places is fired alone (1 in-flight).
-//   - mobs, boss, items fire as pairs (first 2, then the 3rd when any completes).
-//   - prose openers/details/atmosphere fire after all 3 above complete, in pairs.
+// The burst never exceeds RecommendMaxInFlight=2:
+//   - places fires alone, then landmarks alone (each keys later prompts).
+//   - mobs + boss pair up; items chains in as a slot frees.
+//   - the K fill_sector calls run two at a time; fill_scars chains in once the
+//     last sector call has been LAUNCHED (one slot is free from then on).
 // ---------------------------------------------------------------------------
 
 export function fillTables(
     idea: string,
     levelRange: [number, number],
+    k: number,
+    areaSeed: number,
     onReady: (tables: OracleTableData[]) => void
 ): void {
     const recommend: Recommend = (tapestry as any).authoring.recommend;
@@ -96,7 +113,7 @@ export function fillTables(
         level_max: String(levelRange[1]),
     };
 
-    // Step 1: fill places first - prose fills key off the place list.
+    // Step 1: fill places first - names + sector synthesis key off the place list.
     call(recommend, "fill_places", vars, SCHEMA_PLACES, (placesRaw) => {
         const places = mapPlaces(placesRaw);
         const placeList = places.length > 0 ? places : ["hall", "passage", "chamber", "corner", "threshold", "alcove"];
@@ -105,114 +122,237 @@ export function fillTables(
             entries: placeList.map((p) => ({ w: 10, id: slug(p), name: p, desc: "" })),
         });
 
-        // Step 2: mobs, boss, items in a batch of 3.
-        // Fire them in pairs to stay under the in-flight limit.
-        let pending = 3;
-        const done = () => {
-            pending -= 1;
-            if (pending === 0) {
-                fillProse(recommend, idea, placeList, tables, onReady);
-            }
+        // Step 2: landmarks (1 in-flight). K is a dice-owned geometry fact; the
+        // mapper returns EXACTLY k records no matter what the model does.
+        const lmVars: Record<string, string> = {
+            idea,
+            count: String(k),
+            level_min: vars.level_min,
+            level_max: vars.level_max,
         };
+        call(recommend, "fill_landmarks", lmVars, SCHEMA_LANDMARKS, (lmRaw) => {
+            const landmarks = mapLandmarks(lmRaw, k, fallbackLandmarks());
+            tables.push({ kind: "landmarks", entries: encodeLandmarksTable(landmarks) });
 
-        // Pair 1: mobs + boss (2 in-flight).
-        // fill_items is chained inside the mobs callback so it fires only after
-        // mobs resolves (freeing one slot), keeping in-flight <= 2 at all times.
-        let itemsFired = false;
-        const fireItems = () => {
-            if (itemsFired) { return; }
-            itemsFired = true;
-            call(recommend, "fill_items", vars, SCHEMA_ITEMS, (raw) => {
-                const entries = mapItems(raw);
-                tables.push({ kind: "items", entries: entries.length > 0 ? entries : fallbackItems() });
+            // Step 3: mobs, boss, items - pairs under the in-flight limit.
+            let pending = 3;
+            const done = () => {
+                pending -= 1;
+                if (pending === 0) {
+                    fillSectors(recommend, idea, k, areaSeed, landmarks, tables, onReady);
+                }
+            };
+            let itemsFired = false;
+            const fireItems = () => {
+                if (itemsFired) { return; }
+                itemsFired = true;
+                call(recommend, "fill_items", vars, SCHEMA_ITEMS, (raw) => {
+                    const entries = mapItems(raw);
+                    tables.push({ kind: "items", entries: entries.length > 0 ? entries : fallbackItems() });
+                    done();
+                });
+            };
+            call(recommend, "fill_mobs", vars, SCHEMA_MOBS, (raw) => {
+                const entries = mapMobs(raw);
+                tables.push({ kind: "mobs", entries: entries.length > 0 ? entries : fallbackMobs() });
                 done();
+                fireItems();
             });
-        };
-        call(recommend, "fill_mobs", vars, SCHEMA_MOBS, (raw) => {
-            const entries = mapMobs(raw);
-            tables.push({ kind: "mobs", entries: entries.length > 0 ? entries : fallbackMobs() });
-            done();
-            // mobs slot freed - now fire items (boss may still be in-flight: 1 -> 2).
-            fireItems();
-        });
-        call(recommend, "fill_boss", vars, SCHEMA_BOSS, (raw) => {
-            const entries = mapBoss(raw);
-            tables.push({ kind: "boss", entries: entries.length > 0 ? entries : fallbackBoss() });
-            done();
-            // boss slot freed - fire items if mobs hasn't already triggered it.
-            fireItems();
+            call(recommend, "fill_boss", vars, SCHEMA_BOSS, (raw) => {
+                const entries = mapBoss(raw);
+                tables.push({ kind: "boss", entries: entries.length > 0 ? entries : fallbackBoss() });
+                done();
+                fireItems();
+            });
         });
     });
 }
 
 // ---------------------------------------------------------------------------
-// fillProse (private)
+// fillSectors (private)
 //
-// Fires the three prose LLM calls after mobs/boss/items all complete.
-// All prose fragments go into a single "prose" table with entries tagged by
-// sub-kind via the entry name field ("opener", "detail", "atmosphere").
+// Fires the K fill_sector calls (two at a time) plus fill_scars, assembles the
+// "sectors" table (holes left by unparseable sector replies are synthesized in
+// normalizeTables), builds the area "prose" table as the UNION of the sector
+// pools, and calls onReady.
 // ---------------------------------------------------------------------------
 
-function fillProse(
+function fillSectors(
     recommend: Recommend,
     idea: string,
-    places: string[],
+    k: number,
+    areaSeed: number,
+    landmarks: LandmarkDressing[],
     tables: OracleTableData[],
     onReady: (t: OracleTableData[]) => void
 ): void {
-    const proseEntries: OracleEntry[] = [];
+    const results: Array<SectorPools | null> = [];
+    for (let i = 0; i < k; i++) { results.push(null); }
     const scarEntries: OracleEntry[] = [];
-    // Phase 1: fill fragments for the primary place; used loosely for all rooms.
-    const keyPlace = places[0] || "chamber";
-    let pending = 4;
-    const done = () => {
-        pending -= 1;
-        if (pending === 0) {
-            if (proseEntries.length === 0) {
-                for (const e of fallbackProse()) { proseEntries.push(e); }
-            }
-            tables.push({ kind: "prose", entries: proseEntries });
-            if (scarEntries.length === 0) {
-                for (const e of fallbackScars()) { scarEntries.push(e); }
-            }
-            tables.push({ kind: "scars", entries: scarEntries });
-            onReady(tables);
-        }
-    };
-    const proseVars: Record<string, string> = { idea, place: keyPlace };
-
-    // Round B (atmosphere + scars) fires as Round A (openers + details) frees slots,
-    // keeping in-flight <= 2 at all times.
-    let atmosphereFired = false;
-    const fireAtmosphere = () => {
-        if (atmosphereFired) { return; }
-        atmosphereFired = true;
-        call(recommend, "fill_prose_atmosphere", proseVars, SCHEMA_PROSE, (raw) => {
-            for (const e of mapProse(raw, "atmosphere")) { proseEntries.push(e); }
-            done();
-        });
-    };
+    let completed = 0;
+    let launched = 0;
     let scarsFired = false;
+    let scarsDone = false;
+    let sectorsDone = false;
+
+    const finish = () => {
+        if (!sectorsDone || !scarsDone) { return; }
+        // The area prose table = union of the sector pools (assembleRoom2 + the
+        // legacy compose fallback read it). Sector tags map: sensory->atmosphere.
+        const proseEntries: OracleEntry[] = [];
+        let n = 0;
+        for (let i = 0; i < k; i++) {
+            const s = results[i];
+            if (!s) { continue; }
+            for (const line of s.openers) { proseEntries.push({ w: 10, id: "opener-" + n, name: "opener", desc: line }); n++; }
+            for (const line of s.details) { proseEntries.push({ w: 10, id: "detail-" + n, name: "detail", desc: line }); n++; }
+            for (const line of s.sensory) { proseEntries.push({ w: 10, id: "atmosphere-" + n, name: "atmosphere", desc: line }); n++; }
+        }
+        tables.push({ kind: "prose", entries: proseEntries.length > 0 ? proseEntries : fallbackProse() });
+        const empty: SectorPools = { qualifier: "", openers: [], details: [], sensory: [], hooks: [], landmarkLines: [] };
+        const dense: SectorPools[] = [];
+        for (let i = 0; i < k; i++) { dense.push(results[i] || empty); }
+        tables.push({ kind: "sectors", entries: encodeSectorsTable(dense) });
+        tables.push({ kind: "scars", entries: scarEntries.length > 0 ? scarEntries : fallbackScars() });
+        onReady(tables);
+    };
+
     const fireScars = () => {
         if (scarsFired) { return; }
         scarsFired = true;
-        call(recommend, "fill_scars", proseVars, SCHEMA_SCARS, (raw) => {
+        call(recommend, "fill_scars", { idea, place: "chamber" }, SCHEMA_SCARS, (raw) => {
             for (const e of mapScars(raw)) { scarEntries.push(e); }
-            done();
+            scarsDone = true;
+            finish();
         });
     };
 
-    // Round A: openers + details (2 in-flight). Each completion frees a slot for one Round B call.
-    call(recommend, "fill_prose_openers", proseVars, SCHEMA_PROSE, (raw) => {
-        for (const e of mapProse(raw, "opener")) { proseEntries.push(e); }
-        done();
-        fireAtmosphere();
-    });
-    call(recommend, "fill_prose_details", proseVars, SCHEMA_PROSE, (raw) => {
-        for (const e of mapProse(raw, "detail")) { proseEntries.push(e); }
-        done();
+    const fireNext = () => {
+        if (launched >= k) { return; }
+        const i = launched;
+        launched += 1;
+        call(recommend, "fill_sector", { idea, landmark: landmarks[i].name }, SCHEMA_SECTOR, (raw) => {
+            results[i] = mapSector(raw);
+            completed += 1;
+            if (launched < k) {
+                fireNext();
+            } else {
+                fireScars();
+            }
+            if (completed === k) {
+                sectorsDone = true;
+                finish();
+            }
+        });
+    };
+
+    fireNext();
+    if (k > 1) {
+        fireNext();
+    } else {
         fireScars();
-    });
+    }
+}
+
+// ---------------------------------------------------------------------------
+// normalizeTables
+//
+// The single normalization point for BOTH the LLM and baked paths, called by
+// area-gen before the freeze. Guarantees:
+//   - a "landmarks" table with EXACTLY k valid, name-distinct records
+//     (fallback-deck padding + waypoint synthesis past exhaustion);
+//   - a "sectors" table with exactly k pool-sets (a hole or empty pool-set is
+//     synthesized from the prose table; a hole's non-empty qualifier survives);
+//   - a "prose" table (fallback entries when absent);
+//   - a "scars" table (generic fallback when absent).
+// Pure given its inputs - golden-tested under plain node.
+// ---------------------------------------------------------------------------
+
+export function normalizeTables(tables: OracleTableData[], k: number, areaSeed: number): OracleTableData[] {
+    const out = tables.slice();
+    const byKind = function (kind: string): OracleTableData | null {
+        for (let i = 0; i < out.length; i++) {
+            if (out[i].kind === kind) { return out[i]; }
+        }
+        return null;
+    };
+
+    // 1. prose first (sector synthesis reads it).
+    let prose = byKind("prose");
+    if (!prose) {
+        prose = { kind: "prose", entries: fallbackProse() };
+        out.push(prose);
+    }
+
+    // 2. landmarks: exactly k valid distinct records.
+    const lmTable = byKind("landmarks");
+    const parsedLm = lmTable ? parseLandmarksTable(lmTable.entries) : [];
+    const deck = fallbackLandmarks();
+    const used: Record<string, boolean> = {};
+    const finalLm: LandmarkDressing[] = [];
+    for (let i = 0; i < k; i++) {
+        const cand = parsedLm[i];
+        if (cand && cand.name !== "" && cand.desc !== "" && !used[cand.name.toLowerCase()]) {
+            used[cand.name.toLowerCase()] = true;
+            finalLm.push(cand);
+        } else {
+            finalLm.push(null as any); // hole - filled below
+        }
+    }
+    let deckIdx = 0;
+    for (let i = 0; i < k; i++) {
+        if (finalLm[i]) { continue; }
+        let fill: LandmarkDressing | null = null;
+        while (deckIdx < deck.length) {
+            const cand = deck[deckIdx];
+            deckIdx += 1;
+            if (!used[cand.name.toLowerCase()]) { fill = cand; break; }
+        }
+        if (!fill) {
+            fill = {
+                name: "waypoint " + (i + 1),
+                desc: "Something about this spot draws the eye and holds it. Travelers have marked it before you; their signs are half-worn but legible.",
+                afar: "A marked waypoint interrupts the landscape.",
+            };
+        }
+        used[fill.name.toLowerCase()] = true;
+        finalLm[i] = fill;
+    }
+    const lmEntries = encodeLandmarksTable(finalLm);
+    if (lmTable) {
+        lmTable.entries = lmEntries;
+    } else {
+        out.push({ kind: "landmarks", entries: lmEntries });
+    }
+
+    // 3. sectors: exactly k pool-sets; empty ones synthesize from prose.
+    const secTable = byKind("sectors");
+    const parsedSec = secTable ? parseSectorsTable(secTable.entries) : [];
+    const synth = synthesizeSectors(k, prose.entries, areaSeed);
+    const finalSec: SectorPools[] = [];
+    for (let i = 0; i < k; i++) {
+        const cand = parsedSec[i];
+        if (cand && cand.openers.length > 0) {
+            finalSec.push(cand);
+        } else {
+            const s = synth[i];
+            if (cand && cand.qualifier !== "") { s.qualifier = cand.qualifier; }
+            finalSec.push(s);
+        }
+    }
+    const secEntries = encodeSectorsTable(finalSec);
+    if (secTable) {
+        secTable.entries = secEntries;
+    } else {
+        out.push({ kind: "sectors", entries: secEntries });
+    }
+
+    // 4. scars: always present.
+    if (!byKind("scars")) {
+        out.push({ kind: "scars", entries: fallbackScars() });
+    }
+
+    return out;
 }
 
 // ---------------------------------------------------------------------------
@@ -225,7 +365,7 @@ function fillProse(
 // so a lazy load inside any runtime callback returns null.
 // ---------------------------------------------------------------------------
 
-const BAKED_KINDS = ["places", "mobs", "boss", "items", "rooms", "prose"];
+const BAKED_KINDS = ["places", "mobs", "boss", "items", "rooms", "prose", "landmarks"];
 export const BAKED_SET_IDS = ["test-kitchen", "endless-underdeep"]; // add ids as baked sets are authored
 
 // Rebuild loadYaml entry rows (CLR-backed, not native JsArrays) into native JS objects

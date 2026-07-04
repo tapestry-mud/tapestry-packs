@@ -1,14 +1,15 @@
 name: "@tapestry/oracle"
-version: "0.3.1"
+version: "0.4.0"
 type: module
 display_name: "Tapestry Oracle"
 description: >
-  The solo-RPG generator. Rolls a coherent area from tables, materializes it lazily as the
-  player explores, dresses it with the LLM as flavor over dice-owned facts, and freezes every
-  step into sidecars. Dice own facts; the LLM owns dressing and is never load-bearing.
+  The solo-RPG generator. Rolls a coherent area from tables inside a radius envelope with
+  landmarks, Voronoi sector prose, and edge-hash exits; mints the whole room graph at creation
+  (no stubs) and populates each room on first arrival. Dice own facts; the LLM owns dressing
+  and is never load-bearing.
 author: "Tapestry"
 license: "AGPL-3.0"
-engine: ">=0.1.44"
+engine: ">=0.1.47"
 validation: strict
 dependencies:
   "@tapestry/core": "^0.1.22"

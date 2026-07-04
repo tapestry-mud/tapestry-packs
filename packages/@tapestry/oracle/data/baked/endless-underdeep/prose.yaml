@@ -1,9 +1,41 @@
+# Prose pool for the endless-underdeep set. 12 lines per tag: the v3
+# anti-repetition floor (pools of 30+ per area) applies to the baked path too.
 oracle_table:
   kind: prose
   entries:
     - { w: 10, id: opener-0, name: opener, desc: "The dark presses close on every side." }
     - { w: 10, id: opener-1, name: opener, desc: "Your torch gutters in the still, cold air." }
+    - { w: 10, id: opener-2, name: opener, desc: "The passage widens into rougher stone." }
+    - { w: 10, id: opener-3, name: opener, desc: "Broken flowstone makes a field of teeth here." }
+    - { w: 10, id: opener-4, name: opener, desc: "The ceiling dips until you walk half-bent." }
+    - { w: 10, id: opener-5, name: opener, desc: "A vein of quartz splits the wall like frozen lightning." }
+    - { w: 10, id: opener-6, name: opener, desc: "Rubble from some old collapse chokes half the chamber." }
+    - { w: 10, id: opener-7, name: opener, desc: "The floor here is swept stone, unnaturally clean." }
+    - { w: 10, id: opener-8, name: opener, desc: "Columns of dripstone bar the way like old fencing." }
+    - { w: 10, id: opener-9, name: opener, desc: "A dry channel snakes across the chamber floor." }
+    - { w: 10, id: opener-10, name: opener, desc: "The walls glitter faintly with wet mineral." }
+    - { w: 10, id: opener-11, name: opener, desc: "Cold air moves through this space with a purpose." }
     - { w: 10, id: detail-0, name: detail, desc: "Water ticks somewhere out in the black." }
     - { w: 10, id: detail-1, name: detail, desc: "Old scratches score the stone, shoulder-high." }
+    - { w: 10, id: detail-2, name: detail, desc: "A rusted piton juts from a crack, rope long gone." }
+    - { w: 10, id: detail-3, name: detail, desc: "Pale moss maps unreadable continents on the wall." }
+    - { w: 10, id: detail-4, name: detail, desc: "Someone stacked flat stones into a small cairn." }
+    - { w: 10, id: detail-5, name: detail, desc: "A boot print has fossilized in the dried mud." }
+    - { w: 10, id: detail-6, name: detail, desc: "Char marks fan across the ceiling in a black star." }
+    - { w: 10, id: detail-7, name: detail, desc: "Tiny bones crunch under your feet like gravel." }
+    - { w: 10, id: detail-8, name: detail, desc: "A seam of coal glints dully where a pick once worked." }
+    - { w: 10, id: detail-9, name: detail, desc: "Water has worn the stone here into smooth flanks." }
+    - { w: 10, id: detail-10, name: detail, desc: "An old torch bracket hangs empty and bent." }
+    - { w: 10, id: detail-11, name: detail, desc: "Crystals bloom in a fist-sized pocket of the wall." }
     - { w: 10, id: atmosphere-0, name: atmosphere, desc: "Nothing down here has seen the sun." }
     - { w: 10, id: atmosphere-1, name: atmosphere, desc: "The deep swallows the sound of your steps." }
+    - { w: 10, id: atmosphere-2, name: atmosphere, desc: "The dark behind you feels recently vacated." }
+    - { w: 10, id: atmosphere-3, name: atmosphere, desc: "A mineral tang coats your tongue." }
+    - { w: 10, id: atmosphere-4, name: atmosphere, desc: "The stone hums faintly, too low to be sound." }
+    - { w: 10, id: atmosphere-5, name: atmosphere, desc: "Your light seems smaller here than it should be." }
+    - { w: 10, id: atmosphere-6, name: atmosphere, desc: "The air is old enough to feel borrowed." }
+    - { w: 10, id: atmosphere-7, name: atmosphere, desc: "Somewhere far off, rock settles with a groan." }
+    - { w: 10, id: atmosphere-8, name: atmosphere, desc: "The cold works its way in at the seams." }
+    - { w: 10, id: atmosphere-9, name: atmosphere, desc: "Every shadow keeps its shape a moment too long." }
+    - { w: 10, id: atmosphere-10, name: atmosphere, desc: "The silence is a pressure against your ears." }
+    - { w: 10, id: atmosphere-11, name: atmosphere, desc: "Dust hangs in your light, undisturbed for years." }

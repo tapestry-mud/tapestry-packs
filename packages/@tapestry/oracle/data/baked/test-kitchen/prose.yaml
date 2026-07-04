@@ -1,9 +1,42 @@
+# Prose pool for the test-kitchen set. 12 lines per tag: the v3 anti-repetition
+# floor (pools of 30+ per area) applies to the baked path too - with pools this
+# size plus neighbor exclusion and variable cadence, adjacent repeats die.
 oracle_table:
   kind: prose
   entries:
     - { w: 10, id: opener-0, name: opener, desc: "Steam hangs in the air." }
     - { w: 10, id: opener-1, name: opener, desc: "Pots clatter somewhere close." }
+    - { w: 10, id: opener-2, name: opener, desc: "Flour dusts every surface like fresh snow." }
+    - { w: 10, id: opener-3, name: opener, desc: "The counters here stand at giant scale." }
+    - { w: 10, id: opener-4, name: opener, desc: "Racks of dented tins wall you in." }
+    - { w: 10, id: opener-5, name: opener, desc: "A butcher's chill clings to this stretch." }
+    - { w: 10, id: opener-6, name: opener, desc: "Burnt sugar has lacquered the floor black." }
+    - { w: 10, id: opener-7, name: opener, desc: "You wade through drifts of onion skins." }
+    - { w: 10, id: opener-8, name: opener, desc: "The tiles underfoot are cracked and greasy." }
+    - { w: 10, id: opener-9, name: opener, desc: "Sacks of grain slump like sleeping bodies." }
+    - { w: 10, id: opener-10, name: opener, desc: "A long prep table runs the length of the room." }
+    - { w: 10, id: opener-11, name: opener, desc: "Knife scars crosshatch every wooden surface." }
     - { w: 10, id: detail-0, name: detail, desc: "Grease slicks the flagstones." }
     - { w: 10, id: detail-1, name: detail, desc: "A long bench runs the wall." }
+    - { w: 10, id: detail-2, name: detail, desc: "Ladles big as shovels hang from iron hooks." }
+    - { w: 10, id: detail-3, name: detail, desc: "A tipped cauldron has dried mid-spill." }
+    - { w: 10, id: detail-4, name: detail, desc: "Someone chalked tallies on the low beam." }
+    - { w: 10, id: detail-5, name: detail, desc: "Mouse tracks stitch through the spilled flour." }
+    - { w: 10, id: detail-6, name: detail, desc: "A stack of chipped plates leans past its balance point." }
+    - { w: 10, id: detail-7, name: detail, desc: "Dried herbs swing overhead in brittle bundles." }
+    - { w: 10, id: detail-8, name: detail, desc: "The cutting board holds a half-diced root, abandoned." }
+    - { w: 10, id: detail-9, name: detail, desc: "An apron hangs on its peg, stiff with old stains." }
+    - { w: 10, id: detail-10, name: detail, desc: "Barrel hoops rust in a corner heap." }
+    - { w: 10, id: detail-11, name: detail, desc: "A bell rope dangles, frayed just out of reach." }
     - { w: 10, id: atmosphere-0, name: atmosphere, desc: "It smells of scorched fat." }
     - { w: 10, id: atmosphere-1, name: atmosphere, desc: "Heat presses from the ovens." }
+    - { w: 10, id: atmosphere-2, name: atmosphere, desc: "Somewhere a tap drips into a full basin." }
+    - { w: 10, id: atmosphere-3, name: atmosphere, desc: "The air tastes of salt and old smoke." }
+    - { w: 10, id: atmosphere-4, name: atmosphere, desc: "A draft carries the ghost of baking bread." }
+    - { w: 10, id: atmosphere-5, name: atmosphere, desc: "Yeast sours the air to the edge of sweetness." }
+    - { w: 10, id: atmosphere-6, name: atmosphere, desc: "Every sound comes back doubled off the tile." }
+    - { w: 10, id: atmosphere-7, name: atmosphere, desc: "The silence has the texture of held breath." }
+    - { w: 10, id: atmosphere-8, name: atmosphere, desc: "Something simmers where nothing should." }
+    - { w: 10, id: atmosphere-9, name: atmosphere, desc: "Cold spots drift through the warmth like currents." }
+    - { w: 10, id: atmosphere-10, name: atmosphere, desc: "Pepper pricks at the back of your throat." }
+    - { w: 10, id: atmosphere-11, name: atmosphere, desc: "The light gutters as if the room breathed." }

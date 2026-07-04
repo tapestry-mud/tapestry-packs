@@ -101,11 +101,38 @@ tapestry.flows.register({
             },
         },
         {
+            // v3: run size picks the target_rooms band (a dice-owned geometry fact;
+            // the exact count rolls from the seed within the band).
+            id: "size",
+            type: "choice",
+            prompt: "Run size:",
+            options: function(_entity: any) {
+                return [
+                    { label: "school (~20 rooms)", value: "school" },
+                    { label: "standard (40-60 rooms)", value: "standard" },
+                    { label: "epic (~100 rooms)", value: "epic" },
+                ];
+            },
+            on_select: function(entity: any, option: any) {
+                entity.setProperty("__solo_size", option.value);
+            },
+        },
+        {
             id: "destination_pack",
             type: "text",
             prompt: "Destination pack (blank to create one):",
             on_input: function(entity: any, value: string) {
                 entity.setProperty("__solo_dest_pack", value);
+            },
+        },
+        {
+            // v3: optional explicit seed - replays and shared runs ("try my circus").
+            // Blank rolls from time x player as always.
+            id: "seed",
+            type: "text",
+            prompt: "Seed (blank for random):",
+            on_input: function(entity: any, value: string) {
+                entity.setProperty("__solo_seed", value);
             },
         },
     ],
@@ -115,6 +142,8 @@ tapestry.flows.register({
         const rawMin = entity.getProperty("__solo_min_level") || "";
         const rawMax = entity.getProperty("__solo_max_level") || "";
         const rawDest = entity.getProperty("__solo_dest_pack") || "";
+        const rawSize = entity.getProperty("__solo_size") || "";
+        const rawSeed = entity.getProperty("__solo_seed") || "";
         // Scenario is an LLM-OFF-only concept. The scenario step is skipped when the LLM is on,
         // so a value here is stale from a prior LLM-off run - ignore it, or it overrides the typed
         // idea (the "typed Haunted Circus, generated endless-underdeep" bug).
@@ -191,8 +220,23 @@ tapestry.flows.register({
 
         const bakedSetId = scenario ? scenario.bakedSet : BAKED_SET_IDS[0];
 
+        // Size band (defaults to standard if the step was somehow skipped).
+        const sizeValue = (rawSize === "school" || rawSize === "epic") ? String(rawSize) : "standard";
+
+        // Optional explicit seed: blank -> random; non-blank must be a
+        // non-negative integer.
+        let seedValue: number | null = null;
+        const seedStr = String(rawSeed).trim();
+        if (seedStr !== "") {
+            const parsedSeed = parseInt(seedStr, 10);
+            if (isNaN(parsedSeed) || parsedSeed < 0) {
+                return { success: false, message: "Seed must be a non-negative integer (or blank for random)." };
+            }
+            seedValue = parsedSeed;
+        }
+
         try {
-            createSoloArea(entity, ideaValue, nameValue, minLevel, maxLevel, namespace, bakedSetId);
+            createSoloArea(entity, ideaValue, nameValue, minLevel, maxLevel, namespace, bakedSetId, sizeValue, seedValue);
         } catch (err) {
             const detail = (err && (err as any).message) ? (err as any).message : String(err);
             return { success: false, message: "Area generation failed: " + detail };

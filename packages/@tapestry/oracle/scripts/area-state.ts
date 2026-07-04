@@ -35,6 +35,10 @@ export interface AreaState {
     areaSlug: string;
     /** The run-state key for this area's RunState cell (format: playerId + ":" + areaId). */
     runStateKey: string;
+    /** Rolled target room count (dice-owned size fact; drives the radius envelope).
+     *  Persisted via the frozen "structure" oracle table; defaults to 40 on a
+     *  reload of a pre-v3 area. */
+    targetRooms: number;
     /** Frozen roster rolled at creation. */
     roster: Roster;
     /** Loaded six-axis tables for this area's theme, keyed by table id (ROOM-1..6).

@@ -1,0 +1,23 @@
+# Baked landmark deck for the endless-underdeep set. Encoded rows (id-prefix codec
+# in sector-compose.ts): "lm-<i>" = bespoke room description, "afar-<i>" = the
+# seen-from-afar line; name = display name, no leading article. 8 records. NO
+# direction or exit talk - spatial wording is appended geometry only.
+oracle_table:
+  kind: landmarks
+  entries:
+    - { w: 10, id: lm-0, name: drowned cathedral, desc: "Columns of living stone rise out of black water into a vault your light cannot find. Every drip returns as a chord, as if the dark were singing back. Pale fish move between the pillars like slow candles." }
+    - { w: 10, id: afar-0, name: drowned cathedral, desc: "Vast columns glimmer over a sheet of black water." }
+    - { w: 10, id: lm-1, name: bone garden, desc: "Ribs of something enormous arch out of the cave floor, furred with white lichen. Smaller skeletons nest between them, arranged with unsettling care. Nothing here died where it lies." }
+    - { w: 10, id: afar-1, name: bone garden, desc: "A stand of pale, curving shapes breaks the cavern floor." }
+    - { w: 10, id: lm-2, name: dwarf gate, desc: "A door of fused granite stands twice your height, its runes worn to shadows. The seam down its middle has never been forced. Cold air breathes through it in a slow rhythm, in and out." }
+    - { w: 10, id: afar-2, name: dwarf gate, desc: "A monolithic slab of worked stone stands where no stone should." }
+    - { w: 10, id: lm-3, name: glowshelf reef, desc: "Fungus builds itself into terraces here, shelf on shelf of cold blue light. The glow pulses when you speak, brightening at consonants. Wading through it leaves your boots luminous for a while." }
+    - { w: 10, id: afar-3, name: glowshelf reef, desc: "A tide of cold blue light laps against the dark." }
+    - { w: 10, id: lm-4, name: hanging city, desc: "Stone dwellings cling to the underside of the cavern roof like wasp nests, stairs spiraling into them from nowhere. Rope bridges sag between windows that are all dark. Dust falls from them in slow threads, as if something up there still walks." }
+    - { w: 10, id: afar-4, name: hanging city, desc: "Dwellings stud the distant ceiling like barnacles." }
+    - { w: 10, id: lm-5, name: black chasm, desc: "The floor simply ends at a rim of crumbling shale. Pebbles kicked over the edge fall without ever striking bottom. Standing here you feel the pull of it in your knees, patient and impersonal." }
+    - { w: 10, id: afar-5, name: black chasm, desc: "A ragged absence interrupts the floor of the world." }
+    - { w: 10, id: lm-6, name: forge of the deep, desc: "An anvil the size of a cottage sits amid dead furnaces, its face mirror-bright where everything else is rust. Tools too heavy for human arms lean in their racks. The air still tastes of hot iron, decades cold." }
+    - { w: 10, id: afar-6, name: forge of the deep, desc: "Dead furnaces bulk in the gloom around a single gleam of steel." }
+    - { w: 10, id: lm-7, name: whisper pool, desc: "A perfectly round pool holds water so still it reads as solid. Lean close and it murmurs in a language you almost know, naming things you have lost. The urge to answer is strong here." }
+    - { w: 10, id: afar-7, name: whisper pool, desc: "A coin of silver water gleams flat and unmoving." }
