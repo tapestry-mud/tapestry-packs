@@ -31,13 +31,21 @@
 
 import * as tapestry from "@tapestry/engine";
 import { splitmix64, hashCoord } from "./prng.js";
-import { rngFor, mintMobInstance, mintBossInstance, mintItemInstance, mintMobInstanceByTypeId, shouldReuse } from "./resolver.js";
+import {
+    rngFor, mintMobInstance, mintBossInstance, mintItemInstance, mintMobInstanceByTypeId,
+    mintEliteInstance, mintMinibossInstance, shouldReuse,
+} from "./resolver.js";
 import { getAreaState, getRoomPath } from "./area-state.js";
 import { ensureAreaContext, getMintedSet } from "./area-context.js";
 import { getRunState } from "./run-state.js";
-import { pureDegree, DEFAULT_SPAN } from "./structure.js";
+import { pureDegree, DEFAULT_SPAN, placeLandmarks, landmarkPath } from "./structure.js";
 import { diceSpan, resolveBands } from "./six-axis.js";
 import { pathKey } from "./coords.js";
+import {
+    CONTEXT_BUMP, DISPOSITION_TEMPLATES, TIER_TEMPLATES,
+    rollDisposition, isEntryAdjacent, stirLine,
+} from "./tiers.js";
+import { grantStarterKit } from "./starter-kit.js";
 
 // ---------------------------------------------------------------------------
 // Tuning constants (unchanged in kind from 0.3.x room-gen.ts)
@@ -126,41 +134,100 @@ export function markPopulated(areaId: string, roomId: string): void {
 }
 
 // ---------------------------------------------------------------------------
-// populateRoom - ambient spawns + boss clock for one room. Returns the spawned
-// display names (for the arrival lines). Spawn semantics identical to 0.3.x
-// materializeRoom steps 3-4.
+// populateRoom - the stage-B threat-tier ladder for one room's first visit.
+// Returns the arrival LINES (per-disposition dressing; the caller capitalizes
+// and sends). Order, with every rng draw in fixed code position so per-room
+// streams stay traversal-independent:
+//   1. miniboss - landmark rooms spawn their frozen identity (exactly one per
+//      landmark, skipped when the landmark is entry-adjacent: the
+//      structurally-safe start wins over exactly-K, documented).
+//   2. elite - charged-band rooms convert their first density slot into a
+//      swell-capable epithet-named elite (never at entry/entry-adjacent).
+//   3. trash - the 0.3.x ambient loop (same stream keys, mint-vs-reuse, loot
+//      draw), now with a dice-owned band-weighted DISPOSITION per spawn that
+//      picks the template (aggro/neutral/timid).
+//   4. boss clock - advances every first visit, but FIRES at most once per
+//      run, and never in landmark or entry-adjacent rooms (no double-boss).
 // ---------------------------------------------------------------------------
 
 export function populateRoom(roomId: string, areaId: string): string[] {
-    const spawned: string[] = [];
+    const lines: string[] = [];
     const areaState = getAreaState(areaId);
-    if (!areaState) { return spawned; }
+    if (!areaState) { return lines; }
     const path = getRoomPath(roomId);
-    if (!path) { return spawned; }
+    if (!path) { return lines; }
     const runState = getRunState(areaState.runStateKey);
-    if (!runState) { return spawned; }
+    if (!runState) { return lines; }
 
     const areaSeed = areaState.areaSeed;
     const roomSeed = hashCoord(areaSeed, path);
     const coordKey = String(roomSeed);
     const mintedMobTypes = getMintedSet(areaId);
+    const mob1 = areaState.sixAxis["MOB-1"];
 
-    // Spawn density from the PURE geometry band - the same degree number the
+    // Spawn density + band from the PURE geometry degree - the same number the
     // mint used, so structure, prose cadence, and density agree.
     const room1 = areaState.sixAxis["ROOM-1"];
+    let band = "chamber";
     let density = 1;
     if (room1) {
         const span = diceSpan(room1.dice);
         const degree = pureDegree(areaSeed, path, span);
-        const band = resolveBands(room1, degree).band;
+        band = resolveBands(room1, degree).band;
         density = Object.prototype.hasOwnProperty.call(DENSITY, band) ? DENSITY[band] : 1;
     } else {
         const degree = pureDegree(areaSeed, path, DEFAULT_SPAN);
         density = degree <= 2 ? 0 : (degree <= 7 ? 1 : 2);
+        band = density === 0 ? "transit" : (density === 2 ? "charged" : "chamber");
+    }
+
+    const safeStart = path === "0,0,0" || isEntryAdjacent(path);
+
+    // 1. Landmark miniboss (structural fight with an address). placeLandmarks is
+    // pure f(seed) - cheap to recompute; no landmark list is persisted in state.
+    let isLandmarkRoom = false;
+    const landmarkCells = placeLandmarks(areaSeed, areaState.targetRooms);
+    let landmarkIndex = -1;
+    for (let i = 0; i < landmarkCells.length; i++) {
+        if (landmarkPath(landmarkCells[i]) === path) {
+            landmarkIndex = i;
+            isLandmarkRoom = true;
+            break;
+        }
+    }
+    if (landmarkIndex >= 0 && !safeStart) {
+        const mb = mintMinibossInstance(areaId, landmarkIndex, 1, rngFor(areaSeed, coordKey + ":miniboss"));
+        if (mb) {
+            tapestry.mobs.spawnMob({
+                template: TIER_TEMPLATES.miniboss,
+                roomId,
+                override: mb,
+            });
+            lines.push(stirLine("miniboss", String(mb.name || "something")));
+        }
     }
 
     const spawnRng = rngFor(areaSeed, coordKey + ":spawn");
-    for (let i = 0; i < density; i++) {
+
+    // 2. Charged-band elite: the band's effect text has promised "a
+    // swell-capable mob" since 3.6 - the first density slot delivers it.
+    let trashCount = density;
+    if (band === "charged" && !safeStart && density > 0) {
+        const elite = mintEliteInstance(areaId, 1, spawnRng, mob1);
+        if (elite) {
+            tapestry.mobs.spawnMob({
+                template: TIER_TEMPLATES.elite,
+                roomId,
+                override: elite,
+            });
+            lines.push(stirLine("elite", String(elite.name || "something")));
+            trashCount = density - 1;
+        }
+    }
+
+    // 3. Ambient trash (0.3.x semantics: same stream keys, mint-vs-reuse set,
+    // unconditional loot draw) + the dice-owned disposition axis.
+    for (let i = 0; i < trashCount; i++) {
         const level = 1;
         let override: any;
         if (mintedMobTypes && shouldReuse(mintedMobTypes.size, spawnRng)) {
@@ -169,7 +236,7 @@ export function populateRoom(roomId: string, areaId: string): string[] {
             const reuseIdx = Math.floor(spawnRng() * mintedArr.length);
             override = mintMobInstanceByTypeId(areaId, mintedArr[reuseIdx], level, spawnRng);
         } else {
-            override = mintMobInstance(areaId, level, spawnRng);
+            override = mintMobInstance(areaId, level, spawnRng, mob1, Object.prototype.hasOwnProperty.call(CONTEXT_BUMP, band) ? CONTEXT_BUMP[band] : 0);
             if (override && mintedMobTypes) {
                 mintedMobTypes.add(override.fromType);
             }
@@ -184,35 +251,41 @@ export function populateRoom(roomId: string, areaId: string): string[] {
                 override.items.push(loot.id);
             }
         }
+        // Disposition draw is UNCONDITIONAL per iteration too (fixed stream
+        // shape). Dice own the mix; the template carries the temperament.
+        const disposition = rollDisposition(band, spawnRng);
         if (override) {
             tapestry.mobs.spawnMob({
-                template: "tapestry-oracle:hostile-melee",
+                template: DISPOSITION_TEMPLATES[disposition],
                 roomId,
                 override,
             });
-            spawned.push(String(override.name || "something"));
+            lines.push(stirLine(disposition, String(override.name || "something")));
         }
     }
 
-    // Boss clock: threshold from the path-dependent counter (deliberate channel);
-    // the roll itself is seeded from the room so a given first-arrival is stable.
+    // 4. Boss clock: the ONE wandering big-boss pity timer. Counter advances on
+    // every first visit; the FIRE is gated - at most once per run, never in a
+    // landmark room (miniboss owns it) or the safe start.
     const bossRng = splitmix64(roomSeed + 1);
-    if (bossClockFires(runState.roomsSinceLastBoss, bossRng)) {
+    const clockRoll = bossClockFires(runState.roomsSinceLastBoss, bossRng);
+    if (clockRoll && !runState.bossFired && !isLandmarkRoom && !safeStart) {
         const bossOverride = mintBossInstance(areaId, 1, rngFor(areaSeed, coordKey + ":boss"));
         if (bossOverride) {
             tapestry.mobs.spawnMob({
-                template: "tapestry-oracle:swell-boss",
+                template: TIER_TEMPLATES.boss,
                 roomId,
                 override: bossOverride,
             });
-            spawned.push(String(bossOverride.name || "something vast"));
+            lines.push(stirLine("boss", String(bossOverride.name || "something vast")));
         }
+        runState.bossFired = true;
         runState.roomsSinceLastBoss = 0;
     } else {
         runState.roomsSinceLastBoss += 1;
     }
 
-    return spawned;
+    return lines;
 }
 
 // ---------------------------------------------------------------------------
@@ -248,6 +321,19 @@ export function registerPopulationHooks(): void {
             if (!areaId) {
                 return; // not an oracle room - cheap refusal.
             }
+            // PLAYTEST SCAFFOLDING (stage C/E own the real design): a player's
+            // first move inside an oracle area grants the starter kit exactly
+            // once per player per area (persisted in the area's grants table -
+            // no double-grant on reload/re-entry; the creator is granted at
+            // creation because teleport fires no direction event). Runs BEFORE
+            // the revisit gate so walk-ins through populated rooms still get it.
+            const areaStateForKit = getAreaState(areaId);
+            if (areaStateForKit) {
+                const kitLines = grantStarterKit(areaId, areaStateForKit.areaSeed, String(entityId), areaStateForKit.levelRange[0]);
+                for (let i = 0; i < kitLines.length; i++) {
+                    (tapestry as any).world.send(entityId, kitLines[i] + "\r\n");
+                }
+            }
             if (isPopulated(areaId, toRoom)) {
                 return; // backtrack/revisit: spawns happen exactly once.
             }
@@ -256,7 +342,7 @@ export function registerPopulationHooks(): void {
             markPopulated(areaId, toRoom);
             const spawned = populateRoom(toRoom, areaId);
             for (let i = 0; i < spawned.length; i++) {
-                (tapestry as any).world.send(entityId, capitalizeFirst(spawned[i]) + " stirs at your arrival.\r\n");
+                (tapestry as any).world.send(entityId, capitalizeFirst(spawned[i]) + "\r\n");
             }
         } catch (_err) {
             // graceful: never throw into the engine loop.

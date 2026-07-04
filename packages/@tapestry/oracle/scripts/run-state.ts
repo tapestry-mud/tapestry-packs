@@ -14,6 +14,10 @@
 
 export interface RunState {
     roomsSinceLastBoss: number;
+    /** Stage-B: the wandering big-boss pity timer fires at most ONCE per run.
+     *  Run-state is session-scoped (resets on reboot - the accepted 0.3.x
+     *  posture), so a reboot re-arms the timer. */
+    bossFired: boolean;
 }
 
 // In-memory keyed store. Not persisted (slice-1 scope).

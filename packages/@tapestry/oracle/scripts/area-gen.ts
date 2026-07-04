@@ -33,6 +33,7 @@ import { rollTargetRooms, landmarkCount } from "./structure.js";
 import { mintAreaGeometry } from "./geometry-mint.js";
 import { populateEntry } from "./population.js";
 import { EMPTY_ROSTER } from "./area-context.js";
+import { grantStarterKit } from "./starter-kit.js";
 
 // ---------------------------------------------------------------------------
 // Configurable constants
@@ -264,6 +265,13 @@ export function createSoloArea(
                 delete pending[playerId];
                 tapestry.world.teleportEntity(playerId, gen.entryRoomId);
                 tapestry.world.send(playerId, "The pattern settles into place around you.");
+                // PLAYTEST SCAFFOLDING (stage C/E own the real design): the
+                // creator gets the starter kit here because teleportEntity
+                // fires no direction event for the moved-handler grant path.
+                const kitLines = grantStarterKit(areaSlug, areaSeed, String(playerId), minLevel);
+                for (let i = 0; i < kitLines.length; i++) {
+                    tapestry.world.send(playerId, kitLines[i]);
+                }
                 tapestry.admin.executeAs(playerId, "look");
             }
         });
@@ -293,7 +301,7 @@ function buildArea(
 
     // Run state before population so the boss clock reads correct state.
     const stateKey = runKey(actor.entityId, areaSlug);
-    setRunState(stateKey, { roomsSinceLastBoss: 0 });
+    setRunState(stateKey, { roomsSinceLastBoss: 0, bossFired: false });
 
     // Every area is six-axis: authored theme keeps its set; any other area
     // assembles ROOM-2 from its frozen prose + scars tables (frozen above).

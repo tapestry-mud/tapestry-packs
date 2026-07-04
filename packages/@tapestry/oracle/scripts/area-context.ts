@@ -122,7 +122,7 @@ export function ensureAreaContext(roomId: string): string | undefined {
         // Run-state is session-scoped (resets on reboot); a synthetic per-area key
         // suffices since the population trigger has no playerId-stable key here.
         const runStateKey = "reload:" + areaId;
-        setRunState(runStateKey, { roomsSinceLastBoss: 0 });
+        setRunState(runStateKey, { roomsSinceLastBoss: 0, bossFired: false });
         const theme = typeof area.theme === "string" ? area.theme : "";
         const themeDir = theme.toLowerCase().indexOf("underdeep") !== -1 ? "endless-underdeep" : "";
         // target_rooms rides the frozen "structure" oracle table (the T5 area
