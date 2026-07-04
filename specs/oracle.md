@@ -10,11 +10,17 @@ last-updated: 2026-07-04
 `@tapestry/oracle` is the solo-RPG area generator for Tapestry. It rolls a coherent area from
 frozen tables inside a radius envelope with landmarks, Voronoi sector prose, and edge-hash exits;
 mints the WHOLE room graph (real two-way exits, zero stubs) at creation; and populates each room
-with spawns on first player arrival. The LLM fills tables once at area creation (dressing only --
-names, bespoke landmark prose, sector fragment pools, scar lines); all facts (seed, target_rooms,
-landmark placement, sector geometry, exit existence, direction words, boss clock, stat rolls) are
-dice-owned and deterministic. The generator works in both LLM-on mode (live burst via
-`authoring.recommend` structured output) and LLM-off mode (baked hand-authored table sets).
+with spawns on first player arrival through a THREAT-TIER LADDER: ambient trash with a dice-owned
+disposition mix, a swell-capable elite in every charged-band room, one named miniboss AT each
+landmark, and a single once-per-run wandering boss on the pity clock. The LLM fills tables once
+at area creation (dressing only -- names, bespoke landmark prose + miniboss identities, sector
+fragment pools, banded creature rosters, scar lines); all facts (seed, target_rooms, landmark
+placement, sector geometry, exit existence, direction words, menace-band selection, disposition
+distribution, boss clock, stat rolls) are dice-owned and deterministic. The generator works in
+both LLM-on mode (live burst via `authoring.recommend` structured output) and LLM-off mode
+(baked hand-authored table sets). The `solo` command is open to players (roles `["player"]`);
+the stage-E per-player rate limit is a documented SHIP DEPENDENCY before a server has real
+strangers on it.
 
 The design has two hard lines: (1) dice own facts, LLM owns dressing -- no LLM output ever touches
 a number, a direction, or an exit; (2) same seed replays byte-identical on any box. The only
@@ -91,15 +97,16 @@ All geometry is `f(areaSeed, coord)` + frozen constants, golden-tested under pla
 | Kind | Shape | Usage |
 |------|-------|-------|
 | `places` | place-word entries (`w`, `id`, `name`, `desc`) | qualifier x place room names |
-| `mobs` | entries with `balance_ref: "mob"` | ambient spawn source via `mintMobInstance` |
-| `boss` | single entry with `balance_ref: "boss"` | boss spawn source via `mintBossInstance` |
+| `mobs` | BANDED: id prefix `mb-<band>-<slug>` assigns each creature a MOB-1 menace band (`skulker`/`common`/`hunter`/`apex`); `balance_ref: "mob"` | banded spawn source via `mintMobInstance` / elite pool via `mintEliteInstance` (a table with NO banded ids -- every 0.4.0 frozen area -- falls back to the flat weighted pick) |
+| `boss` | single entry with `balance_ref: "boss"` | wandering-boss source via `mintBossInstance` |
 | `items` | entries with rarity + item kind | loot source via `mintItemInstance` |
 | `prose` | entries tagged `opener`/`detail`/`atmosphere` | union of sector pools; feeds assembleRoom2 + sector synthesis |
 | `scars` | entries tagged by consequence kind | ROOM-3 state-override scar prose |
-| `landmarks` | ID-PREFIX ENCODED: `lm-<i>` rows carry the bespoke room description, `afar-<i>` rows the seen-from-afar line; `name` = landmark display name (no leading article) | bespoke landmark rooms + reference lines |
-| `sectors` | ID-PREFIX ENCODED: `s<i>-qual`, `s<i>-opener-<n>`, `s<i>-detail-<n>`, `s<i>-sensory-<n>`, `s<i>-hook-<n>`, `s<i>-lmline-<n>` | per-sector prose pools + qualifier + slot lines |
+| `landmarks` | ID-PREFIX ENCODED: `lm-<i>` rows carry the bespoke room description, `afar-<i>-<v>` rows the seen-from-afar VARIANTS (target 3), `boss-<i>` rows the landmark's frozen MINIBOSS identity (name = title, desc = one line); legacy 0.4.0 rows (`afar-<i>`, no boss rows) still parse -- one variant, keeper-of synthesis | bespoke landmark rooms + reference lines + miniboss identities |
+| `sectors` | ID-PREFIX ENCODED: `s<i>-qual-<n>` (the 2-3 word QUALIFIER DECK; legacy single `s<i>-qual` parses as a one-word deck), `s<i>-opener-<n>`, `s<i>-detail-<n>`, `s<i>-sensory-<n>`, `s<i>-hook-<n>`, `s<i>-lmline-<n>` | per-sector prose pools + name-deck qualifiers + slot lines |
 | `structure` | single entry `target-rooms` (desc = the number) | persists target_rooms the T6 way |
 | `visited` | one row per populated room, `id` = pathKey, entries kept SORTED | first-visit tracking across reboot |
+| `grants` | one row per granted player, `id` = player entity id, entries SORTED | starter-kit once-per-player gate (PLAYTEST SCAFFOLDING) |
 
 The id-prefix encoding exists because the engine's `writeOracleTable` binding whitelists exactly
 `{w, id, name, desc, balance_ref, rarity}` -- extra fields are dropped at the Jint boundary, so
@@ -119,24 +126,54 @@ Composed (non-landmark) rooms assemble from their sector's pools:
   directions). Zero state; adjacent repeat rate drops from 12.5% to under 3% (residual documented
   -- a perfect guarantee needs radius-2 recursion, not worth it for prose). Pools of 4 or fewer
   skip exclusion.
-- **Names**: `titleCase(qualifier + " " + place)` -- sector qualifier x neighbor-excluded place
-  word; z != 0 overrides with Upper/Lower; a place word already containing the qualifier drops it
-  ("cold" x "cold room" -> "Cold Room"). Landmark rooms are named by their landmark (deck deduped
-  at map time).
-- **Slot-filled landmark references**: appended at mint from computed geometry -- either the
-  landmark's afar line plus a dice-owned direction tail, or a slot-filled `{dir}` pool line
-  (8-way `dirWord`; vertical uses a fixed template). Seeded 0.45 gate; always-on for the entry
-  room and rooms adjacent to their landmark. The LLM never writes a direction: mapper lint drops
-  slotless landmark lines and strips compass sentences from all pool lines and bespoke prose.
+- **Names**: mint-time NO-REPLACEMENT deal (`dealSectorNames`, pure and traversal-independent):
+  each sector shuffles its qualifier-deck x place product deck with a seeded rng and deals
+  `titleCase(qualifier + " " + place)` names to its composed rooms in sorted-path order,
+  reshuffling past exhaustion (repeats only after every product is used once -- the 0.4.0
+  independent per-room pick duplicated 8 name clusters in a 41-room run). z != 0 overrides the
+  qualifier with Upper/Lower; a place word already containing the qualifier drops it ("cold" x
+  "cold room" -> "Cold Room"). Landmark rooms are named by their landmark (deck deduped at map
+  time).
+- **Slot-filled landmark references**: appended at mint from computed geometry -- one of the
+  landmark's afar VARIANTS (up to 3 frozen per landmark) plus a dice-owned 4-tail direction
+  deck, or a slot-filled `{dir}` pool line (8-way `dirWord`; vertical uses a fixed template).
+  DISTANCE-BANDED seeded gate: 0.45 within 2D distance 3 of the landmark, 0.25 beyond
+  (the 0.4.0 flat gate put one fixed afar sentence in 17/41 rooms); always-on for the entry
+  room and rooms adjacent to their landmark. Four rng draws happen unconditionally so the
+  stream shape never depends on branch outcomes. The LLM never writes a direction: mapper lint
+  drops slotless landmark lines and strips compass sentences from all pool lines and bespoke
+  prose.
 - Landmark rooms use their frozen bespoke description verbatim.
 (packages/@tapestry/oracle/scripts/sector-compose.ts; packages/@tapestry/oracle/scripts/geometry-mint.ts)
 
-### First-visit population
+### First-visit population - the threat-tier ladder
 
-`populateRoom` moves the 0.3.x spawn semantics intact (same rng stream keys
-`coordKey+":spawn"`/`":boss"`, mint-vs-reuse set, unconditional loot draw at 0.35, boss clock
-slope 0.07, level-1 flat band): only WHERE spawns happen changed. Spawn density reads the pure
-geometry band (transit 0 / chamber 1 / charged 2 / landmark 1 / threshold 1).
+`populateRoom` runs the stage-B tier ladder on each room's first visit, every rng draw in fixed
+code position (per-room streams stay traversal-independent; keys `coordKey+":miniboss"` /
+`":spawn"` / `":boss"`):
+
+1. **Miniboss** -- a landmark room spawns its frozen identity (`boss-<i>` landmarks row; a
+   0.4.0-era table synthesizes "the keeper of the <landmark>" via `defaultMinibossFor`) on the
+   `swell-miniboss` template. Exactly one per landmark -- EXCEPT a landmark that is
+   entry-adjacent (possible on school maps), where the structurally-safe start wins over
+   exactly-K and the miniboss is skipped (documented exception: that run has K-1).
+2. **Elite** -- a charged-band room converts its first density slot into a swell-capable elite:
+   apex-forced banded selection, a SIGNATURE epithet rolled once and frozen into the name
+   ("the dire tandoor beast"), elite balance row, `swell-elite` template. Never at entry or
+   entry-adjacent rooms.
+3. **Trash** -- the 0.3.x ambient loop (same stream key, mint-vs-reuse set, unconditional 0.35
+   loot draw, level-1 flat band) plus two new unconditional per-iteration draws: banded type
+   selection through MOB-1, and a dice-owned band-weighted DISPOSITION draw that picks the
+   spawn template (see the disposition axis section).
+4. **Boss clock** -- see the boss clock section; suppressed here in landmark and safe-start
+   rooms.
+
+Spawn density reads the pure geometry band (transit 0 / chamber 1 / charged 2 / landmark 1 /
+threshold 1); the elite consumes one charged slot (charged = 1 elite + 1 trash). Arrival lines
+are per-kind dressing (`stirLine`): aggro "rounds on you the moment you enter", neutral "stirs
+at your arrival", timid "shrinks back", elite "turns its full attention on you", miniboss
+"rises to meet you". (packages/@tapestry/oracle/scripts/population.ts:populateRoom;
+packages/@tapestry/oracle/scripts/tiers.ts)
 
 First-visit tracking: an in-memory per-area set of visited pathKeys, hydrated lazily from the
 frozen `visited` oracle table and persisted by rewriting that table (sorted entries) on each
@@ -170,9 +207,14 @@ RecommendMaxInFlight=2 (K = landmark count):
 - Round 1 (1 in-flight): `fill_places`
 - Round 2 (1 in-flight): `fill_landmarks` -- `mapLandmarks` returns EXACTLY K records (name
   dedupe as a no-replacement deck, direction lint sentence-by-sentence, fallback-deck padding,
-  numbered-waypoint synthesis past exhaustion, 500-char sentence-boundary cap for bespoke descs)
-- Round 3 (up to 2): `fill_mobs` + `fill_boss`, then `fill_items` as a slot frees
-- Round 4 (up to 2): `fill_sector` x K (each knows its landmark's name; pool lines are
+  numbered-waypoint synthesis past exhaustion, 500-char sentence-boundary cap for bespoke
+  descs); each record now carries up to 3 linted `afars` variants plus a `boss_name`/`boss_desc`
+  miniboss identity (title normalized to "the <title>"; junk -> "" -> keeper-of synthesis at
+  consume time; normalize pads afars to >= 1)
+- Round 3 (up to 2): `fill_mobs` (BANDED: 2 skulkers / 3 common / 2 hunters / 1 apex, required
+  `band` enum -> `mb-<band>-<slug>` ids) + `fill_boss`, then `fill_items` as a slot frees
+- Round 4 (up to 2): `fill_sector` x K (each knows its landmark's name; 2-3 one-word
+  QUALIFIERS per sector -- legacy single-qualifier replies still map; pool lines are
   sentence-cased and direction-linted; `landmark_lines` must carry the literal `{dir}` slot or
   they drop), with `fill_scars` chained in once the last sector call has been launched
 
@@ -192,11 +234,14 @@ When the LLM is off, the `solo` flow presents a `scenario` choice FIRST (engine-
 `buildScenarios(SIX_AXIS_THEMES, BAKED_SET_IDS)`, golden-tested; six-axis themes offer
 depth-banded scenarios using their own baked set, other baked sets offer flat scenarios, no
 duplicates). Baked table sets load eagerly at module init (`data/baked/<setId>/<kind>.yaml`) and
-now include an authored `landmarks` deck (8 records per set, no direction talk). `bakedTables`
+include an authored `landmarks` deck (8 records per set, no direction talk, 3 afar variants +
+a miniboss identity each) and a BANDED `mobs` deck (`mb-<band>-` ids across all four menace
+bands; the apex entry doubles as the elite pool). `bakedTables`
 returns per-call copies down to the entries array -- a shared table object bit once: the first
 run's k=2 normalization truncated the cached landmark deck for every later run in the session.
-Sector pools synthesize from the (grown, 12-per-tag) prose pools with distinct seeded qualifiers;
-landmark reference lines use the dice template deck. The stale `__solo_scenario` gate from 0.3.0
+Sector pools synthesize from the (grown, 12-per-tag) prose pools, each sector dealing 2
+distinct qualifiers from a 20-word deck (2 x K never exhausts it at the K=8 cap); landmark
+reference lines use the dice template deck. The stale `__solo_scenario` gate from 0.3.0
 is unchanged. (packages/@tapestry/oracle/scripts/oracle-tables.ts:bakedTables;
 packages/@tapestry/oracle/data/baked/)
 
@@ -206,14 +251,22 @@ The flow collects: scenario (LLM-off) or idea (LLM-on), `name`, `min_level`, `ma
 `size` (school/standard/epic choice -- the target_rooms band), `destination_pack`, and `seed`
 (blank = random; a non-negative integer replays that exact area -- the stage-F shareable-seed
 seam and the determinism-proof lever). Destination-pack resolution and `authoring.createPack`
-semantics are unchanged from 0.3.x. (packages/@tapestry/oracle/scripts/flows/solo-flow.ts)
+semantics are unchanged from 0.3.x. The `solo` command registers with `roles: ["player"]` --
+the engine CommandRouter treats `player`/`mob` as actor-type roles and ANY other listed role
+(admin, builder) as a privilege gate the actor must hold, so the open form is exactly
+`["player"]` (admins qualify: they dispatch as source "player"). SHIP DEPENDENCY: the stage-E
+per-player rate limit must land before a public server carries strangers.
+(packages/@tapestry/oracle/scripts/flows/solo-flow.ts;
+packages/@tapestry/oracle/scripts/commands/solo.ts)
 
 ### Theme-x-balance separation
 
 Theme (place words, mob names, prose) is LLM-owned dressing in the oracle tables. Balance
 (level, hp formula, damage, stat modifiers) is dice-owned and comes exclusively from the master
-balance table. Rarity modifies the effective level band via `rarityModifier` before the balance
-lookup. Unchanged in v3. (packages/@tapestry/oracle/scripts/balance-table.ts;
+balance table -- stage B adds `elite` and `miniboss` anchor rows beside mob/weapon/armor/boss;
+six-axis adds selection/dressing/disposition, never numbers. Rarity modifies the effective
+level band via `rarityModifier` before the balance lookup.
+(packages/@tapestry/oracle/scripts/balance-table.ts;
 packages/@tapestry/oracle/scripts/resolver.ts)
 
 ### Mint-vs-reuse
@@ -224,13 +277,75 @@ session-scoped -- the deliberate path-dependent channel. Unchanged in kind from 
 (packages/@tapestry/oracle/scripts/area-context.ts:getMintedSet;
 packages/@tapestry/oracle/scripts/population.ts:populateRoom)
 
-### Boss clock
+### Boss clock - the once-per-run wandering boss
 
-`bossClockFires(roomsSinceLastBoss, rng)` (now in population.ts): threshold =
-`min(roomsSinceLastBoss * 0.07, 1.0)`; advances on each first-visit population; entry room is
-count 0 and structurally boss-free; resets on spawn. The clock can fire multiple times per run
-(ambient dread) -- boss tiering is campaign stage B. Run-state key unchanged.
-(packages/@tapestry/oracle/scripts/population.ts:bossClockFires)
+`bossClockFires(roomsSinceLastBoss, rng)` (population.ts): threshold =
+`min(roomsSinceLastBoss * 0.07, 1.0)`; the counter advances on each first-visit population;
+entry room is count 0 and structurally boss-free. Stage-B semantics: the FIRE is gated --
+at most ONCE per run (`RunState.bossFired`), and never in a landmark room (the miniboss owns
+those -- no double-boss) or an entry-adjacent room (the structurally-safe start). Landmark
+minibosses are the structural fights; the clock is the one wandering pity-timer boss. A boss
+and an elite MAY share a charged room (only the landmark double-boss is barred). Run-state
+stays session-scoped and resets on reboot (the accepted 0.3.x posture) -- a reboot re-arms the
+pity timer exactly as it reset the 0.4.0 counter.
+(packages/@tapestry/oracle/scripts/population.ts:bossClockFires;
+packages/@tapestry/oracle/scripts/run-state.ts)
+
+### Mobs six-axis - MOB-1 menace bands + the disposition axis
+
+The mob tables are six-axis (campaign stage B, per the 2026-06-25 v2 exploration):
+
+- **DEGREE**: WHICH creature spawns is a banded menace roll, not a flat pick. The shared
+  `_default/MOB-1.yaml` DEGREE table (1d10: skulker 1-2 / common 3-6 / hunter 7-9 / apex 10)
+  eager-loads with ROOM-1/ROOM-3 into every area's six-axis set. `selectMobEntry` rolls the
+  degree, bends it, resolves the band through the shipped band resolver, and weighted-picks
+  within the band's id slice. Fallback ladder = back-compat by construction: no MOB-1 / no
+  banded ids (every 0.4.0 frozen table) / empty band slice all fall back to the flat
+  whole-table pick.
+- **CONTEXT**: the room's ROOM-1 band bends the menace roll before bands are read
+  (`CONTEXT_BUMP`: transit -2 / chamber 0 / charged +2 / landmark +1 / threshold +2) and
+  weights the disposition draw.
+- **DISPOSITION** (dice-owned, band-weighted): every trash spawn draws aggro/neutral/timid
+  (`DISPOSITION_WEIGHTS`, [aggro, neutral, timid]: charged [.65,.30,.05] skews aggro, transit
+  [.10,.30,.60] skews timid -- transit density is currently 0, the row exists for future
+  density changes; unknown bands use chamber [.30,.45,.25]). The draw picks the spawn TEMPLATE:
+  `hostile-melee` (aggro), `wary-melee` (neutral -- fights only when attacked), or
+  `skittish-melee` (timid). The template's `base_disposition` field IS the engine aggro seam
+  (DispositionEvaluator aggros hostile mobs on room entry + tick; ADMINS ARE EXEMPT -- the
+  disposition axis is only observable on a player character). ENGINE GAPS (documented, not
+  built): `SpawnOverride` carries only fromType/name/desc/maxHp/damage/items/noReroll, so a
+  per-instance disposition override is impossible pack-side; and there is no flee-on-sight
+  seam, so timid approximates as neutral + `wimpy_pct: 65` (never initiates, bolts early once
+  hurt) + restless wander.
+- **DRESSING**: per-disposition arrival lines (`stirLine`); the LLM only names and describes
+  creatures (`fill_mobs` asks 2 skulkers / 3 common / 2 hunters / 1 apex with a required
+  `band` enum; the mapper encodes it as the `mb-<band>-<slug>` id, invalid bands -> common).
+- **SIGNATURE**: elite epithets (8-word deck, rolled once at mint, frozen into the name);
+  miniboss identities frozen in the landmarks table.
+- **CONSEQUENCE**: the existing death-stamp hooks (unchanged). **CASCADE**: deferred to the
+  combat lane (documented, not built).
+
+Tier balance rides new `elite` (dice hp, ~2x trash) and `miniboss` (flat hp between elite and
+boss) rows in master-balance; swell DIALS are template data (`swell-elite` lightest,
+`swell-miniboss` middle, `swell-boss` unchanged) because spawn overrides cannot carry
+properties. (packages/@tapestry/oracle/scripts/tiers.ts;
+packages/@tapestry/oracle/data/six-axis/_default/MOB-1.yaml;
+packages/@tapestry/oracle/data/master-balance.yml)
+
+### Starter kit - PLAYTEST SCAFFOLDING
+
+Stage C (items six-axis) and stage E (gear isolation / onboarding NPC) own the real design;
+this is a stopgap so a brand-new character can fight the tier ladder. On a player's first
+entry to a solo area (creator: at the creation teleport, which fires no direction event;
+anyone else: on their first move inside, BEFORE the revisit gate) they receive one weapon +
+head/hands/feet armor, stats from the master balance table at the AREA'S MIN LEVEL (wear/wield
+carry no level gates -- a level-1 character always equips it). Items freeze through
+`writeItemTemplate` and deliver through `items.spawnToInventory` (the core-loaditem / tinkers
+seam). Gate: once per player per area -- the `grants` oracle table + an in-memory mirror
+(visited-table pattern), mark-first. Kit item ids and the grants rows are keyed by the player
+ENTITY id, which is per-database -- they are player-scoped artifacts, deliberately outside the
+same-seed byte-identity claim (which covers rooms, tables, and loot side-cars).
+(packages/@tapestry/oracle/scripts/starter-kit.ts)
 
 ### Item delivery - freeze + ride mob inventory
 
@@ -251,7 +366,8 @@ back. (packages/@tapestry/oracle/scripts/oracle-structured.ts)
 ### Six-axis generator stack
 
 Every area remains six-axis: shared `_default` MECHANICS (ROOM-1 degree bands, ROOM-3
-consequence taxonomy) eager-loaded at module init; an authored theme keeps its full set; any
+consequence taxonomy, MOB-1 menace bands) eager-loaded at module init; an authored theme keeps
+its full set (authored themes carry no MOB-1, so the shared one always applies); any
 other area gets ROOM-2 ASSEMBLED from its frozen prose + scars tables. The `rooms` composer and
 depth-biased degree remain, but v3 mints call `pureDegree` (pressure 0) directly so band,
 edges, cadence, and density share one number. Consequence stamping (`mob.death` ->
@@ -268,6 +384,22 @@ default to strict validation (see Rejected: room-property visited marker).
 (packages/@tapestry/oracle/pack.yaml:22-23)
 
 ## Rejected and Reverted
+
+- Per-instance disposition override -- the stage-B disposition axis was first sketched as a
+  spawn-override field. Rejected: the engine `SpawnOverride`/`ParseOverride`/`ApplyOverride`
+  chain accepts exactly fromType/name/desc/maxHp/damage/items/noReroll; no tag, property, or
+  disposition can ride a spawn. Disposition (and swell dials) are TEMPLATE data instead --
+  three trash templates carry the three temperaments.
+  (packages/@tapestry/oracle/scripts/tiers.ts:DISPOSITION_TEMPLATES)
+
+- Flee-on-sight timid -- the engine has no seam for a mob that avoids players before combat
+  (the Disposition enum is Neutral/Friendly/Hostile; wimpy_pct fires only in combat).
+  "Timid" ships as the honest approximation: neutral + wimpy_pct 65 + restless wander.
+  Building engine-side flee-on-sight is an engine-lane candidate, not a pack patch.
+
+- `roles: ["player", "builder", "admin"]` on solo -- listing privilege roles alongside the
+  actor-type role re-gates the command (CommandRouter requires one of the privilege roles when
+  any is present); plain players got "Huh?". The open registration is exactly `["player"]`.
 
 - Room-property visited marker -- the v3 first-visit tracker was first a pack-declared
   `oracle_populated` room property. Rejected: generated rooms belong to the runtime-created
@@ -298,6 +430,7 @@ default to strict validation (see Rejected: room-property visited marker).
 
 ## Change Log
 
+- 2026-07-04 [oracle-stage-b-tiers-mobs](changes/2026-07-04-oracle-stage-b-tiers-mobs.md) - threat-tier ladder (charged elites with frozen epithets, landmark minibosses with frozen identities + 0.4.0 keeper synthesis, once-per-run wandering boss with landmark/safe-start suppression); mobs six-axis (shared MOB-1 menace bands + banded mb- ids with flat-pick back-compat, dice-owned band-weighted disposition axis riding template selection, elite/miniboss balance rows, four new mob templates); ride-alongs (3 afar variants + distance-banded gate + 4-tail deck, sector qualifier decks + mint-time no-replacement name deal); solo opened to players (rate-limit ship dependency documented); starter-kit playtest scaffolding (grants table, spawnToInventory)
 - 2026-07-04 [oracle-v3-rooms](changes/2026-07-04-oracle-v3-rooms.md) - rooms v3: radius envelope + target_rooms size bands, wedge-placed landmarks with bespoke prose + afar lines, Voronoi sector pools with border blends, canonical edge-hash exits with forced Bresenham roads + vertical scarcity + band modulation, eager chunked geometry mint (stubs deleted), first-visit population trigger with visited-table persistence, anti-repetition stack (variable cadence, neighbor exclusion, qualifier x place names, slot-filled landmark references), fill_landmarks + fill_sector burst rounds, seed + size flow inputs; fixes: non-greedy room-id parse (negative-x reload), baked-cache aliasing, Jint 5s-cap chunking
 - 2026-06-28 [oracle-structured-six-axis-everywhere](changes/2026-06-28-oracle-structured-six-axis-everywhere.md) - structured-output table fill (parser deleted, per-kind json_schema + JSON->entry mappers); six-axis on every area (shared _default mechanics + assembled ROOM-2 dressing, composer ungated); fill_scars + always-present scars table; place-word room names; extracted buildScenarios with theme/baked dedup; playtest fixes (stale-scenario gate, weighted exit count, present-tense prompts)
 - 2026-06-27 [oracle-six-axis-tables](changes/2026-06-27-oracle-six-axis-tables.md) - six-axis generator stack: 3D coords (u/d fix + depth), per-table dice-metadata band resolver, depth-biased degree, multi-table composition + depth-banded rooms, module-init six-axis cache, consequence stamping + walk-in revisit scars, LLM-off scenario picker
