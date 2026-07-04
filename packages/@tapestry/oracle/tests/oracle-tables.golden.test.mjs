@@ -59,8 +59,12 @@ test("normalizeTables guarantees k landmarks + k sectors from a bare baked set",
     assert.equal(names.size, k, "landmark names distinct");
     const sectors = parseSectorsTable(kindOf(normalized, "sectors").entries);
     assert.equal(sectors.length, k);
-    const quals = new Set(sectors.map((s) => s.qualifier));
-    assert.equal(quals.size, k, "sector qualifiers distinct");
+    const allQuals = [];
+    for (const s of sectors) {
+        assert.equal(s.qualifiers.length, 2, "each synthesized sector deals 2 qualifiers");
+        allQuals.push(...s.qualifiers);
+    }
+    assert.equal(new Set(allQuals).size, 2 * k, "sector qualifier decks distinct");
     for (const s of sectors) {
         assert.ok(s.openers.length >= 8, `synthesized sector pools should inherit the grown prose pool (got ${s.openers.length})`);
     }
@@ -93,7 +97,7 @@ test("normalizeTables keeps a filled sector but replaces an empty one", () => {
     const normalized = normalizeTables([filled], 2, 7);
     const sectors = parseSectorsTable(kindOf(normalized, "sectors").entries);
     assert.equal(sectors.length, 2);
-    assert.equal(sectors[0].qualifier, "gilded");
+    assert.deepEqual(sectors[0].qualifiers, ["gilded"], "0.4.0-style single-qual row survives");
     assert.deepEqual(sectors[0].openers, ["Real LLM line."]);
     assert.ok(sectors[1].openers.length > 0, "hole synthesized");
 });

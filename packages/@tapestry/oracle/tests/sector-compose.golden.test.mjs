@@ -7,13 +7,13 @@ import {
     encodeLandmarksTable, parseLandmarksTable, encodeSectorsTable, parseSectorsTable,
     synthesizeSectors, fallbackLandmarks, FALLBACK_LANDMARK_LINES,
     cadencePlan, pickExcluding, fillSlots, landmarkRefLine,
-    composeRoomV3, roomNameV3, titleCase,
+    composeRoomV3, dealSectorNames, titleCase,
 } from "../dist/scripts/sector-compose.js";
 import { splitmix64 } from "../dist/scripts/prng.js";
 
 function pools(overrides = {}) {
     return {
-        qualifier: "flooded",
+        qualifiers: ["flooded", "dim"],
         openers: ["O1.", "O2.", "O3.", "O4.", "O5.", "O6.", "O7.", "O8."],
         details: ["D1.", "D2.", "D3.", "D4.", "D5.", "D6."],
         sensory: ["S1.", "S2.", "S3.", "S4.", "S5."],
@@ -59,10 +59,20 @@ test("parseLandmarksTable reads the 0.4.0 shape (single afar-<i>, no boss rows)"
 });
 
 test("sector table codec round-trips", () => {
-    const sectors = [pools(), pools({ qualifier: "outer", hooks: [] })];
+    const sectors = [pools(), pools({ qualifiers: ["outer"], hooks: [] })];
     const rows = encodeSectorsTable(sectors);
+    assert.ok(rows.find((r) => r.id === "s0-qual-1" && r.desc === "dim"), "second qualifier row");
     const back = parseSectorsTable(rows);
     assert.deepEqual(back, sectors);
+});
+
+test("parseSectorsTable reads the 0.4.0 single-qual row", () => {
+    const back = parseSectorsTable([
+        { w: 10, id: "s0-qual", name: "qualifier", desc: "gilded" },
+        { w: 10, id: "s0-opener-0", name: "opener", desc: "A line." },
+    ]);
+    assert.deepEqual(back[0].qualifiers, ["gilded"]);
+    assert.deepEqual(back[0].openers, ["A line."]);
 });
 
 test("parseLandmarksTable tolerates junk and gaps", () => {
@@ -88,8 +98,12 @@ test("synthesizeSectors: k distinct qualifiers, pools from prose tags", () => {
     ];
     const sectors = synthesizeSectors(4, prose, 42);
     assert.equal(sectors.length, 4);
-    const quals = new Set(sectors.map((s) => s.qualifier));
-    assert.equal(quals.size, 4, "qualifiers must be distinct");
+    const allQuals = [];
+    for (const s of sectors) {
+        assert.equal(s.qualifiers.length, 2, "each sector deals 2 qualifiers");
+        allQuals.push(...s.qualifiers);
+    }
+    assert.equal(new Set(allQuals).size, 8, "qualifiers must be distinct across sectors");
     for (const s of sectors) {
         assert.deepEqual(s.openers, ["A.", "B."]);
         assert.deepEqual(s.details, ["C."]);
@@ -232,18 +246,65 @@ test("composeRoomV3: deterministic, cadence-driven length, blend stays composed"
     assert.equal(composeRoomV3(5, "1,1,0", 4, empty, null), "");
 });
 
-test("roomNameV3: qualifier x place, Upper/Lower override, deterministic", () => {
+const NAME_LANDMARKS = [
+    { index: 0, x: 3, y: 0, z: 0 },
+    { index: 1, x: -3, y: 0, z: 0 },
+];
+
+function nameRooms() {
+    const rooms = [];
+    for (let x = -5; x <= 5; x++) {
+        for (let y = -2; y <= 2; y++) {
+            rooms.push(`${x},${y},0`);
+        }
+    }
+    return rooms;
+}
+
+test("dealSectorNames: no duplicate within a sector before deck exhaustion", () => {
     const places = ["gallery", "shaft", "hollow", "chasm", "cavern", "crawlway"];
-    const name = roomNameV3(11, "2,0,0", "flooded", places);
-    assert.ok(name.startsWith("Flooded "), name);
-    assert.equal(name, roomNameV3(11, "2,0,0", "flooded", places));
-    assert.ok(roomNameV3(11, "2,0,1", "flooded", places).startsWith("Upper "));
-    assert.ok(roomNameV3(11, "2,0,-1", "flooded", places).startsWith("Lower "));
-    // no qualifier -> bare place
-    const bare = roomNameV3(11, "2,0,0", "", places);
-    assert.ok(!bare.includes(" "), bare);
-    // no places -> qualifier alone survives
-    assert.equal(roomNameV3(11, "2,0,0", "flooded", []), "Flooded");
+    const sectors = [pools(), pools({ qualifiers: ["outer", "old"] })];
+    const rooms = nameRooms();
+    const names = dealSectorNames(11, rooms, NAME_LANDMARKS, sectors, places);
+    // landmark rooms are not named here
+    assert.equal(names["3,0,0"], undefined);
+    assert.equal(names["-3,0,0"], undefined);
+    // sector 0 = x >= 0 side (ties break to index 0). Deck = 2 quals x 6 places = 12.
+    const sector0 = rooms.filter((p) => {
+        const x = parseInt(p.split(",")[0], 10);
+        return x >= 0 && p !== "3,0,0";
+    }).sort();
+    const first12 = sector0.slice(0, 12).map((p) => names[p]);
+    assert.equal(new Set(first12).size, 12, `dupes in first deal: ${first12.join(", ")}`);
+    for (const n of first12) {
+        assert.ok(/^(Flooded|Dim) /.test(n), `sector-0 name must use a sector qualifier: ${n}`);
+    }
+    // every composed room got a name; deterministic; input order irrelevant
+    for (const p of rooms) {
+        if (p === "3,0,0" || p === "-3,0,0") { continue; }
+        assert.ok(names[p] && names[p].length > 0, `unnamed room ${p}`);
+    }
+    const shuffledRooms = rooms.slice().reverse();
+    assert.deepEqual(dealSectorNames(11, shuffledRooms, NAME_LANDMARKS, sectors, places), names);
+});
+
+test("dealSectorNames: z levels override the qualifier with Upper/Lower", () => {
+    const places = ["gallery", "shaft"];
+    const sectors = [pools(), pools()];
+    const names = dealSectorNames(7, ["1,0,1", "1,0,-1", "1,1,0"], NAME_LANDMARKS, sectors, places);
+    assert.ok(names["1,0,1"].startsWith("Upper "), names["1,0,1"]);
+    assert.ok(names["1,0,-1"].startsWith("Lower "), names["1,0,-1"]);
+});
+
+test("dealSectorNames never stutters the qualifier against the place word", () => {
+    const places = ["cold room", "hearth"];
+    const sectors = [pools({ qualifiers: ["cold"] }), pools({ qualifiers: ["cold"] })];
+    const rooms = ["0,1,0", "1,1,0", "2,1,0", "-1,1,0", "-2,1,0"];
+    const names = dealSectorNames(5, rooms, NAME_LANDMARKS, sectors, places);
+    for (const p of rooms) {
+        assert.ok(!/^Cold Cold/.test(names[p]), names[p]);
+        assert.ok(names[p] === "Cold Room" || names[p] === "Cold Hearth", names[p]);
+    }
 });
 
 test("fallback decks are well-formed", () => {
@@ -269,11 +330,3 @@ test("fallback decks are well-formed", () => {
     assert.equal(titleCase("walk-in freezer"), "Walk-In Freezer");
 });
 
-test("roomNameV3 never stutters the qualifier against the place word", () => {
-    const places = ["cold room", "hearth"];
-    for (let x = -3; x <= 3; x++) {
-        const name = roomNameV3(5, `${x},0,0`, "cold", places);
-        assert.ok(!/^Cold Cold/.test(name), name);
-        assert.ok(name === "Cold Room" || name === "Cold Hearth", name);
-    }
-});

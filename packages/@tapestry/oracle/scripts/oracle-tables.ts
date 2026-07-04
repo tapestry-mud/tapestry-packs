@@ -209,7 +209,7 @@ function fillSectors(
             for (const line of s.sensory) { proseEntries.push({ w: 10, id: "atmosphere-" + n, name: "atmosphere", desc: line }); n++; }
         }
         tables.push({ kind: "prose", entries: proseEntries.length > 0 ? proseEntries : fallbackProse() });
-        const empty: SectorPools = { qualifier: "", openers: [], details: [], sensory: [], hooks: [], landmarkLines: [] };
+        const empty: SectorPools = { qualifiers: [], openers: [], details: [], sensory: [], hooks: [], landmarkLines: [] };
         const dense: SectorPools[] = [];
         for (let i = 0; i < k; i++) { dense.push(results[i] || empty); }
         tables.push({ kind: "sectors", entries: encodeSectorsTable(dense) });
@@ -355,7 +355,7 @@ export function normalizeTables(tables: OracleTableData[], k: number, areaSeed: 
             finalSec.push(cand);
         } else {
             const s = synth[i];
-            if (cand && cand.qualifier !== "") { s.qualifier = cand.qualifier; }
+            if (cand && cand.qualifiers && cand.qualifiers.length > 0) { s.qualifiers = cand.qualifiers; }
             finalSec.push(s);
         }
     }

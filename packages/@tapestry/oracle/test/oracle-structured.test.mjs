@@ -158,9 +158,9 @@ test("mapLandmarks pads from the deck and synthesizes past exhaustion", () => {
   assert.equal(tiny[1].name, "waypoint 2");
 });
 
-test("mapSector maps pools, lowercases qualifier to one word, enforces {dir}", () => {
+test("mapSector maps pools, lowercases qualifiers to one word, enforces {dir}", () => {
   const raw = JSON.stringify({
-    qualifier: "Flooded Midway",
+    qualifiers: ["Flooded Midway", "Rotted", "flooded"],
     openers: ["Water sheets the boards."], details: ["Ticket stubs float past."],
     sensory: ["Everything smells of wet rope."], hooks: ["A prize booth stands shuttered."],
     landmark_lines: [
@@ -170,7 +170,10 @@ test("mapSector maps pools, lowercases qualifier to one word, enforces {dir}", (
     ],
   });
   const s = mapSector(raw);
-  assert.equal(s.qualifier, "flooded");
+  assert.deepEqual(s.qualifiers, ["flooded", "rotted"]); // deduped, first-word, lowercase
+  // legacy single-qualifier replies still map
+  const legacy = mapSector(JSON.stringify({ qualifier: "Gilded Hall", openers: ["A line."], details: [], sensory: [], hooks: [], landmark_lines: [] }));
+  assert.deepEqual(legacy.qualifiers, ["gilded"]);
   assert.deepEqual(s.openers, ["Water sheets the boards."]);
   assert.equal(s.landmarkLines.length, 2); // the slotless line dropped
   assert.ok(s.landmarkLines[0].includes("{dir}"));

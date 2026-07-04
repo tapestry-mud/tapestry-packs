@@ -33,7 +33,7 @@ import {
 } from "./structure.js";
 import {
     parseLandmarksTable, parseSectorsTable, composeRoomV3, landmarkRefLine,
-    roomNameV3, titleCase, type LandmarkDressing, type SectorPools,
+    dealSectorNames, titleCase, type LandmarkDressing, type SectorPools,
 } from "./sector-compose.js";
 import { parseCoord, neighborPath, pathKey, ALL_DIRECTIONS } from "./coords.js";
 import { diceSpan } from "./six-axis.js";
@@ -45,7 +45,7 @@ export interface MintResult {
 }
 
 const EMPTY_POOLS: SectorPools = {
-    qualifier: "", openers: [], details: [], sensory: [], hooks: [], landmarkLines: [],
+    qualifiers: [], openers: [], details: [], sensory: [], hooks: [], landmarkLines: [],
 };
 
 /** Rooms minted (pass 1) or exit-wired (pass 2) per engine tick. Sized so each
@@ -89,6 +89,10 @@ export function mintAreaGeometry(areaState: AreaState, onDone: (result: MintResu
     for (let i = 0; i < structure.rooms.length; i++) {
         roomSet[structure.rooms[i]] = true;
     }
+
+    // Mint-time no-replacement name deal: each sector deals its qualifier x place
+    // product deck to its composed rooms (pure, traversal-independent).
+    const nameByPath = dealSectorNames(areaSeed, structure.rooms, structure.landmarks, sectors, placeNames);
 
     // -----------------------------------------------------------------------
     // Pass 1 (chunked): create every reachable room (sorted order -
@@ -138,7 +142,7 @@ export function mintAreaGeometry(areaState: AreaState, onDone: (result: MintResu
                 }
             }
 
-            name = roomNameV3(areaSeed, path, pools.qualifier, placeNames);
+            name = nameByPath[path] || "";
             if (name === "") { name = "Chamber"; }
         }
 

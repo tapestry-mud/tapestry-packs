@@ -23,6 +23,7 @@
 
 import { splitmix64, hashCoord } from "./prng.js";
 import { parseCoord, formatCoord } from "./coords.js";
+import { sectorOf, type LandmarkCell } from "./structure.js";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -45,8 +46,10 @@ export interface LandmarkDressing {
 }
 
 export interface SectorPools {
-    /** One-word name qualifier for the sector ("flooded", "outer"...). */
-    qualifier: string;
+    /** One-word name qualifiers for the sector (2-3: "flooded", "outer"...).
+     *  0.4.0 frozen tables carried exactly one (id "s<i>-qual"); the parser still
+     *  reads that shape into a one-element deck. */
+    qualifiers: string[];
     openers: string[];
     details: string[];
     sensory: string[];
@@ -169,7 +172,10 @@ export function encodeSectorsTable(sectors: SectorPools[]): EntryRow[] {
     const out: EntryRow[] = [];
     for (let i = 0; i < sectors.length; i++) {
         const s = sectors[i];
-        out.push({ w: 10, id: "s" + i + "-qual", name: "qualifier", desc: s.qualifier });
+        const quals = s.qualifiers || [];
+        for (let q = 0; q < quals.length; q++) {
+            out.push({ w: 10, id: "s" + i + "-qual-" + q, name: "qualifier", desc: quals[q] });
+        }
         const lists: Array<[string, string[]]> = [
             ["opener", s.openers], ["detail", s.details], ["sensory", s.sensory],
             ["hook", s.hooks], ["lmline", s.landmarkLines],
@@ -191,7 +197,7 @@ export function parseSectorsTable(entries: any[]): SectorPools[] {
     if (!entries || typeof entries.length !== "number") { return []; }
     const ensure = function (idx: number): SectorPools {
         if (!byIndex[idx]) {
-            byIndex[idx] = { qualifier: "", openers: [], details: [], sensory: [], hooks: [], landmarkLines: [] };
+            byIndex[idx] = { qualifiers: [], openers: [], details: [], sensory: [], hooks: [], landmarkLines: [] };
         }
         return byIndex[idx];
     };
@@ -204,7 +210,7 @@ export function parseSectorsTable(entries: any[]): SectorPools[] {
         const idx = parseInt(m[1], 10);
         const s = ensure(idx);
         if (idx > max) { max = idx; }
-        if (m[2] === "qual") { s.qualifier = desc; continue; }
+        if (m[2] === "qual") { s.qualifiers.push(desc); continue; }
         if (m[2] === "opener") { s.openers.push(desc); continue; }
         if (m[2] === "detail") { s.details.push(desc); continue; }
         if (m[2] === "sensory") { s.sensory.push(desc); continue; }
@@ -213,7 +219,7 @@ export function parseSectorsTable(entries: any[]): SectorPools[] {
     }
     const out: SectorPools[] = [];
     for (let i = 0; i <= max; i++) {
-        out.push(byIndex[i] || { qualifier: "", openers: [], details: [], sensory: [], hooks: [], landmarkLines: [] });
+        out.push(byIndex[i] || { qualifiers: [], openers: [], details: [], sensory: [], hooks: [], landmarkLines: [] });
     }
     return out;
 }
@@ -224,14 +230,17 @@ export function parseSectorsTable(entries: any[]): SectorPools[] {
 
 const QUALIFIER_DECK: string[] = [
     "outer", "inner", "old", "broken", "quiet", "flooded",
-    "overgrown", "dim", "cold", "forgotten",
+    "overgrown", "dim", "cold", "forgotten", "sunken", "raised",
+    "narrow", "wide", "ruined", "still", "windy", "dark",
+    "worn", "hidden",
 ];
 
 /**
  * Synthesize K sector pool-sets for the baked/LLM-off path: pools are shared from
  * the area prose table (opener/detail/atmosphere tags; atmosphere maps to sensory),
- * but each sector gets a DISTINCT seeded qualifier so sectors stay legible in room
- * names even when the prose pool is shared.
+ * but each sector gets TWO distinct seeded qualifiers (a per-sector name deck) so
+ * sectors stay legible in room names even when the prose pool is shared. 2 x k
+ * never exceeds the 20-word deck at the K=8 cap.
  */
 export function synthesizeSectors(k: number, proseEntries: any[], areaSeed: number): SectorPools[] {
     const openers: string[] = [];
@@ -248,7 +257,7 @@ export function synthesizeSectors(k: number, proseEntries: any[], areaSeed: numb
             if (tag === "atmosphere") { sensory.push(desc); }
         }
     }
-    // Seeded partial Fisher-Yates over the qualifier deck: k distinct qualifiers.
+    // Seeded partial Fisher-Yates over the qualifier deck: 2k distinct qualifiers.
     const deck = QUALIFIER_DECK.slice();
     const rng = splitmix64(hashCoord(areaSeed, "sector-qualifiers"));
     for (let i = 0; i < deck.length - 1; i++) {
@@ -260,7 +269,7 @@ export function synthesizeSectors(k: number, proseEntries: any[], areaSeed: numb
     const out: SectorPools[] = [];
     for (let i = 0; i < k; i++) {
         out.push({
-            qualifier: deck[i % deck.length],
+            qualifiers: [deck[(2 * i) % deck.length], deck[(2 * i + 1) % deck.length]],
             openers: openers.slice(),
             details: details.slice(),
             sensory: sensory.slice(),
@@ -558,20 +567,15 @@ export function composeRoomV3(
 }
 
 /**
- * qualifier x place-word room name. z-levels override the sector qualifier with
- * Upper/Lower so vertical rooms read as vertical. Neighbor-excluded place pick.
- * A place word that already contains the qualifier drops it ("cold" x
- * "cold room" names "Cold Room", never "Cold Cold Room").
+ * Compose one room name from a dealt qualifier x place pair. z-levels override
+ * the qualifier with Upper/Lower so vertical rooms read as vertical. A place
+ * word that already contains the qualifier drops it ("cold" x "cold room"
+ * names "Cold Room", never "Cold Cold Room").
  */
-export function roomNameV3(areaSeed: number, path: string, qualifier: string, places: string[]): string {
-    const coords = parseCoord(path);
-    const z = coords ? coords[2] : 0;
+function composeName(qualifier: string, place: string, z: number): string {
     let qual = qualifier || "";
     if (z > 0) { qual = "upper"; }
     if (z < 0) { qual = "lower"; }
-    const place = places && places.length > 0
-        ? pickExcluding(places, areaSeed, path, "name")
-        : "";
     // Word-boundary containment via space padding (no regex, no block-scoped
     // locals: a Jint quirk threw "placeWords is not defined" on the previous
     // split()-based form when a second area generated in the same session).
@@ -584,4 +588,83 @@ export function roomNameV3(areaSeed: number, path: string, qualifier: string, pl
         return titleCase(qual + " " + place);
     }
     return titleCase(place !== "" ? place : qual);
+}
+
+/**
+ * Mint-time NO-REPLACEMENT name deal (stage-B ride-along: the 0.4.0 per-room
+ * independent pick exhausted at 41 rooms with 8 duplicate clusters). Pure and
+ * traversal-independent: rooms sort internally, each sector shuffles its own
+ * qualifier x place product deck with a seeded rng and deals names to its
+ * composed rooms in sorted-path order; on exhaustion the deck reshuffles and
+ * dealing continues (repeats only after every product is used once). Landmark
+ * cells are skipped - landmark rooms are named by their landmark.
+ */
+export function dealSectorNames(
+    areaSeed: number,
+    rooms: string[],
+    landmarkCells: LandmarkCell[],
+    sectors: SectorPools[],
+    places: string[]
+): Record<string, string> {
+    const skip: Record<string, boolean> = {};
+    for (let i = 0; i < landmarkCells.length; i++) {
+        const l = landmarkCells[i];
+        skip[formatCoord(l.x, l.y, l.z)] = true;
+    }
+    const sorted = rooms.slice().sort();
+    const bySector: Record<number, string[]> = {};
+    for (let i = 0; i < sorted.length; i++) {
+        const path = sorted[i];
+        if (skip[path]) { continue; }
+        const c = parseCoord(path);
+        if (!c) { continue; }
+        const sec = landmarkCells.length > 0 ? sectorOf(landmarkCells, c[0], c[1]).index : 0;
+        if (!bySector[sec]) { bySector[sec] = []; }
+        bySector[sec].push(path);
+    }
+    const out: Record<string, string> = {};
+    for (const secKey in bySector) {
+        if (!Object.prototype.hasOwnProperty.call(bySector, secKey)) { continue; }
+        const sec = parseInt(secKey, 10);
+        const pool = sectors[sec] && sectors[sec].qualifiers ? sectors[sec].qualifiers : [];
+        const quals: string[] = [];
+        for (let i = 0; i < pool.length; i++) {
+            if (pool[i] !== "") { quals.push(pool[i]); }
+        }
+        if (quals.length === 0) { quals.push(""); }
+        const placeList = places && places.length > 0 ? places.slice() : [""];
+        const deck: Array<{ q: string; p: string }> = [];
+        for (let qi = 0; qi < quals.length; qi++) {
+            for (let pi = 0; pi < placeList.length; pi++) {
+                deck.push({ q: quals[qi], p: placeList[pi] });
+            }
+        }
+        const rng = splitmix64(hashCoord(areaSeed, "names:s" + sec));
+        let hand = shuffleDeck(deck, rng);
+        let di = 0;
+        const secRooms = bySector[sec];
+        for (let ri = 0; ri < secRooms.length; ri++) {
+            if (di >= hand.length) {
+                hand = shuffleDeck(deck, rng);
+                di = 0;
+            }
+            const pick = hand[di];
+            di += 1;
+            const c = parseCoord(secRooms[ri]);
+            const name = composeName(pick.q, pick.p, c ? c[2] : 0);
+            out[secRooms[ri]] = name;
+        }
+    }
+    return out;
+}
+
+function shuffleDeck<T>(deck: T[], rng: () => number): T[] {
+    const d = deck.slice();
+    for (let i = 0; i < d.length - 1; i++) {
+        const j = i + Math.floor(rng() * (d.length - i));
+        const tmp = d[i];
+        d[i] = d[j];
+        d[j] = tmp;
+    }
+    return d;
 }

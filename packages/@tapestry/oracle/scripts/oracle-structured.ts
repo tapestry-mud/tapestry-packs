@@ -365,8 +365,14 @@ export function mapSector(raw: string | null): SectorPools | null {
         }
         return out;
     };
-    const qualifierRaw = cleanName(j.qualifier).toLowerCase();
-    const qualifier = qualifierRaw.split(" ")[0] || "";
+    const qualifiers: string[] = [];
+    const rawQuals = Array.isArray(j.qualifiers)
+        ? j.qualifiers
+        : (typeof j.qualifier === "string" ? [j.qualifier] : []);
+    for (let i = 0; i < rawQuals.length && qualifiers.length < 3; i++) {
+        const q = cleanName(rawQuals[i]).toLowerCase().split(" ")[0] || "";
+        if (q !== "" && qualifiers.indexOf(q) === -1) { qualifiers.push(q); }
+    }
     const landmarkLines: string[] = [];
     if (Array.isArray(j.landmark_lines)) {
         for (const line of j.landmark_lines) {
@@ -377,7 +383,7 @@ export function mapSector(raw: string | null): SectorPools | null {
         }
     }
     return {
-        qualifier,
+        qualifiers,
         openers: mapLines(j.openers),
         details: mapLines(j.details),
         sensory: mapLines(j.sensory),
@@ -410,14 +416,14 @@ export const SCHEMA_LANDMARKS = JSON.stringify({
 export const SCHEMA_SECTOR = JSON.stringify({
     type: "object",
     properties: {
-        qualifier: { type: "string" },
+        qualifiers: { type: "array", items: { type: "string" } },
         openers: { type: "array", items: { type: "string" } },
         details: { type: "array", items: { type: "string" } },
         sensory: { type: "array", items: { type: "string" } },
         hooks: { type: "array", items: { type: "string" } },
         landmark_lines: { type: "array", items: { type: "string" } },
     },
-    required: ["qualifier", "openers", "details", "sensory", "hooks", "landmark_lines"],
+    required: ["qualifiers", "openers", "details", "sensory", "hooks", "landmark_lines"],
     additionalProperties: false,
 });
 
