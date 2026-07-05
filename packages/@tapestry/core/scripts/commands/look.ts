@@ -1,19 +1,12 @@
 import * as tapestry from "@tapestry/engine";
+import { conditionIndex, conditionText } from "../combat/condition.js";
 
+// Band logic lives in combat/condition.ts (B.2) - ONE ladder shared with the
+// combat condition line so look and combat can never disagree.
 function getHealthTierText(entityId) {
     var stats = tapestry.stats.get(entityId);
     if (!stats) { return null; }
-    var hp = stats.hp;
-    var maxHp = stats.maxHp;
-    if (maxHp <= 0) { return "is near death"; }
-    var pct = Math.floor((hp / maxHp) * 100);
-    if (pct >= 100) { return "is in perfect health"; }
-    if (pct >= 75) { return "has a few scratches"; }
-    if (pct >= 50) { return "has some small wounds"; }
-    if (pct >= 35) { return "is wounded"; }
-    if (pct >= 20) { return "is badly wounded"; }
-    if (pct >= 10) { return "is bleeding profusely"; }
-    return "is near death";
+    return conditionText(conditionIndex(stats.hp, stats.maxHp));
 }
 
 // ROM-style worn slot label, e.g. "worn on head". Multi-slots arrive keyed

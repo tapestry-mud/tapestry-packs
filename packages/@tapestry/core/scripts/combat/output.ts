@@ -1,4 +1,5 @@
 import * as tapestry from "@tapestry/engine";
+import { conditionIndex, conditionText } from "./condition.js";
 // --- Combat engage output ---
 tapestry.events.on("combat.engage", function(event) {
     var data = event.data || {};
@@ -16,6 +17,38 @@ tapestry.events.on("combat.engage", function(event) {
 
 function formatDamageMessage(subject, weaponName, targetName, damage) {
     return subject + " " + weaponName + " " + tapestry.combat.formatDamageVerb(damage) + " " + targetName + ".";
+}
+
+// --- Target condition line (B.2) ---
+// The %-of-target channel, split from the damage verb (verb = absolute
+// damage, the progression channel; condition = relative tactical state -
+// Travis's design call 2026-07-04). Emitted ONLY when the target's condition
+// BAND changes, never every round. Band ladder is shared with `look`
+// (combat/condition.js), so the two can never disagree.
+var lastConditionBand = {};
+
+function sendConditionTransition(attackerId, targetId, targetName, roomId) {
+    var stats = tapestry.stats.get(targetId);
+    if (!stats) { return; }
+    var band = conditionIndex(stats.hp, stats.maxHp);
+    var prev = Object.prototype.hasOwnProperty.call(lastConditionBand, targetId)
+        ? lastConditionBand[targetId]
+        : 0; // unseen targets start at perfect health
+    lastConditionBand[targetId] = band;
+    if (band === prev || stats.hp <= 0) {
+        return; // no transition, or the kill line owns this beat
+    }
+    var line = "<combat_status>" + targetName + " " + conditionText(band) + ".</combat_status>\r\n";
+    tapestry.world.send(attackerId, line);
+    if (roomId) {
+        tapestry.world.sendToRoomExceptMany(roomId, [attackerId, targetId], line);
+    }
+}
+
+function clearConditionTracking(entityId) {
+    if (entityId && Object.prototype.hasOwnProperty.call(lastConditionBand, entityId)) {
+        delete lastConditionBand[entityId];
+    }
 }
 
 // --- Combat hit output ---
@@ -39,6 +72,10 @@ tapestry.events.on("combat.hit", function(event) {
         var roomMsg = formatDamageMessage(attackerName + "'s", weaponName, targetName, damage) + "\r\n";
         tapestry.world.sendToRoomExceptMany(roomId, [attackerId, targetId], roomMsg);
     }
+
+    // HP is already applied when combat.hit fires (VitalsService.Apply runs
+    // first in ResolveAutoAttacksPhase), so this reads the post-hit band.
+    sendConditionTransition(attackerId, targetId, targetName, roomId);
 });
 
 // --- Combat miss output ---
@@ -118,6 +155,9 @@ tapestry.events.on("combat.kill", function(event) {
     var killerName = data.killerName || "Something";
     var roomId = event.roomId;
 
+    // The victim's condition tracking dies with it.
+    clearConditionTracking(event.targetEntityId);
+
     if (event.sourceEntityId) {
         tapestry.world.send(event.sourceEntityId, "<combat_kill>You have slain " + victimName + "!</combat_kill>\r\n");
     }
@@ -138,6 +178,9 @@ tapestry.events.on("entity.vital.depleted", function(event) {
     if (!entity || entity.type !== "player") {
         return;
     }
+
+    // Vitals restore on recall - drop the stale condition band.
+    clearConditionTracking(event.sourceEntityId);
 
     var entityId = event.sourceEntityId;
     var roomId = entity.roomId;

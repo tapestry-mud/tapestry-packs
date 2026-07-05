@@ -1,6 +1,6 @@
 ---
 capability: core-combat
-last-updated: 2026-07-03
+last-updated: 2026-07-04
 ---
 
 # core-combat
@@ -104,6 +104,26 @@ there is no standalone aggro behavior.
   to pick a verb. Attacker sees "Your [weapon] [verb] [target].", defender sees
   "[attacker]'s [weapon] [verb] you.", room bystanders see the third-person form.
   (packages/@tapestry/core/scripts/combat/output.ts:21-41)
+
+- Target condition line (B.2): after the damage messages, `combat.hit` emits
+  `<combat_status>[target] [condition].</combat_status>` to the attacker and
+  room bystanders when - and ONLY when - the target's condition BAND changed
+  (never every round; not on the killing blow, which the kill line owns). Two
+  channels by design (Travis 2026-07-04): the verb keys on ABSOLUTE damage
+  (the progression channel), the condition line is the RELATIVE tactical
+  state. HP is already applied when combat.hit fires, so the line reads the
+  post-hit band. Per-target tracking is in-memory, seeded at perfect health,
+  cleared on combat.kill and player death.
+  (packages/@tapestry/core/scripts/combat/output.ts:sendConditionTransition)
+
+- The percent-HP band ladder lives in `combat/condition.ts`
+  (`CONDITION_BANDS`, `conditionIndex`, `conditionText`) - the ONE
+  implementation shared by the `look` command's health tier text and the
+  combat condition line, so the two can never disagree. Bands mirror the
+  engine HealthTier ladder exactly: perfect (100), few scratches (75-99),
+  small wounds (50-74), wounded (35-49), badly wounded (20-34), bleeding
+  profusely (10-19), near death (<10 or maxHp <= 0).
+  (packages/@tapestry/core/scripts/combat/condition.ts)
 - `combat.miss`: sends `<combat_miss>`-tagged miss messages to all three
   audiences (attacker, defender, room).
   (packages/@tapestry/core/scripts/combat/output.ts:44-63)
@@ -166,5 +186,6 @@ any pack can build a swell boss as data.
 
 ## Change Log
 
+- 2026-07-04 [target-condition-line](changes/2026-07-04-target-condition-line.md) - band ladder extracted to combat/condition.ts (shared by look + combat output); combat.hit emits the target condition line on band transitions only (verb = absolute damage channel, condition = relative tactical channel)
 - 2026-07-03 [vocabulary-consolidation](changes/2026-07-03-vocabulary-consolidation.md) - mob flee content on wimpy_pct (int 0-100); flee_threshold doubles converted x100; wimpy command and help read percentage
 - 2026-06-21 [swell-combat-graduation](changes/2026-06-21-swell-combat-graduation.md) - the telegraph-rung validator, sidestep/brace counters, the tune dial editor, and the swell_* dial declarations graduated into core from example-pack
