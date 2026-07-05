@@ -12,7 +12,10 @@ frozen tables inside a radius envelope with landmarks, Voronoi sector prose, and
 mints the WHOLE room graph (real two-way exits, zero stubs) at creation; and populates each room
 with spawns on first player arrival through a THREAT-TIER LADDER: ambient trash with a dice-owned
 disposition mix, a swell-capable elite in every charged-band room, one named miniboss AT each
-landmark, and a single once-per-run wandering boss on the pity clock. The LLM fills tables once
+landmark, and a single once-per-run wandering boss on the pity clock. The entry room is a
+STRUCTURALLY SAFE START: zero ambient spawns ever (B.2), boss-free, elite-free -- its one
+inhabitant is the friendly guide NPC that hands over the starter kit and starter abilities on
+interaction. The LLM fills tables once
 at area creation (dressing only -- names, bespoke landmark prose + miniboss identities, sector
 fragment pools, banded creature rosters, scar lines); all facts (seed, target_rooms, landmark
 placement, sector geometry, exit existence, direction words, menace-band selection, disposition
@@ -152,6 +155,12 @@ Composed (non-landmark) rooms assemble from their sector's pools:
 code position (per-room streams stay traversal-independent; keys `coordKey+":miniboss"` /
 `":spawn"` / `":boss"`):
 
+0. **Safe entry (B.2 structural guarantee)** -- the entry cell spawns ZERO ambient mobs, ever:
+   `tiers.ambientDensity(band, path)` zeroes the trash budget at `ENTRY_PATH` ("0,0,0"), the
+   same posture as the structurally boss-free entry. NPCs stay allowed -- the guide (below)
+   rides the separate NPC spawn path, so the ambient-zero rule and the guide spawn cannot
+   collide. Golden-tested for every band. (packages/@tapestry/oracle/scripts/tiers.ts:ambientDensity)
+
 1. **Miniboss** -- a landmark room spawns its frozen identity (`boss-<i>` landmarks row; a
    0.4.0-era table synthesizes "the keeper of the <landmark>" via `defaultMinibossFor`) on the
    `swell-miniboss` template. Exactly one per landmark -- EXCEPT a landmark that is
@@ -266,6 +275,31 @@ Theme (place words, mob names, prose) is LLM-owned dressing in the oracle tables
 balance table -- stage B adds `elite` and `miniboss` anchor rows beside mob/weapon/armor/boss;
 six-axis adds selection/dressing/disposition, never numbers. Rarity modifies the effective
 level band via `rarityModifier` before the balance lookup.
+
+B.2 retuned the LOW-LEVEL anchors against a pinned player model (geared skill-less level 1:
+~6.5 avg damage/hit, 55-60% hit rate; targets agreed with Travis 2026-07-04): trash 2d10 +
+1d6 damage at L1 (3-4 rounds to kill), elite 5d10 (~2x trash, 8-10 rounds), miniboss 60 HP
+(a real fight), L10 anchors rescaled proportionally with the 20/40/60 anchors untouched.
+The boss curve is deliberately untouched: the swell chunk (15% of boss maxHp per countered
+swell, a swell-boss template dial) is what kills a 200 HP L1 boss (~7 clean counters);
+attrition never does. Trash `wimpy_pct` is 0 at L1 (interpolating back to the old curve by
+L10) and the hostile/wary TEMPLATES carry wimpy 0 to match -- all solo trash currently mints
+at L1 and `SpawnOverride` cannot carry wimpy, so the template IS the L1 value; skittish keeps
+65 because that approximation IS the timid disposition. TTK targets are pinned by golden
+tests (tests/balance-curve.golden.test.mjs); frozen-area tables are untouched -- only newly
+minted stats change.
+
+LOADYAML TYPE CONTRACT (B.2 discovery): the engine's `data.loadYaml` is YamlDotNet
+`Deserialize<object>` -- under the live Jint runtime EVERY scalar is a STRING and CLR-dict
+key lookups are TYPE-STRICT. Two consequences, both fixed in balance-table.ts: arithmetic
+must coerce (`"2" + 0` is `"20"` -- this string-concat made every live trash spawn carry 10x
+the tabled hp dice from 0.3.x through 0.5.0, the real cause of the unkillable-trash playtest;
+node golden tests stayed green because the js-yaml stub typed scalars), and dice-band dict
+lookups must index with the ORIGINAL anchor element, never a coerced number (`damage[1]`
+misses the CLR key "1"). `num()` is the single coercion point; the oracle engine-stub now
+stringifies all scalars so golden tests exercise exactly the live shapes.
+(packages/@tapestry/oracle/scripts/balance-table.ts;
+packages/@tapestry/oracle/node_modules/@tapestry/engine/index.js)
 (packages/@tapestry/oracle/scripts/balance-table.ts;
 packages/@tapestry/oracle/scripts/resolver.ts)
 
@@ -332,20 +366,36 @@ properties. (packages/@tapestry/oracle/scripts/tiers.ts;
 packages/@tapestry/oracle/data/six-axis/_default/MOB-1.yaml;
 packages/@tapestry/oracle/data/master-balance.yml)
 
-### Starter kit - PLAYTEST SCAFFOLDING
+### Entry guide + starter provisions - PLAYTEST SCAFFOLDING
 
-Stage C (items six-axis) and stage E (gear isolation / onboarding NPC) own the real design;
-this is a stopgap so a brand-new character can fight the tier ladder. On a player's first
-entry to a solo area (creator: at the creation teleport, which fires no direction event;
-anyone else: on their first move inside, BEFORE the revisit gate) they receive one weapon +
-head/hands/feet armor, stats from the master balance table at the AREA'S MIN LEVEL (wear/wield
-carry no level gates -- a level-1 character always equips it). Items freeze through
-`writeItemTemplate` and deliver through `items.spawnToInventory` (the core-loaditem / tinkers
-seam). Gate: once per player per area -- the `grants` oracle table + an in-memory mirror
-(visited-table pattern), mark-first. Kit item ids and the grants rows are keyed by the player
-ENTITY id, which is per-database -- they are player-scoped artifacts, deliberately outside the
-same-seed byte-identity claim (which covers rooms, tables, and loot side-cars).
-(packages/@tapestry/oracle/scripts/starter-kit.ts)
+Stage C (items six-axis) and stage E (gear isolation / real onboarding design) own the final
+shape; the B.2 guide replaces the stage-B SILENT auto-grant so the player SEES the handoff.
+
+The guide (`tapestry-oracle:guide`: no_kill engine tag, friendly, stationary, generic
+identity by design) spawns with the entry room at creation (`populateEntry`) and RE-ENSURES
+on every arrival at the entry cell -- `ensureGuideAt` presence-checks by `template_id` before
+spawning, so the creation spawn and the post-reboot respawn (spawnMob mobs are transient;
+the entry's visited marker is frozen) can never double-spawn. Saying a greet/kit keyword to
+it (core onSay dispatch; the mob hooks register via `mobs.registerScript` at script load)
+delivers two things:
+
+- **Kit**: one weapon + head/hands/feet armor, stats from the master balance table at the
+  AREA'S MIN LEVEL (wear/wield carry no level gates). Items freeze through
+  `writeItemTemplate` and deliver through `items.spawnToInventory`. Gate unchanged from
+  stage B: once per player per area -- the `grants` oracle table + an in-memory mirror
+  (visited-table pattern), mark-first. Kit item ids and grants rows are keyed by the player
+  ENTITY id, which is per-database -- player-scoped artifacts, deliberately outside the
+  same-seed byte-identity claim (which covers rooms, tables, and loot side-cars).
+- **Starter abilities**: kick + bash (class-agnostic @tapestry/core skills) at novice-cap
+  proficiency 25 via `tapestry.abilities.learn` -- the same engine seam core's admin-learn
+  uses. Gated by ABSENCE (`abilities.getProficiency === null`), so re-asking never clobbers
+  trained progress. A level-1 character gets two real combat decisions (damage spender +
+  stun).
+
+A hint keyword answers with the roads-lead-to-landmarks line; anything else prompts for
+HELLO/HINT. The creation teleport sends a one-line pointer at the guide instead of granting.
+(packages/@tapestry/oracle/scripts/guide.ts; packages/@tapestry/oracle/scripts/starter-kit.ts;
+packages/@tapestry/oracle/templates/mobs/guide.yaml)
 
 ### Item delivery - freeze + ride mob inventory
 
@@ -430,6 +480,7 @@ default to strict validation (see Rejected: room-property visited marker).
 
 ## Change Log
 
+- 2026-07-04 [oracle-stage-b2-combat-feel](changes/2026-07-04-oracle-stage-b2-combat-feel.md) - safe entry room (ambient-zero structural guarantee, golden-tested); entry guide NPC (no_kill, reload-safe ensureGuideAt, onSay-delivered starter kit through the unchanged grants gate + kick/bash at novice cap via abilities.learn, silent auto-grant deleted); low-level balance retune against the pinned player model (trash 2d10/1d6/wimpy-0 at L1, elite 5d10, miniboss 60, L10 proportional, boss curve untouched - swell chunks are the kill mechanic), TTK targets pinned by golden tests; loadYaml string-scalar fix (live pools were 10x the table since 0.3.x - num() coercion + original-key dict lookups + string-scalar engine stub for test parity)
 - 2026-07-04 [oracle-stage-b-tiers-mobs](changes/2026-07-04-oracle-stage-b-tiers-mobs.md) - threat-tier ladder (charged elites with frozen epithets, landmark minibosses with frozen identities + 0.4.0 keeper synthesis, once-per-run wandering boss with landmark/safe-start suppression); mobs six-axis (shared MOB-1 menace bands + banded mb- ids with flat-pick back-compat, dice-owned band-weighted disposition axis riding template selection, elite/miniboss balance rows, four new mob templates); ride-alongs (3 afar variants + distance-banded gate + 4-tail deck, sector qualifier decks + mint-time no-replacement name deal); solo opened to players (rate-limit ship dependency documented); starter-kit playtest scaffolding (grants table, spawnToInventory)
 - 2026-07-04 [oracle-v3-rooms](changes/2026-07-04-oracle-v3-rooms.md) - rooms v3: radius envelope + target_rooms size bands, wedge-placed landmarks with bespoke prose + afar lines, Voronoi sector pools with border blends, canonical edge-hash exits with forced Bresenham roads + vertical scarcity + band modulation, eager chunked geometry mint (stubs deleted), first-visit population trigger with visited-table persistence, anti-repetition stack (variable cadence, neighbor exclusion, qualifier x place names, slot-filled landmark references), fill_landmarks + fill_sector burst rounds, seed + size flow inputs; fixes: non-greedy room-id parse (negative-x reload), baked-cache aliasing, Jint 5s-cap chunking
 - 2026-06-28 [oracle-structured-six-axis-everywhere](changes/2026-06-28-oracle-structured-six-axis-everywhere.md) - structured-output table fill (parser deleted, per-kind json_schema + JSON->entry mappers); six-axis on every area (shared _default mechanics + assembled ROOM-2 dressing, composer ungated); fill_scars + always-present scars table; place-word room names; extracted buildScenarios with theme/baked dedup; playtest fixes (stale-scenario gate, weighted exit count, present-tense prompts)

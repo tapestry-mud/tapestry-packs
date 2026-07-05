@@ -33,7 +33,6 @@ import { rollTargetRooms, landmarkCount } from "./structure.js";
 import { mintAreaGeometry } from "./geometry-mint.js";
 import { populateEntry } from "./population.js";
 import { EMPTY_ROSTER } from "./area-context.js";
-import { grantStarterKit } from "./starter-kit.js";
 
 // ---------------------------------------------------------------------------
 // Configurable constants
@@ -265,13 +264,10 @@ export function createSoloArea(
                 delete pending[playerId];
                 tapestry.world.teleportEntity(playerId, gen.entryRoomId);
                 tapestry.world.send(playerId, "The pattern settles into place around you.");
-                // PLAYTEST SCAFFOLDING (stage C/E own the real design): the
-                // creator gets the starter kit here because teleportEntity
-                // fires no direction event for the moved-handler grant path.
-                const kitLines = grantStarterKit(areaSlug, areaSeed, String(playerId), minLevel);
-                for (let i = 0; i < kitLines.length; i++) {
-                    tapestry.world.send(playerId, kitLines[i]);
-                }
+                // B.2: provisions are guide-delivered now - the guide spawned
+                // with the entry room (populateEntry); point the creator at it
+                // instead of silently auto-granting the kit.
+                tapestry.world.send(playerId, "A weathered guide waits here. Say HELLO to be outfitted for the road.");
                 tapestry.admin.executeAs(playerId, "look");
             }
         });

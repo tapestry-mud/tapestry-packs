@@ -1,0 +1,31 @@
+# The entry-room guide (stage B.2). Friendly, non-attackable (no_kill is an
+# engine-built-in tag), stationary. Spawned by guide.ensureGuideAt - the NPC
+# path, deliberately separate from the ambient dice path so the entry room's
+# ambient-zero rule (tiers.ambientDensity) can never collide with it.
+# Hands over the starter kit + starter abilities via onSay (scripts/guide.ts).
+# Generic identity is deliberate: stage E owns the real onboarding design.
+id: "tapestry-oracle:guide"
+name: "a weathered guide"
+type: "npc"
+tags: [no_kill]
+base_disposition: friendly
+keywords: [guide, weathered]
+behavior: stationary
+idle_chance: 0.3
+idle_interval: 30
+idle_commands:
+  - "say Say HELLO when you are ready to be outfitted, or ask for a HINT."
+  - "emote studies the shifting pattern of the paths."
+stats:
+  strength: 10
+  dexterity: 10
+  constitution: 12
+  intelligence: 14
+  wisdom: 16
+  luck: 10
+  max_hp: 100
+  max_resource: 0
+  max_movement: 40
+properties:
+  mob_level: 5
+  description: "Weathered by many runs through many patterns, the guide waits at the entry with provisions for those who ask."

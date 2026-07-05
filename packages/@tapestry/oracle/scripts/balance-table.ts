@@ -3,30 +3,51 @@ import { weightedPick } from "./prng.js";
 // Eager load at module init - the engine clears CurrentPackDir after boot, so a lazy load returns null.
 const data: any = engineData.loadYaml("data/master-balance.yml");
 
+// data.loadYaml is YamlDotNet Deserialize<object>: EVERY scalar arrives as a
+// STRING under the live Jint runtime. Any arithmetic on those values must
+// coerce first - "2" + 0 is "20" in JS, which is exactly the B.2 bug that
+// made live trash spawn with 10x the tabled hp dice (interpolateNumeric
+// string-concatenated at the anchors) while node golden tests, whose js-yaml
+// stub typed scalars as numbers, stayed green. num() is the single coercion
+// point; the engine test stub now loads yaml FAILSAFE-style (all strings) so
+// the golden tests exercise this same path.
+function num(v: any): number {
+    const n = Number(v);
+    return isNaN(n) ? 0 : n;
+}
+
 export function clampLevel(level: number): number {
     if (level < 1) { return 1; }
     if (level > 60) { return 60; }
     return Math.floor(level);
 }
 
-export function interpolateNumeric(anchors: number[], values: number[], level: number): number {
+export function interpolateNumeric(anchors: Array<number | string>, values: Array<number | string>, level: number): number {
     const L = clampLevel(level);
     for (let i = 0; i < anchors.length - 1; i++) {
-        if (L >= anchors[i] && L <= anchors[i + 1]) {
-            const span = anchors[i + 1] - anchors[i];
-            const t = span === 0 ? 0 : (L - anchors[i]) / span;
-            return Math.round(values[i] + t * (values[i + 1] - values[i]));
+        const a0 = num(anchors[i]);
+        const a1 = num(anchors[i + 1]);
+        if (L >= a0 && L <= a1) {
+            const span = a1 - a0;
+            const t = span === 0 ? 0 : (L - a0) / span;
+            const v0 = num(values[i]);
+            return Math.round(v0 + t * (num(values[i + 1]) - v0));
         }
     }
-    return values[L <= anchors[0] ? 0 : values.length - 1];
+    return num(values[L <= num(anchors[0]) ? 0 : values.length - 1]);
 }
 
-function nearestAnchor(anchors: number[], level: number): number {
+/** Nearest anchor, returned as the ORIGINAL array element (a string under the
+ *  live engine loader) because callers use it as a DICT KEY: Jint's CLR-dict
+ *  wrapper matches keys by type, so a coerced number misses a string key
+ *  ("damage[1]" finds nothing when the key is "1"). Coerce with num() only
+ *  for arithmetic, never for indexing. */
+function nearestAnchor(anchors: Array<number | string>, level: number): number | string {
     const L = clampLevel(level);
-    let best = anchors[0];
-    let bestDist = Math.abs(L - anchors[0]);
+    let best: number | string = anchors[0];
+    let bestDist = Math.abs(L - num(anchors[0]));
     for (const a of anchors) {
-        const d = Math.abs(L - a);
+        const d = Math.abs(L - num(a));
         if (d < bestDist) { best = a; bestDist = d; }
     }
     return best;
@@ -34,7 +55,8 @@ function nearestAnchor(anchors: number[], level: number): number {
 
 export function rarityModifier(rarity: string): number {
     const r = data.rarity || {};
-    return typeof r[rarity] === "number" ? r[rarity] : 0;
+    if (r[rarity] === undefined || r[rarity] === null) { return 0; }
+    return num(r[rarity]);
 }
 
 export function statsFor(kind: string, level: number, rng: () => number): Record<string, string | number> {
@@ -77,12 +99,17 @@ export function statsFor(kind: string, level: number, rng: () => number): Record
 }
 
 // Boss swell dials: unchanged v1 clamped lookup. Combat lane owns the 1-60 curve later.
+// Index with the ORIGINAL key string (Jint CLR-dict wrappers are key-type-strict);
+// coerce the dial values because loadYaml scalars are strings (see num() above).
 export function bossSwellDials(rank: number): Record<string, number> {
     const swell = data.boss_swell;
-    const ranks = Object.keys(swell).map(Number).sort((x, y) => x - y);
-    let r = ranks[0];
-    for (const k of ranks) { if (rank >= k) { r = k; } }
-    return swell[r];
+    const keys = Object.keys(swell).sort(function (x, y) { return num(x) - num(y); });
+    let rk = keys[0];
+    for (let i = 0; i < keys.length; i++) { if (rank >= num(keys[i])) { rk = keys[i]; } }
+    const row = swell[rk] || {};
+    const out: Record<string, number> = {};
+    for (const k of Object.keys(row)) { out[k] = num(row[k]); }
+    return out;
 }
 
 /**

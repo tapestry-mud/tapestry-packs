@@ -42,10 +42,10 @@ import { pureDegree, DEFAULT_SPAN, placeLandmarks, landmarkPath } from "./struct
 import { diceSpan, resolveBands } from "./six-axis.js";
 import { pathKey } from "./coords.js";
 import {
-    CONTEXT_BUMP, DISPOSITION_TEMPLATES, TIER_TEMPLATES,
-    rollDisposition, isEntryAdjacent, stirLine,
+    CONTEXT_BUMP, DISPOSITION_TEMPLATES, TIER_TEMPLATES, ENTRY_PATH,
+    rollDisposition, isEntryAdjacent, stirLine, ambientDensity, entrySafeDensity,
 } from "./tiers.js";
-import { grantStarterKit } from "./starter-kit.js";
+import { ensureGuideAt } from "./guide.js";
 
 // ---------------------------------------------------------------------------
 // Tuning constants (unchanged in kind from 0.3.x room-gen.ts)
@@ -57,9 +57,8 @@ const BOSS_CLOCK_SLOPE = 0.07;
 /** Chance an ambient mob carries a piece of loot (rides mob inventory). */
 const LOOT_DROP_CHANCE = 0.35;
 
-/** Spawn density per ROOM-1 band. transit is a breather; charged is densest.
- *  threshold maps to 1: the arena's real threat is the boss clock, not trash. */
-const DENSITY: Record<string, number> = { transit: 0, chamber: 1, charged: 2, landmark: 1, threshold: 1 };
+// Per-band ambient density moved to tiers.DENSITY (B.2) so the entry-zero
+// structural guarantee (tiers.ambientDensity) is golden-testable beside it.
 
 // ---------------------------------------------------------------------------
 // bossClockFires (moved from room-gen.ts - room-gen retired with the stubs)
@@ -174,11 +173,12 @@ export function populateRoom(roomId: string, areaId: string): string[] {
         const span = diceSpan(room1.dice);
         const degree = pureDegree(areaSeed, path, span);
         band = resolveBands(room1, degree).band;
-        density = Object.prototype.hasOwnProperty.call(DENSITY, band) ? DENSITY[band] : 1;
+        density = ambientDensity(band, path);
     } else {
         const degree = pureDegree(areaSeed, path, DEFAULT_SPAN);
-        density = degree <= 2 ? 0 : (degree <= 7 ? 1 : 2);
-        band = density === 0 ? "transit" : (density === 2 ? "charged" : "chamber");
+        const raw = degree <= 2 ? 0 : (degree <= 7 ? 1 : 2);
+        band = raw === 0 ? "transit" : (raw === 2 ? "charged" : "chamber");
+        density = entrySafeDensity(path, raw);
     }
 
     const safeStart = path === "0,0,0" || isEntryAdjacent(path);
@@ -296,6 +296,9 @@ export function populateRoom(roomId: string, areaId: string): string[] {
 
 export function populateEntry(areaId: string, entryRoomId: string): void {
     markPopulated(areaId, entryRoomId);
+    // Guide first (NPC path), then the tier ladder (dice path, ambient-zero
+    // at entry by the tiers.ambientDensity structural rule).
+    ensureGuideAt(areaId, entryRoomId);
     populateRoom(entryRoomId, areaId);
 }
 
@@ -321,18 +324,15 @@ export function registerPopulationHooks(): void {
             if (!areaId) {
                 return; // not an oracle room - cheap refusal.
             }
-            // PLAYTEST SCAFFOLDING (stage C/E own the real design): a player's
-            // first move inside an oracle area grants the starter kit exactly
-            // once per player per area (persisted in the area's grants table -
-            // no double-grant on reload/re-entry; the creator is granted at
-            // creation because teleport fires no direction event). Runs BEFORE
-            // the revisit gate so walk-ins through populated rooms still get it.
-            const areaStateForKit = getAreaState(areaId);
-            if (areaStateForKit) {
-                const kitLines = grantStarterKit(areaId, areaStateForKit.areaSeed, String(entityId), areaStateForKit.levelRange[0]);
-                for (let i = 0; i < kitLines.length; i++) {
-                    (tapestry as any).world.send(entityId, kitLines[i] + "\r\n");
-                }
+            // B.2: the starter kit is guide-delivered now (say hello to the
+            // guide at entry) - the stage-B silent auto-grant is gone. The
+            // guide itself is transient (spawnMob mobs do not survive a
+            // reboot) while the entry room's visited marker is frozen, so
+            // every arrival at the entry cell re-ensures the guide
+            // (presence-checked - never a double-spawn). Runs BEFORE the
+            // revisit gate on purpose.
+            if (getRoomPath(toRoom) === ENTRY_PATH) {
+                ensureGuideAt(areaId, toRoom);
             }
             if (isPopulated(areaId, toRoom)) {
                 return; // backtrack/revisit: spawns happen exactly once.

@@ -90,6 +90,34 @@ export function rollDisposition(band: string, rng: () => number): Disposition {
     return "timid";
 }
 
+/** The entry cell's pathKey - the structurally safe start. */
+export const ENTRY_PATH = "0,0,0";
+
+/** Ambient spawn density per ROOM-1 band. transit is a breather; charged is
+ *  densest. threshold maps to 1: the arena's real threat is the boss clock,
+ *  not trash. (Moved from population.ts in B.2 so the entry-zero rule below
+ *  is golden-testable with it.) */
+export const DENSITY: Record<string, number> = {
+    transit: 0,
+    chamber: 1,
+    charged: 2,
+    landmark: 1,
+    threshold: 1,
+};
+
+/** STRUCTURAL GUARANTEE (B.2): the entry room spawns ZERO ambient mobs, ever
+ *  - same posture as the structurally boss-free entry. NPCs (the guide) ride
+ *  a different spawn path and stay allowed. */
+export function entrySafeDensity(path: string, density: number): number {
+    return path === ENTRY_PATH ? 0 : density;
+}
+
+/** Ambient (trash) spawn budget for a room: the band's density, entry-zeroed. */
+export function ambientDensity(band: string, path: string): number {
+    const d = Object.prototype.hasOwnProperty.call(DENSITY, band) ? DENSITY[band] : 1;
+    return entrySafeDensity(path, d);
+}
+
 /** True for exactly the six orthogonal neighbors of the entry cell (0,0,0).
  *  The entry cell itself returns false - callers test it separately. */
 export function isEntryAdjacent(path: string): boolean {

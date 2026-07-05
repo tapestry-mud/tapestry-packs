@@ -148,3 +148,31 @@ test("stirLine: per-kind arrival dressing", () => {
     assert.ok(stirLine("miniboss", "the frost-warden").includes("rises to meet you"));
     assert.equal(stirLine("boss", "the head chef"), "the head chef stirs at your arrival.");
 });
+
+// ---------------------------------------------------------------------------
+// B.2 safe entry room: the structural ambient-zero guarantee.
+// ---------------------------------------------------------------------------
+import { ENTRY_PATH, DENSITY, ambientDensity, entrySafeDensity } from "../dist/scripts/tiers.js";
+
+test("entry room ambient density is ZERO for every band (structural guarantee)", () => {
+    for (const band of Object.keys(DENSITY)) {
+        assert.equal(ambientDensity(band, ENTRY_PATH), 0, band + " at entry");
+    }
+    // Unknown band falls back to 1 elsewhere, still 0 at entry.
+    assert.equal(ambientDensity("no-such-band", ENTRY_PATH), 0);
+});
+
+test("non-entry rooms keep the per-band density table", () => {
+    assert.equal(ambientDensity("transit", "1,0,0"), 0);
+    assert.equal(ambientDensity("chamber", "1,0,0"), 1);
+    assert.equal(ambientDensity("charged", "2,-3,0"), 2);
+    assert.equal(ambientDensity("landmark", "0,4,0"), 1);
+    assert.equal(ambientDensity("threshold", "-1,-1,1"), 1);
+    assert.equal(ambientDensity("no-such-band", "1,0,0"), 1);
+});
+
+test("entrySafeDensity zeroes exactly the entry cell (fallback-branch guard)", () => {
+    assert.equal(entrySafeDensity(ENTRY_PATH, 2), 0);
+    assert.equal(entrySafeDensity("0,0,1", 2), 2);
+    assert.equal(entrySafeDensity("1,0,0", 1), 1);
+});

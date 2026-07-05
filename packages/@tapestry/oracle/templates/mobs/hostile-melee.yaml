@@ -26,7 +26,10 @@ properties:
   wander_interval: 45
   wander_chance: 0.4
   wander_boundary: "area"
-  wimpy_pct: 20
+  # B.2 retune: 0 matches the L1 wimpy anchor in master-balance (all solo
+  # trash mints at L1; SpawnOverride cannot carry wimpy, so the template IS
+  # the L1 value). Low-level trash must not flee from new players.
+  wimpy_pct: 0
   corpse_decay: 300
   description: "A creature lurks here."
   ac:
