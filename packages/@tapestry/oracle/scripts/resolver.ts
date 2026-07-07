@@ -258,10 +258,15 @@ export function mintItemInstance(
     // once at mint, overriding the rolled type's dressing name. Same drop,
     // two signatures = two different named items - the deck is small (8
     // entries) but the roll happens once per mint, not once per area.
+    // The frozen NAME is the whole observable effect this slice - we do NOT
+    // stamp a marker property. The mint is persisted to a generated area pack
+    // that boots with no manifest (strict validation), so any property here
+    // must be an ENGINE-registered property; an unregistered flag (e.g.
+    // `signature: true`) crashes the reload with "unregistered property". A
+    // queryable signature marker is a future slice that registers the property.
     let name = type.name;
     if (isSignatureBand(item1, rarity)) {
         name = pickSignatureName(rng);
-        properties.signature = true;
     }
 
     // Fold the killer tier into the frozen id (defaulting to "trash" when no
