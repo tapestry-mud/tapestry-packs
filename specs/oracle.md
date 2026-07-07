@@ -1,6 +1,6 @@
 ---
 capability: oracle
-last-updated: 2026-07-04
+last-updated: 2026-07-06
 ---
 
 # oracle
@@ -102,7 +102,7 @@ All geometry is `f(areaSeed, coord)` + frozen constants, golden-tested under pla
 | `places` | place-word entries (`w`, `id`, `name`, `desc`) | qualifier x place room names |
 | `mobs` | BANDED: id prefix `mb-<band>-<slug>` assigns each creature a MOB-1 menace band (`skulker`/`common`/`hunter`/`apex`); `balance_ref: "mob"` | banded spawn source via `mintMobInstance` / elite pool via `mintEliteInstance` (a table with NO banded ids -- every 0.4.0 frozen area -- falls back to the flat weighted pick) |
 | `boss` | single entry with `balance_ref: "boss"` | wandering-boss source via `mintBossInstance` |
-| `items` | entries with rarity + item kind | loot source via `mintItemInstance` |
+| `items` | entries with rarity + item kind (`{w,id,name,desc,balance_ref,rarity}`, shape unchanged since 0.3.x) | six-axis loot source via `mintItemInstance`: an ITEM-1 DEGREE band (bent by ITEM-6 CONTEXT) picks which `rarity` slice to draw from -- a table with no ITEM-1 band match, or no ITEM-1 table at all (every pre-0.6.0 frozen area), falls back to the flat weighted pick |
 | `prose` | entries tagged `opener`/`detail`/`atmosphere` | union of sector pools; feeds assembleRoom2 + sector synthesis |
 | `scars` | entries tagged by consequence kind | ROOM-3 state-override scar prose |
 | `landmarks` | ID-PREFIX ENCODED: `lm-<i>` rows carry the bespoke room description, `afar-<i>-<v>` rows the seen-from-afar VARIANTS (target 3), `boss-<i>` rows the landmark's frozen MINIBOSS identity (name = title, desc = one line); legacy 0.4.0 rows (`afar-<i>`, no boss rows) still parse -- one variant, keeper-of synthesis | bespoke landmark rooms + reference lines + miniboss identities |
@@ -366,6 +366,52 @@ properties. (packages/@tapestry/oracle/scripts/tiers.ts;
 packages/@tapestry/oracle/data/six-axis/_default/MOB-1.yaml;
 packages/@tapestry/oracle/data/master-balance.yml)
 
+### Items six-axis - ITEM-1 rarity bands + ITEM-6 context
+
+The item tables are six-axis too (stage C, 0.6.0), the same shape as stage B's mobs six-axis:
+
+- **DEGREE**: WHICH rarity an item rolls is a banded roll, not a flat pick off the entry's own
+  static `rarity` field. The shared `_default/ITEM-1.yaml` DEGREE table (1d12: junk 1-2 /
+  common 3-7 / uncommon 8-10 / rare 11 / epic 12) eager-loads alongside ROOM-1/ROOM-3/MOB-1
+  into every area's six-axis set. `selectItemEntry` rolls the degree, bends it by the context
+  bump, resolves the band, and weighted-picks within the entries whose `rarity` field matches
+  that band's name. Fallback ladder mirrors mobs' back-compat-by-construction shape: entries
+  empty -> null; no ITEM-1 table -> flat weighted pick over all entries; no entry matches the
+  resolved band -> flat weighted pick (every 0.4.0/0.5.x frozen area hits this path -- the
+  on-disk `items` table shape is unchanged by this slice).
+- **CONTEXT**: the shared `_default/ITEM-6.yaml` table bends BOTH the rarity roll and the base
+  drop chance from the same two inputs -- which killer tier made the kill (`killer_tier` rows
+  trash/elite/miniboss/boss, each carrying a `bump` AND its own `drop_chance`: 0/0.35, 1/0.65,
+  2/0.90, 3/1.00) and which ROOM-1 band the room reads as (`room_band` rows carry only a
+  `bump`: transit -1 / chamber 0 / charged 1 / landmark 1 / threshold 2). `itemContextBump`
+  sums both matching inputs before the ITEM-1 degree is resolved; `dropChanceFor`/
+  `rollItemDrop` gate whether a kill drops anything at all, checked BEFORE the band roll runs
+  (a separate binary gate, not a "none" band competing inside the DEGREE roll -- see Rejected).
+  Unlike stage B's mob CONTEXT (`CONTEXT_BUMP`, a TS constant), ITEM-6 is TABLE DATA on
+  purpose -- Travis's explicit 2026-07-06 instruction, so pending playtest feel-tuning can
+  retune drop chances and bumps without a rebuild.
+- **DRESSING**: the LLM only names and describes items within each rarity tier. `fill_items`
+  now asks for 8 entries in a tier-shifted register (1 junk plain/disposable, 3 common, 2
+  uncommon, 1 rare, 1 epic legend-shaped-but-not-yet-signature -- the actual signature name is
+  rolled separately at mint, so the LLM/baked entry is just that slot's flavor before the epic
+  roll overrides its name); `junk` joins `RARITY_WEIGHTS` (100, the heaviest weight) and
+  `SCHEMA_ITEMS`'s rarity enum; `fallbackItems()` returns 5 entries spanning junk-epic; both
+  baked decks (`test-kitchen`, `endless-underdeep`) were rewritten to full 6-entry
+  junk-through-epic rosters.
+- **SIGNATURE**: the epic band (the one ITEM-1 band with `fires: signature`) freezes one of 8
+  fixed proper names (`ITEM_SIGNATURE_NAMES`: Gravewake/Emberfall/Duskbiter/Stormkeel/
+  Ashwhisper/Nightgall/Sunderthorn/Hollowmere) over the item's normal dressing name at mint,
+  mirroring stage B's elite epithets -- the frozen item id folds in the killer tier (default
+  "trash" when no context is supplied) so miniboss/elite/boss/trash loot minted at the same
+  room+index can never collide.
+- **CONSEQUENCE/CASCADE**: deferred, per the design spec's own posture, unchanged by this
+  slice -- IT2 (curse/ego/attunement), IT4 (cross-area hook queue), IT5 (item sets).
+
+(packages/@tapestry/oracle/scripts/item-tiers.ts;
+packages/@tapestry/oracle/scripts/resolver.ts:mintItemInstance;
+packages/@tapestry/oracle/data/six-axis/_default/ITEM-1.yaml;
+packages/@tapestry/oracle/data/six-axis/_default/ITEM-6.yaml)
+
 ### Entry guide + starter provisions - PLAYTEST SCAFFOLDING
 
 Stage C (items six-axis) and stage E (gear isolation / real onboarding design) own the final
@@ -399,10 +445,19 @@ packages/@tapestry/oracle/templates/mobs/guide.yaml)
 
 ### Item delivery - freeze + ride mob inventory
 
-Unchanged from 0.3.x: the unconditional loot threshold draw (0.35) per spawn iteration;
-`mintItemInstance` freezes the rolled item as a standalone item-template side-car and attaches it
-to the mob's inventory before spawning; corpse drop via core death transfer. All 7 armor slots
-have base templates. (packages/@tapestry/oracle/scripts/resolver.ts:mintItemInstance)
+Loot now fires at ALL FOUR spawn tiers (stage C, 0.6.0) -- through 0.5.x only the trash loop
+ever called `mintItemInstance`; elite/miniboss/boss dropped zero loot, a real gap rather than a
+design choice (fixed because ITEM-6's killer-tier context has nothing to bend if bosses never
+roll for loot in the first place). Each tier draws its own keyed rng and reads its own
+ITEM-6-driven drop chance via `rollItemDrop`/`dropChanceFor`: trash keeps its existing
+per-iteration draw (same stream key), now reading its threshold from ITEM-6's `trash` row
+instead of the deleted `LOOT_DROP_CHANCE = 0.35` TS constant; elite reuses the shared
+`spawnRng` stream; miniboss and boss each get a dedicated keyed draw
+(`coordKey + ":miniboss-loot"` / `":boss-loot"`). `mintItemInstance` still freezes the rolled
+item as a standalone item-template side-car and attaches it to the mob's inventory before
+spawning; corpse drop via core death transfer is unchanged. All 7 armor slots have base
+templates. (packages/@tapestry/oracle/scripts/population.ts;
+packages/@tapestry/oracle/scripts/resolver.ts:mintItemInstance)
 
 ### Structured-output table fill
 
@@ -478,8 +533,26 @@ default to strict validation (see Rejected: room-property visited marker).
 - `oracle-parse.ts` heuristic free-text parser -- deleted in 0.3.0 for STRICT json_schema
   structured output.
 
+- PZL puzzle-cache loot hookup -- the stage-C roadmap row's text claimed items should hook
+  into "puzzle-cache loot (PZL mid-band) ... from rooms v3." Verified against the rooms-v3
+  design: PZL tables are a documented FUTURE extension in the exploration doc, never built, and
+  the rooms-v3 implementation plan explicitly lists "gates/puzzles" as OUT OF SCOPE
+  (docs/tapestry/superpowers/plans/2026-07-04-oracle-v3-rooms.md:19). There is no PZL table
+  kind, no lock-predicate system, no `fill_puzzles` round -- nothing exists to hook into yet.
+  This is a scope correction (the roadmap row overreached what rooms-v3 actually delivered),
+  not design creep; PZL remains a separate, larger future slice.
+
+- Single-roll "none band" for item drops -- folding "no drop" into the ITEM-1 DEGREE roll as a
+  competing band was considered and rejected. A boss's guaranteed drop (`drop_chance: 1.00`)
+  could never be expressed cleanly as a weighted band racing a "none" band inside one roll, and
+  each killer tier needs its own independent drop probability. Replaced by a separate binary
+  gate (`rollItemDrop`, checked BEFORE `selectItemEntry` runs) so the DEGREE roll stays purely
+  about WHICH rarity, never WHETHER anything drops.
+  (packages/@tapestry/oracle/scripts/item-tiers.ts)
+
 ## Change Log
 
+- 2026-07-06 [oracle-stage-c-items-six-axis](changes/2026-07-06-oracle-stage-c-items-six-axis.md) - items six-axis (ITEM-1 banded rarity DEGREE roll replaces the flat pick; shared ITEM-6 CONTEXT table bends both drop chance and rarity roll from killer tier + room band, kept as table data rather than a TS constant so playtest feel-tuning can retune it without a rebuild); loot now fires at all four spawn tiers (elite/miniboss/boss previously dropped zero loot); junk rarity tier added to dressing (RARITY_WEIGHTS, SCHEMA_ITEMS, fallbackItems, fill_items, both baked decks rewritten to full junk-epic rosters); epic band freezes one of 8 fixed signature names at mint; PZL puzzle-cache hookup cut (does not exist yet, out of scope per the rooms-v3 plan) and a single-roll "none band" design rejected in favor of a per-tier drop-chance gate
 - 2026-07-04 [oracle-stage-b2-combat-feel](changes/2026-07-04-oracle-stage-b2-combat-feel.md) - safe entry room (ambient-zero structural guarantee, golden-tested); entry guide NPC (no_kill, reload-safe ensureGuideAt, onSay-delivered starter kit through the unchanged grants gate + kick/bash at novice cap via abilities.learn, silent auto-grant deleted); low-level balance retune against the pinned player model (trash 2d10/1d6/wimpy-0 at L1, elite 5d10, miniboss 60, L10 proportional, boss curve untouched - swell chunks are the kill mechanic), TTK targets pinned by golden tests; loadYaml string-scalar fix (live pools were 10x the table since 0.3.x - num() coercion + original-key dict lookups + string-scalar engine stub for test parity)
 - 2026-07-04 [oracle-stage-b-tiers-mobs](changes/2026-07-04-oracle-stage-b-tiers-mobs.md) - threat-tier ladder (charged elites with frozen epithets, landmark minibosses with frozen identities + 0.4.0 keeper synthesis, once-per-run wandering boss with landmark/safe-start suppression); mobs six-axis (shared MOB-1 menace bands + banded mb- ids with flat-pick back-compat, dice-owned band-weighted disposition axis riding template selection, elite/miniboss balance rows, four new mob templates); ride-alongs (3 afar variants + distance-banded gate + 4-tail deck, sector qualifier decks + mint-time no-replacement name deal); solo opened to players (rate-limit ship dependency documented); starter-kit playtest scaffolding (grants table, spawnToInventory)
 - 2026-07-04 [oracle-v3-rooms](changes/2026-07-04-oracle-v3-rooms.md) - rooms v3: radius envelope + target_rooms size bands, wedge-placed landmarks with bespoke prose + afar lines, Voronoi sector pools with border blends, canonical edge-hash exits with forced Bresenham roads + vertical scarcity + band modulation, eager chunked geometry mint (stubs deleted), first-visit population trigger with visited-table persistence, anti-repetition stack (variable cadence, neighbor exclusion, qualifier x place names, slot-filled landmark references), fill_landmarks + fill_sector burst rounds, seed + size flow inputs; fixes: non-greedy room-id parse (negative-x reload), baked-cache aliasing, Jint 5s-cap chunking
