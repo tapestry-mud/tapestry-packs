@@ -1,0 +1,18 @@
+# Shared ITEM-1 DEGREE mechanics - used by EVERY solo area (theme-agnostic).
+# Stage C items six-axis: WHICH rarity an item rolls is a banded roll, not a
+# flat pick keyed off the entry's own static rarity field. The roll is bent
+# by killer tier + room band via ITEM-6 (the CONTEXT axis) BEFORE bands are
+# read. Mirrors MOB-1's exact band shape (junk~skulker, common~common,
+# uncommon~hunter, rare+epic split what MOB-1 called apex).
+# Effect text is design documentation, never shown to the player.
+table: ITEM-1
+axis: DEGREE
+name: Item Rarity (shared)
+dice: "1d12"
+degree: "rarity roll bent by killer tier + room band via ITEM-6 (dice-owned; the LLM only names and describes items within each band)"
+bands:
+  - { min: 1, max: 2,   band: junk,     effect: "vendor trash - flavor only, weakest stats.", fires: "-" }
+  - { min: 3, max: 7,   band: common,   effect: "the area's ordinary drop - base item, stats from the balance band.", fires: "-" }
+  - { min: 8, max: 10,  band: uncommon, effect: "a maker's touch - a real, if modest, find.", fires: "-" }
+  - { min: 11, max: 11, band: rare,     effect: "a real standout piece.", fires: "-" }
+  - { min: 12, max: 12, band: epic,     effect: "fires SIGNATURE - a named unique.", fires: "signature" }

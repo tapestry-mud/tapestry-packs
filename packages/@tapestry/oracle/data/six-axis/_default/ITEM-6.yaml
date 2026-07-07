@@ -1,0 +1,19 @@
+# Shared ITEM-6 CONTEXT mechanics - used by EVERY solo area (theme-agnostic).
+# Bends the ITEM-1 rarity roll AND the base drop chance from the same two
+# inputs: which tier of mob dropped it, and which ROOM-1 band the room reads
+# as. Kept as TABLE DATA (not a TS constant like stage B's CONTEXT_BUMP) so
+# the pending playtest feel verdicts can retune drop rates without a rebuild.
+# Effect text is design documentation, never shown to the player.
+table: ITEM-6
+axis: CONTEXT
+name: Item Context (shared)
+inputs:
+  - { kind: killer_tier, key: trash,    bump: 0, drop_chance: 0.35 }
+  - { kind: killer_tier, key: elite,    bump: 1, drop_chance: 0.65 }
+  - { kind: killer_tier, key: miniboss, bump: 2, drop_chance: 0.90 }
+  - { kind: killer_tier, key: boss,     bump: 3, drop_chance: 1.00 }
+  - { kind: room_band, key: transit,   bump: -1 }
+  - { kind: room_band, key: chamber,   bump: 0 }
+  - { kind: room_band, key: charged,   bump: 1 }
+  - { kind: room_band, key: landmark,  bump: 1 }
+  - { kind: room_band, key: threshold, bump: 2 }

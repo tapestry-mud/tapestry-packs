@@ -225,7 +225,7 @@ export function loadSixAxisTables(areaThemeDir: string): Record<string, SixAxisT
 // init, same posture as SIX_AXIS_CACHE.
 const DEFAULT_MECHANICS: Record<string, SixAxisTable> = ((): Record<string, SixAxisTable> => {
     const out: Record<string, SixAxisTable> = {};
-    const ids = ["ROOM-1", "ROOM-3", "MOB-1"];
+    const ids = ["ROOM-1", "ROOM-3", "MOB-1", "ITEM-1", "ITEM-6"];
     for (let i = 0; i < ids.length; i++) {
         const path = "data/six-axis/_default/" + ids[i] + ".yaml";
         try {

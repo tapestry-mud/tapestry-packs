@@ -82,6 +82,7 @@ boss_swell:
   5: { swell_baseline_gap_ticks: 55, swell_jitter_ticks: 15, swell_telegraph_ticks: 12, swell_window_ticks: 40, swell_chunk_pct: 20, swell_whiff_pct: 10, swell_weather_pct: 8 }
 # Rarity tiers: a level-equivalent bump applied on top of the item's band before the stat roll.
 rarity:
+  junk:    -1
   common:   0
   uncommon: 1
   rare:     2
