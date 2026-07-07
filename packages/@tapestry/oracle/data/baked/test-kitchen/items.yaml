@@ -1,5 +1,9 @@
 oracle_table:
   kind: items
   entries:
+    - { w: 100, id: chipped-spoon, name: "chipped spoon", desc: "Barely holds an edge on butter.", balance_ref: weapon, rarity: junk }
     - { w: 60, id: dented-ladle, name: "dented ladle", desc: "Battered but heavy.", balance_ref: weapon, rarity: common }
+    - { w: 60, id: flour-dusted-apron, name: "flour-dusted apron", desc: "Stiff with old batter, still holds together.", balance_ref: armor, rarity: common }
+    - { w: 30, id: seasoned-cleaver, name: "seasoned cleaver", desc: "Its maker's initials are worn smooth on the handle.", balance_ref: weapon, rarity: uncommon }
     - { w: 8, id: master-ladle, name: "masterwork ladle", desc: "Dents plate.", balance_ref: weapon, rarity: rare }
+    - { w: 2, id: head-chefs-knife, name: "the head chef's own knife", desc: "It has never once slipped.", balance_ref: weapon, rarity: epic }
