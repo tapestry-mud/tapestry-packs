@@ -35,7 +35,7 @@ import {
     rngFor, mintMobInstance, mintBossInstance, mintItemInstance, mintMobInstanceByTypeId,
     mintEliteInstance, mintMinibossInstance, shouldReuse,
 } from "./resolver.js";
-import { rollItemDrop, dropChanceFor, type KillerTier } from "./item-tiers.js";
+import { rollItemDrop, dropChanceFor } from "./item-tiers.js";
 import { getAreaState, getRoomPath } from "./area-state.js";
 import { ensureAreaContext, getMintedSet } from "./area-context.js";
 import { getRunState } from "./run-state.js";
