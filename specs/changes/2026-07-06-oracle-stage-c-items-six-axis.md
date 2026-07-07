@@ -56,6 +56,18 @@ drop rates and bumps without a rebuild.
   (default "trash" when no context is supplied) so miniboss/elite/boss/trash loot minted at the
   same room+index can never collide.
 
+- **Minted items carry only engine-registered properties (reboot-safety).** SIGNATURE is a
+  frozen NAME only; the mint stamps NO marker property. Minted item side-cars persist under the
+  per-run area namespace (`<pack>-<seedhex>`), which validates STRICT on reboot -- generated
+  ROOMS use the bare registered runtime namespace and validate lenient, but minted items do
+  not. An unregistered flag on a minted item crashes the strict-boot reload; caught at ship when
+  a reboot OVER a persisted epic threw "unregistered property 'signature'", fixed by dropping
+  the dead `properties.signature = true` write (the frozen name is unchanged). New required boot
+  gate: reboot over a persisted epic drop and confirm `0 issue(s) found`. Filed as a follow-up
+  (latent, out of scope for this pack-only slice): minted items sit outside the
+  runtime-namespace lenient net that rooms get, so any future pack-semantic minted-item property
+  would need engine registration or an item-namespace realignment.
+
 - **`population.ts` loot draw at all four spawn tiers** -- the headline functional fix. Trash
   keeps its existing per-iteration draw (same stream key), now reading its threshold from
   ITEM-6's `trash` row instead of the deleted `LOOT_DROP_CHANCE = 0.35` TS constant. Elite

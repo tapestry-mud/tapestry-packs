@@ -1,6 +1,6 @@
 ---
 capability: oracle
-last-updated: 2026-07-06
+last-updated: 2026-07-07
 ---
 
 # oracle
@@ -404,9 +404,21 @@ The item tables are six-axis too (stage C, 0.6.0), the same shape as stage B's m
   Ashwhisper/Nightgall/Sunderthorn/Hollowmere) over the item's normal dressing name at mint,
   mirroring stage B's elite epithets -- the frozen item id folds in the killer tier (default
   "trash" when no context is supplied) so miniboss/elite/boss/trash loot minted at the same
-  room+index can never collide.
+  room+index can never collide. The frozen NAME is the whole SIGNATURE effect this slice: the
+  mint stamps NO marker property (a queryable signature flag is a future slice, see the
+  reboot-safety invariant below).
 - **CONSEQUENCE/CASCADE**: deferred, per the design spec's own posture, unchanged by this
   slice -- IT2 (curse/ego/attunement), IT4 (cross-area hook queue), IT5 (item sets).
+
+**Reboot-safety invariant (required boot gate):** minted item side-cars persist under the
+per-run area namespace (`<pack>-<seedhex>`), which validates STRICT on reboot -- unlike
+generated ROOMS, which use the bare registered runtime namespace and validate lenient. So
+every property `mintItemInstance` writes must be an ENGINE-registered property; an
+unregistered flag on a minted item (an earlier `signature: true` was the witnessed case)
+crashes the strict-boot reload with "unregistered property". The ship boot gates MUST include
+a reboot OVER a persisted EPIC drop (the mint that carries the most properties, including the
+signature path) and confirm `Pack validation complete: 0 issue(s) found`; minting an epic
+without rebooting over it does not exercise this path.
 
 (packages/@tapestry/oracle/scripts/item-tiers.ts;
 packages/@tapestry/oracle/scripts/resolver.ts:mintItemInstance;
