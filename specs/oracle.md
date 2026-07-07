@@ -170,10 +170,11 @@ code position (per-room streams stay traversal-independent; keys `coordKey+":min
    apex-forced banded selection, a SIGNATURE epithet rolled once and frozen into the name
    ("the dire tandoor beast"), elite balance row, `swell-elite` template. Never at entry or
    entry-adjacent rooms.
-3. **Trash** -- the 0.3.x ambient loop (same stream key, mint-vs-reuse set, unconditional 0.35
-   loot draw, level-1 flat band) plus two new unconditional per-iteration draws: banded type
-   selection through MOB-1, and a dice-owned band-weighted DISPOSITION draw that picks the
-   spawn template (see the disposition axis section).
+3. **Trash** -- the 0.3.x ambient loop (same stream key, mint-vs-reuse set, level-1 flat band)
+   plus two new unconditional per-iteration draws: banded type selection through MOB-1, and a
+   dice-owned band-weighted DISPOSITION draw that picks the spawn template (see the disposition
+   axis section). Its loot draw (still 0.35 by default) now reads from ITEM-6's `trash` row
+   instead of a hardcoded constant -- see "Item delivery" below.
 4. **Boss clock** -- see the boss clock section; suppressed here in landmark and safe-start
    rooms.
 
@@ -471,7 +472,8 @@ back. (packages/@tapestry/oracle/scripts/oracle-structured.ts)
 ### Six-axis generator stack
 
 Every area remains six-axis: shared `_default` MECHANICS (ROOM-1 degree bands, ROOM-3
-consequence taxonomy, MOB-1 menace bands) eager-loaded at module init; an authored theme keeps
+consequence taxonomy, MOB-1 menace bands, ITEM-1 rarity bands, ITEM-6 context bumps)
+eager-loaded at module init; an authored theme keeps
 its full set (authored themes carry no MOB-1, so the shared one always applies); any
 other area gets ROOM-2 ASSEMBLED from its frozen prose + scars tables. The `rooms` composer and
 depth-biased degree remain, but v3 mints call `pureDegree` (pressure 0) directly so band,
