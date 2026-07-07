@@ -98,12 +98,12 @@ there is no standalone aggro behavior.
 
 - `combat.engage`: broadcasts `<combat_engage>...<combat_engage>` to all room
   occupants except attacker and target.
-  (packages/@tapestry/core/scripts/combat/output.ts:2-12)
+  (packages/@tapestry/core/scripts/combat/output.ts:4-14)
 - `combat.hit`: sends damage messages to three audiences using
   `formatDamageMessage` which calls `tapestry.combat.formatDamageVerb(damage)`
   to pick a verb. Attacker sees "Your [weapon] [verb] [target].", defender sees
   "[attacker]'s [weapon] [verb] you.", room bystanders see the third-person form.
-  (packages/@tapestry/core/scripts/combat/output.ts:21-41)
+  (packages/@tapestry/core/scripts/combat/output.ts:55-79)
 
 - Target condition line (B.2): after the damage messages, `combat.hit` emits
   `<combat_status>[target] [condition].</combat_status>` to the attacker and
@@ -126,18 +126,18 @@ there is no standalone aggro behavior.
   (packages/@tapestry/core/scripts/combat/condition.ts)
 - `combat.miss`: sends `<combat_miss>`-tagged miss messages to all three
   audiences (attacker, defender, room).
-  (packages/@tapestry/core/scripts/combat/output.ts:44-63)
+  (packages/@tapestry/core/scripts/combat/output.ts:82-101)
 - `combat.flee`: broadcasts the flee message to the origin room, confirms
   direction to the fleeing player, notifies the destination room, and auto-fires
   `tapestry.world.sendRoomDescription` so the fleeing player sees their new room.
-  (packages/@tapestry/core/scripts/combat/output.ts:66-85)
+  (packages/@tapestry/core/scripts/combat/output.ts:104-123)
 - `combat.flee.failed`: notifies the fleeing player and their room that no exit
-  was available ("no way out!"). (packages/@tapestry/core/scripts/combat/output.ts:88-98)
+  was available ("no way out!"). (packages/@tapestry/core/scripts/combat/output.ts:126-136)
 - `combat.flee.prevented`: notifies that the player tried to flee but was held in
-  place ("feet won't move!"). (packages/@tapestry/core/scripts/combat/output.ts:101-111)
+  place ("feet won't move!"). (packages/@tapestry/core/scripts/combat/output.ts:139-149)
 - `combat.kill`: sends `<combat_kill>You have slain [name]!</combat_kill>` to the
   killer and a third-person form to room bystanders.
-  (packages/@tapestry/core/scripts/combat/output.ts:114-128)
+  (packages/@tapestry/core/scripts/combat/output.ts:152-169)
 - `entity.vital.depleted` (hp, player only): on player death, creates a tagged
   corpse container with a 600-tick decay timer, silently unequips all gear and
   transfers inventory to the corpse, places the corpse in the death room, restores
@@ -145,7 +145,7 @@ there is no standalone aggro behavior.
   `recall_room_id` property if set, else `tapestry-core:recall`), sends
   `<death>`-tagged messages, auto-describes the recall room, and publishes a
   `player.death` event for pack extensions.
-  (packages/@tapestry/core/scripts/combat/output.ts:131-185)
+  (packages/@tapestry/core/scripts/combat/output.ts:172-229)
 
 ### Swell combat content (boss slice 1)
 
