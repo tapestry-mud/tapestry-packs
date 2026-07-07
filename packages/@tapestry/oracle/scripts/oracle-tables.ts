@@ -467,7 +467,13 @@ function fallbackBoss(): OracleEntry[] {
 }
 
 function fallbackItems(): OracleEntry[] {
-    return [{ w: 60, id: "tool", name: "worn tool", desc: "Still useful.", balance_ref: "weapon", rarity: "common" }];
+    return [
+        { w: 100, id: "scrap", name: "a bit of scrap", desc: "Barely worth carrying.", balance_ref: "weapon", rarity: "junk" },
+        { w: 60, id: "tool", name: "worn tool", desc: "Still useful.", balance_ref: "weapon", rarity: "common" },
+        { w: 30, id: "fitted-gear", name: "fitted gear", desc: "A maker's mark on the strap.", balance_ref: "armor", rarity: "uncommon" },
+        { w: 8, id: "keen-edge", name: "a keen-edged blade", desc: "Balanced better than most.", balance_ref: "weapon", rarity: "rare" },
+        { w: 2, id: "storied-relic", name: "a storied relic", desc: "It has seen a war or two.", balance_ref: "weapon", rarity: "epic" },
+    ];
 }
 
 function fallbackProse(): OracleEntry[] {

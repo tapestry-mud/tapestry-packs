@@ -10,7 +10,7 @@ import type { OracleEntry } from "./oracle-tables.js"; // type-only: erased at c
 
 import type { LandmarkDressing, SectorPools } from "./sector-compose.js"; // type-only: erased at compile
 
-const RARITY_WEIGHTS: Record<string, number> = { common: 60, uncommon: 30, rare: 8, epic: 2 };
+const RARITY_WEIGHTS: Record<string, number> = { junk: 100, common: 60, uncommon: 30, rare: 8, epic: 2 };
 const MAX_NAME = 60;
 const MAX_DESC = 200;
 /** Landmark room descriptions are bespoke prose (2-3 sentences) - a larger cap. */
@@ -222,7 +222,7 @@ export const SCHEMA_ITEMS = JSON.stringify({
                 properties: {
                     name: { type: "string" },
                     desc: { type: "string" },
-                    rarity: { type: "string", enum: ["common", "uncommon", "rare", "epic"] },
+                    rarity: { type: "string", enum: ["junk", "common", "uncommon", "rare", "epic"] },
                     kind: { type: "string", enum: ["weapon", "armor"] },
                 },
                 required: ["name", "desc", "rarity", "kind"], additionalProperties: false,

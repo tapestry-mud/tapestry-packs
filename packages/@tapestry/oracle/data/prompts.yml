@@ -167,7 +167,7 @@ fill_boss:
 
 fill_items:
   system: "You name loot. ASCII only."
-  template: "List 6 items found in {idea}, levels {level_min} to {level_max}. Mix weapons and armor, mostly common with a couple rare. Give each a name, a short description, a rarity (common, uncommon, rare, or epic), and a kind (weapon or armor)."
+  template: "List 8 items found in {idea}, levels {level_min} to {level_max}: 1 junk (plain, disposable - a whetstone, a stale ration), 3 common (plain utilitarian names), 2 uncommon (one distinguishing word or a maker's touch), 1 rare (a real standout piece), 1 epic (evocative, legend-shaped flavor - its actual unique name is rolled separately at mint, this is just its base type's flavor). Mix weapons and armor. Give each a name, a short description, a rarity (junk, common, uncommon, rare, or epic), and a kind (weapon or armor)."
 
 fill_landmarks:
   system: >

@@ -97,7 +97,14 @@ test("schemas are strict-valid JSON objects", () => {
   assert.equal(m.additionalProperties, false);
   assert.deepEqual(m.required, ["mobs"]);
   const it = JSON.parse(SCHEMA_ITEMS);
-  assert.deepEqual(it.properties.items.items.properties.rarity.enum, ["common", "uncommon", "rare", "epic"]);
+  assert.deepEqual(it.properties.items.items.properties.rarity.enum, ["junk", "common", "uncommon", "rare", "epic"]);
+});
+
+test("mapItems accepts the junk rarity tier and weights it heaviest", () => {
+  const raw = JSON.stringify({ items: [{ name: "Scrap", desc: "worthless", rarity: "junk", kind: "weapon" }] });
+  const out = mapItems(raw);
+  assert.equal(out[0].rarity, "junk");
+  assert.equal(out[0].w, 100);
 });
 
 test("slug kebabs and caps", () => {
