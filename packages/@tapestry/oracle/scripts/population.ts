@@ -35,6 +35,7 @@ import {
     rngFor, mintMobInstance, mintBossInstance, mintItemInstance, mintMobInstanceByTypeId,
     mintEliteInstance, mintMinibossInstance, shouldReuse,
 } from "./resolver.js";
+import { rollItemDrop, dropChanceFor, type KillerTier } from "./item-tiers.js";
 import { getAreaState, getRoomPath } from "./area-state.js";
 import { ensureAreaContext, getMintedSet } from "./area-context.js";
 import { getRunState } from "./run-state.js";
@@ -53,9 +54,6 @@ import { ensureGuideAt } from "./guide.js";
 
 /** Probability climbs this fraction per room since the last boss spawn. */
 const BOSS_CLOCK_SLOPE = 0.07;
-
-/** Chance an ambient mob carries a piece of loot (rides mob inventory). */
-const LOOT_DROP_CHANCE = 0.35;
 
 // Per-band ambient density moved to tiers.DENSITY (B.2) so the entry-zero
 // structural guarantee (tiers.ambientDensity) is golden-testable beside it.
@@ -163,6 +161,8 @@ export function populateRoom(roomId: string, areaId: string): string[] {
     const coordKey = String(roomSeed);
     const mintedMobTypes = getMintedSet(areaId);
     const mob1 = areaState.sixAxis["MOB-1"];
+    const item1 = areaState.sixAxis["ITEM-1"];
+    const item6 = areaState.sixAxis["ITEM-6"];
 
     // Spawn density + band from the PURE geometry degree - the same number the
     // mint used, so structure, prose cadence, and density agree.
@@ -198,6 +198,14 @@ export function populateRoom(roomId: string, areaId: string): string[] {
     if (landmarkIndex >= 0 && !safeStart) {
         const mb = mintMinibossInstance(areaId, landmarkIndex, 1, rngFor(areaSeed, coordKey + ":miniboss"));
         if (mb) {
+            const mbLootRng = rngFor(areaSeed, coordKey + ":miniboss-loot");
+            if (rollItemDrop(item6, "miniboss", mbLootRng)) {
+                const loot = mintItemInstance(areaId, 1, mbLootRng, coordKey, 0, item1, item6, { killerTier: "miniboss", roomBand: band });
+                if (loot) {
+                    if (!mb.items) { mb.items = []; }
+                    mb.items.push(loot.id);
+                }
+            }
             tapestry.mobs.spawnMob({
                 template: TIER_TEMPLATES.miniboss,
                 roomId,
@@ -215,6 +223,13 @@ export function populateRoom(roomId: string, areaId: string): string[] {
     if (band === "charged" && !safeStart && density > 0) {
         const elite = mintEliteInstance(areaId, 1, spawnRng, mob1);
         if (elite) {
+            if (rollItemDrop(item6, "elite", spawnRng)) {
+                const loot = mintItemInstance(areaId, 1, spawnRng, coordKey, 0, item1, item6, { killerTier: "elite", roomBand: band });
+                if (loot) {
+                    if (!elite.items) { elite.items = []; }
+                    elite.items.push(loot.id);
+                }
+            }
             tapestry.mobs.spawnMob({
                 template: TIER_TEMPLATES.elite,
                 roomId,
@@ -242,10 +257,12 @@ export function populateRoom(roomId: string, areaId: string): string[] {
             }
         }
         // Loot threshold draw is UNCONDITIONAL per iteration - same rng stream
-        // shape as the shipped code. spawnMob consumes no rng.
+        // position as 0.5.x; the THRESHOLD now reads from ITEM-6 (data, not a
+        // constant) so trash's observable drop rate at the default (no-bump)
+        // context stays exactly 0.35. spawnMob consumes no rng.
         const lootRoll = spawnRng();
-        if (override && lootRoll < LOOT_DROP_CHANCE) {
-            const loot = mintItemInstance(areaId, level, spawnRng, coordKey, i);
+        if (override && lootRoll < dropChanceFor(item6, "trash")) {
+            const loot = mintItemInstance(areaId, level, spawnRng, coordKey, i, item1, item6, { killerTier: "trash", roomBand: band });
             if (loot) {
                 if (!override.items) { override.items = []; }
                 override.items.push(loot.id);
@@ -272,6 +289,14 @@ export function populateRoom(roomId: string, areaId: string): string[] {
     if (clockRoll && !runState.bossFired && !isLandmarkRoom && !safeStart) {
         const bossOverride = mintBossInstance(areaId, 1, rngFor(areaSeed, coordKey + ":boss"));
         if (bossOverride) {
+            const bossLootRng = rngFor(areaSeed, coordKey + ":boss-loot");
+            if (rollItemDrop(item6, "boss", bossLootRng)) {
+                const loot = mintItemInstance(areaId, 1, bossLootRng, coordKey, 0, item1, item6, { killerTier: "boss", roomBand: band });
+                if (loot) {
+                    if (!bossOverride.items) { bossOverride.items = []; }
+                    bossOverride.items.push(loot.id);
+                }
+            }
             tapestry.mobs.spawnMob({
                 template: TIER_TEMPLATES.boss,
                 roomId,
