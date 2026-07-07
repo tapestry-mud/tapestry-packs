@@ -17,6 +17,10 @@ import * as tapestry from "@tapestry/engine";
 import { splitmix64, hashCoord, weightedPick } from "./prng.js";
 import { statsFor, rarityModifier, clampLevel } from "./balance-table.js";
 import { selectMobEntry, pickEpithet, defaultMinibossFor } from "./tiers.js";
+import {
+    selectItemEntry, itemContextBump, pickSignatureName, isSignatureBand,
+    type ItemDropContext,
+} from "./item-tiers.js";
 import { parseLandmarksTable } from "./sector-compose.js";
 import type { SixAxisTable } from "./six-axis.js";
 import type { OracleEntry } from "./oracle-tables.js";
@@ -204,10 +208,13 @@ export function mintMobInstanceByTypeId(areaId: string, typeId: string, level: n
 }
 
 // ---------------------------------------------------------------------------
-// mintItemInstance - roll an item type from frozen <area>:items, apply rarity
-// modifier to the level band, roll stats, freeze via writeItemTemplate, and
-// return { id, base, name } so the caller can attach it to a mob's inventory.
-// Returns null if the table is empty or the base template is unknown.
+// mintItemInstance - roll an item type from frozen <area>:items through the
+// ITEM-1 band resolver (bent by ITEM-6 context), apply rarity modifier to
+// the level band, roll stats, freeze via writeItemTemplate, and return
+// { id, base, name } so the caller can attach it to a mob's inventory.
+// The epic band (ITEM-1's signature-firing band) freezes a proper-noun
+// SIGNATURE name over the dressing name. Returns null if the table is empty
+// or the base template is unknown.
 // ---------------------------------------------------------------------------
 
 export function mintItemInstance(
@@ -215,11 +222,16 @@ export function mintItemInstance(
     level: number,
     rng: () => number,
     coordKey: string,
-    index: number
+    index: number,
+    item1?: SixAxisTable,
+    item6?: SixAxisTable,
+    ctx?: ItemDropContext
 ): { id: string; base: string; name: string } | null {
     const entries = table(areaId, "items");
     if (entries.length === 0) { return null; }
-    const type = rollEntry(entries, rng);
+    const bump = ctx ? itemContextBump(item6, ctx) : 0;
+    const type = selectItemEntry(item1, entries, bump, rng);
+    if (!type) { return null; }
     const rarity = type.rarity || "common";
     const effectiveLevel = clampLevel(level + rarityModifier(rarity));
     const isArmor = type.balance_ref === "armor";
@@ -242,18 +254,34 @@ export function mintItemInstance(
         properties.damage_dice = String(stats.damage);
     }
 
-    const frozenId = areaId + ":loot-" + type.id + "-" + coordKey + "-" + index;
+    // SIGNATURE (ITEM-5): the top ITEM-1 band freezes a unique proper name
+    // once at mint, overriding the rolled type's dressing name. Same drop,
+    // two signatures = two different named items - the deck is small (8
+    // entries) but the roll happens once per mint, not once per area.
+    let name = type.name;
+    if (isSignatureBand(item1, rarity)) {
+        name = pickSignatureName(rng);
+        properties.signature = true;
+    }
+
+    // Fold the killer tier into the frozen id (defaulting to "trash" when no
+    // ctx is supplied) so miniboss/elite/boss/trash loot minted at the SAME
+    // coordKey and the SAME index (Task 4 mints each of the three new tiers
+    // at index 0) can never collide - each tier gets its own id namespace
+    // even when several tiers fire in one room and roll the same base type.
+    const tierTag = ctx ? ctx.killerTier : "trash";
+    const frozenId = areaId + ":loot-" + type.id + "-" + coordKey + "-" + tierTag + "-" + index;
     const written = (tapestry as any).authoring.writeItemTemplate({
         areaId,
         id: frozenId,
         base: baseId,
-        name: type.name,
+        name,
         desc: type.desc,
         type: "item",
         properties,
     });
     if (!written) { return null; }
-    return { id: frozenId, base: baseId, name: type.name };
+    return { id: frozenId, base: baseId, name };
 }
 
 // ---------------------------------------------------------------------------
