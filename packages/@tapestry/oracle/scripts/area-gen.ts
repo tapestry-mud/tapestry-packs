@@ -24,6 +24,7 @@
 
 import * as tapestry from "@tapestry/engine";
 import { splitmix64 } from "./prng.js";
+import { seededAreaName } from "./area-namer.js";
 import { soloAreaBiomePalette } from "./roster.js";
 import { runKey, setRunState } from "./run-state.js";
 import { setAreaState, getAreaState } from "./area-state.js";
@@ -150,8 +151,20 @@ export function createSoloArea(
     // Unique bare area id. Deterministic slug from seed.
     const areaSlug = targetNamespace + "-" + (areaSeed >>> 0).toString(16);
 
-    const ideaHint = (idea && idea.trim() !== "") ? idea.trim() : "the wilds";
-    const nameHint = (name && name.trim() !== "") ? name.trim() : ideaHint;
+    // Theme (LLM dressing input) keeps its generic fallback. The DISPLAY name gets the
+    // seeded namer when the player supplied neither an idea nor a name - "the wilds" was
+    // the same string on every blank run.
+    const ideaGiven = !!(idea && idea.trim() !== "");
+    const nameGiven = !!(name && name.trim() !== "");
+    const ideaHint = ideaGiven ? idea!.trim() : "the wilds";
+    let nameHint: string;
+    if (nameGiven) {
+        nameHint = name!.trim();
+    } else if (ideaGiven) {
+        nameHint = ideaHint;
+    } else {
+        nameHint = seededAreaName(areaSeed);
+    }
     const levelRange: [number, number] = [minLevel, maxLevel];
 
     const created = tapestry.authoring.createArea(areaSlug, nameHint);
