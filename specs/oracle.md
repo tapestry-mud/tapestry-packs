@@ -273,6 +273,68 @@ The flow holds these answers in flow scratch (`entity.scratch`) between steps, n
 entity property bag, so a completed solo run leaves no `solo_*` residue in `player.yaml`.
 (packages/@tapestry/oracle/scripts/flows/solo-flow.ts)
 
+### Run lifecycle: list and discard
+
+`solo` is one command with subcommand-style args parsed in its handler (the engine router is
+single-token). It stays registered with `roles: ["player"]`; the admin escape hatch checks
+privilege inside the handler.
+
+- `solo` - roll a new area and enter it.
+- `solo list` - render the caller's owned runs: index, display name, level range, room count.
+- `solo discard` - discard the run you are standing in, resolved via `ensureAreaContext` on your
+  current room and intersected with your owned list.
+- `solo discard <n>` - discard run #n from `solo list` (insertion order, stable).
+- `solo discard <areaId>` - **admin/builder only**. Removes ANY area by full id, including
+  orphans minted before this feature existed. Ordinary players are list-scoped and cannot name
+  an id outside their own runs.
+(packages/@tapestry/oracle/scripts/commands/solo.ts)
+
+#### Ownership
+
+`oracle_runs` is a registered `string` player property (`properties.yml`) holding a JSON array,
+one record per run: `{ areaId, name, levelRange, roomCount, seed, packName }`. Written at the end
+of `createSoloArea` once the room graph exists (so `roomCount` is the real minted count), removed
+at discard. It is the sole authorization source for `solo discard <n>`.
+
+An admin `solo discard <areaId>` can tear down an area whose owner is offline. The stale record on
+that player's file is harmless and is pruned lazily the next time they run `solo list`.
+(packages/@tapestry/oracle/scripts/owned-runs.ts)
+
+#### Discard order
+
+1. `authoring.deleteArea(areaId)` - the engine's atomic sweep (evacuate to recall, untrack
+   entities, remove rooms, clear consequences, unregister from the area/oracle-table/item
+   registries, delete the area directory). If it returns false, nothing further runs.
+2. `clearAreaCaches(areaId)` (`area-teardown.ts`) - the pack's own in-memory stores: `AreaState`
+   plus room->area and room->path maps, `RunState` cells, the minted-type set, the visited set,
+   the granted-player set.
+3. `removeOwnedRun(playerId, areaId)`.
+(packages/@tapestry/oracle/scripts/commands/solo.ts; packages/@tapestry/oracle/scripts/area-teardown.ts)
+
+#### What discard does NOT touch
+
+- **Your inventory.** Item templates under the area go with the directory; items already instanced
+  in a player's inventory are real entities on the player file and stay. Gear purge is stage E's
+  lifecycle, not this one.
+- **The destination pack.** Its `pack.yaml` scaffold, its runtime-namespace marker, and
+  `server.yaml` all survive. An area is not a pack. Empty pack directories linger and are benign;
+  pack-level GC belongs to the v3 one-pack-per-run lifecycle.
+
+### Default naming
+
+When the player leaves BOTH the idea and the name blank, the display name is
+`seededAreaName(areaSeed)` (`area-namer.ts`): a `qualifier x place` draw from two hand-authored
+16-word ASCII decks, e.g. `the Ashen Hollow`. Same seed, same name, on every box, with or without
+an LLM.
+
+The namer draws from its OWN sub-stream, `splitmix64(hashCoord(areaSeed, "name"))`, never from the
+area's primary `rng()`. The single documented `target_rooms` draw at the head of the area stream is
+undisturbed, so geometry is unchanged for a given seed.
+
+An explicit idea (theme) or an explicit name still wins. The theme hint keeps its `"the wilds"`
+generic fallback for the LLM; only the player-visible name changed.
+(packages/@tapestry/oracle/scripts/area-namer.ts; packages/@tapestry/oracle/scripts/area-gen.ts)
+
 ### Theme-x-balance separation
 
 Theme (place words, mob names, prose) is LLM-owned dressing in the oracle tables. Balance
