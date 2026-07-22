@@ -74,6 +74,13 @@ function persistGrants(areaId: string, s: Set<string>): void {
     }
 }
 
+/** Teardown: drop the granted-player set for a discarded area. The frozen "grants"
+ *  oracle table goes with the area directory, so nothing needs rewriting. Items already
+ *  in a player's inventory are real entities on the player file and stay (Decision C). */
+export function removeGranted(areaId: string): void {
+    _granted.delete(areaId);
+}
+
 /**
  * Grant the starter kit to playerId for areaId, once. Returns the player-facing
  * lines to send ([] when already granted or nothing could be delivered).

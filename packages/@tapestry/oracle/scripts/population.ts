@@ -96,6 +96,12 @@ function visitedSet(areaId: string): Set<string> {
     return s;
 }
 
+/** Teardown: drop the visited-room set for a discarded area. The frozen "visited"
+ *  oracle table goes with the area directory, so nothing needs rewriting. */
+export function removeVisited(areaId: string): void {
+    _populated.delete(areaId);
+}
+
 function visitKey(roomId: string): string | null {
     const path = getRoomPath(roomId);
     if (!path) { return null; }

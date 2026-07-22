@@ -236,7 +236,7 @@ tapestry.flows.register({
         }
 
         try {
-            createSoloArea(entity, ideaValue, nameValue, minLevel, maxLevel, namespace, bakedSetId, sizeValue, seedValue);
+            createSoloArea(entity, ideaValue, nameValue, minLevel, maxLevel, namespace, bakedSetId, sizeValue, seedValue, packName);
         } catch (err) {
             const detail = (err && (err as any).message) ? (err as any).message : String(err);
             return { success: false, message: "Area generation failed: " + detail };

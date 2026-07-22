@@ -98,3 +98,27 @@ export function setRoomPath(roomId: string, path: string): void {
 export function getRoomPath(roomId: string): string | undefined {
     return _roomPathMap.get(roomId);
 }
+
+// ---------------------------------------------------------------------------
+// Teardown: drop everything this store holds for one area.
+// ---------------------------------------------------------------------------
+
+/**
+ * Removes the AreaState plus every room->area and room->path entry belonging to
+ * the area. Returns the number of rooms unmapped. A sibling area sharing the pack
+ * namespace is untouched: the map is keyed by exact areaId, never by prefix.
+ */
+export function removeAreaState(areaId: string): number {
+    _areaStore.delete(areaId);
+    const doomed: string[] = [];
+    _roomAreaMap.forEach(function (mappedArea: string, roomId: string): void {
+        if (mappedArea === areaId) {
+            doomed.push(roomId);
+        }
+    });
+    for (let i = 0; i < doomed.length; i++) {
+        _roomAreaMap.delete(doomed[i]);
+        _roomPathMap.delete(doomed[i]);
+    }
+    return doomed.length;
+}

@@ -34,3 +34,24 @@ export function getRunState(key: string): RunState | undefined {
 export function setRunState(key: string, state: RunState): void {
     _store.set(key, state);
 }
+
+/**
+ * Removes every RunState cell belonging to an area. Two key shapes reach this store:
+ * the creation key `<playerId>:<areaId>` (runKey) and the reload key `reload:<areaId>`
+ * (area-context.ensureAreaContext). Both end in `:<areaId>`, and areaId is the whole
+ * tail, so a suffix match is exact and cannot reach a sibling area.
+ * Returns the number of cells removed.
+ */
+export function removeRunStatesForArea(areaId: string): number {
+    const suffix = ":" + areaId;
+    const doomed: string[] = [];
+    _store.forEach(function (_state: RunState, key: string): void {
+        if (key.length > suffix.length && key.endsWith(suffix)) {
+            doomed.push(key);
+        }
+    });
+    for (let i = 0; i < doomed.length; i++) {
+        _store.delete(doomed[i]);
+    }
+    return doomed.length;
+}
