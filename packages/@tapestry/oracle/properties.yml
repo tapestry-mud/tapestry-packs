@@ -4,3 +4,11 @@ properties:
       The per-player seed for this player's current solo run. Persists across logout/login.
     type: int
     applies_to: [player]
+  oracle_runs:
+    description: >
+      JSON array of the solo runs this player created. One record per run:
+      areaId, name, levelRange, roomCount, seed, packName. Powers `solo list`
+      and authorizes `solo discard <n>`. Registered so it takes the typed
+      persist path on the player file.
+    type: string
+    applies_to: [player]
