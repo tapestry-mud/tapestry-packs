@@ -47,7 +47,7 @@ tapestry.flows.register({
                 });
             },
             on_select: function(entity, option) {
-                entity.setProperty("unlink_id", String(option.value));
+                entity.scratch.set("unlink_id", String(option.value));
             }
         },
         {
@@ -56,17 +56,17 @@ tapestry.flows.register({
             type: "confirm",
             prompt: "Remove connection [y/n]?",
             on_yes: function(entity) {
-                entity.setProperty("unlink_confirmed", "yes");
+                entity.scratch.set("unlink_confirmed", "yes");
             },
             on_no: function(entity) {
-                entity.setProperty("unlink_confirmed", "no");
+                entity.scratch.set("unlink_confirmed", "no");
             }
         }
     ],
     on_complete: function(entity) {
-        var unlinkId = entity.getProperty("unlink_id");
+        var unlinkId = entity.scratch.get("unlink_id");
 
-        if (unlinkId === "__none__" || entity.getProperty("unlink_confirmed") !== "yes") {
+        if (unlinkId === "__none__" || entity.scratch.get("unlink_confirmed") !== "yes") {
             entity.send("Unlink cancelled.\r\n");
             return { success: false };
         }
