@@ -54,12 +54,11 @@ registerEditor('area', function (actor, args) {
         return;
     }
 
-    // Stash the resolved target BEFORE triggering so the flow + engine recommend-context
-    // read THIS id, not the current room. flows.trigger carries no payload.
-    tapestry.world.setProperty(actor.entityId, "__edit_area", areaId);
-
+    // Seed the resolved target through the trigger call so the flow's scratch (and the
+    // engine's recommend-context, which reads the same scratch key) sees THIS id, not
+    // the current room.
     actor.send("Editing area '" + areaId + "'. Type 'cancel' to exit; type '~' at a text field for suggestions.\r\n");
-    tapestry.flows.trigger(actor.entityId, "builder_edit_area");
+    tapestry.flows.trigger(actor.entityId, "builder_edit_area", { edit_area: areaId });
 });
 
 // --- the dispatch command --------------------------------------------------

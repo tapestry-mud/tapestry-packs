@@ -7,10 +7,10 @@ import * as tapestry from "@tapestry/engine";
 import { buildEntityEditFlow } from "./edit-flow-factory.js";
 
 // ------------------------------------------------------------------ AREA editor
-// The 'edit area' command stashes __edit_area before triggering; this resolves it (with a
-// current-room fallback) so the schema/apply act on the named area.
+// The 'edit area' command seeds edit_area into flow scratch via the trigger call; this
+// resolves it (with a current-room fallback) so the schema/apply act on the named area.
 function areaResolve(entity) {
-    var stored = entity.getProperty('__edit_area');
+    var stored = entity.scratch.get('edit_area');
     if (stored) {
         return String(stored);
     }
@@ -90,7 +90,7 @@ buildEntityEditFlow({
     schema: areaSchema,
     apply: areaApply,
     recommendField: function (entity) {
-        var key = entity.getProperty('__edit_field');
+        var key = entity.scratch.get('edit_field');
         return (key === 'short' || key === 'description' || key === 'theme' || key === 'lore') ? key : null;
     },
     recommendContext: 'area',

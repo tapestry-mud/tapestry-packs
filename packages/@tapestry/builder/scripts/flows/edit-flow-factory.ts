@@ -47,7 +47,7 @@ export function buildEntityEditFlow(spec) {
                     });
                 },
                 on_select: function (entity, option) {
-                    entity.setProperty('__edit_field', String(option.value));
+                    entity.scratch.set('edit_field', String(option.value));
                 }
             },
             {
@@ -55,23 +55,23 @@ export function buildEntityEditFlow(spec) {
                 id: 'value_choice',
                 type: 'choice',
                 skip_if: function (entity) {
-                    var m = fieldFor(entity, entity.getProperty('__edit_field'));
+                    var m = fieldFor(entity, entity.scratch.get('edit_field'));
                     return !m || m.kind !== 'choice';
                 },
                 prompt: function (entity) {
-                    var m = fieldFor(entity, entity.getProperty('__edit_field'));
+                    var m = fieldFor(entity, entity.scratch.get('edit_field'));
                     var cur = (m && m.current != null && m.current !== '') ? ' (current: ' + m.current + ')' : '';
                     return 'Choose ' + (m ? m.label : 'value') + cur + " (or 'cancel' to abort):";
                 },
                 options: function (entity) {
-                    var m = fieldFor(entity, entity.getProperty('__edit_field'));
+                    var m = fieldFor(entity, entity.scratch.get('edit_field'));
                     var opts = (m && m.options) ? m.options : [];
                     return opts.map(function (v) {
                         return { label: v, value: v };
                     });
                 },
                 on_select: function (entity, option) {
-                    spec.apply(entity, entity.getProperty('__edit_field'), String(option.value));
+                    spec.apply(entity, entity.scratch.get('edit_field'), String(option.value));
                 }
             },
             {
@@ -81,14 +81,14 @@ export function buildEntityEditFlow(spec) {
                 id: 'value_text',
                 type: 'text',
                 skip_if: function (entity) {
-                    var m = fieldFor(entity, entity.getProperty('__edit_field'));
+                    var m = fieldFor(entity, entity.scratch.get('edit_field'));
                     return !!(m && m.kind === 'choice');
                 },
                 recommend_field: function (entity) {
                     return spec.recommendField ? spec.recommendField(entity) : null;
                 },
                 prompt: function (entity) {
-                    var m = fieldFor(entity, entity.getProperty('__edit_field'));
+                    var m = fieldFor(entity, entity.scratch.get('edit_field'));
                     var label = m ? m.label : 'field';
                     var curLine = (m && m.current != null && m.current !== '')
                         ? 'Current ' + label + ':\r\n  ' + m.current + '\r\n' : '';
@@ -106,7 +106,7 @@ export function buildEntityEditFlow(spec) {
                     return curLine + "New value for '" + label + "'" + range + ' (or ' + hints.join(', ') + ')' + ':';
                 },
                 on_input: function (entity, value) {
-                    spec.apply(entity, entity.getProperty('__edit_field'), value);
+                    spec.apply(entity, entity.scratch.get('edit_field'), value);
                 }
             }
         ],

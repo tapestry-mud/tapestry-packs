@@ -105,7 +105,7 @@ buildEntityEditFlow({
     apply: roomApply,
     recommendField: function (entity) {
         // Only name/description have field-specific logic in the engine RoomPromptBuilder.
-        var key = entity.getProperty('__edit_field');
+        var key = entity.scratch.get('edit_field');
         return (key === 'name' || key === 'description') ? key : null;
     },
     completeMessage: 'Room updated.'
