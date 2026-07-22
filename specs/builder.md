@@ -1,6 +1,6 @@
 ---
 capability: builder
-last-updated: 2026-06-20
+last-updated: 2026-07-22
 ---
 
 # builder
@@ -98,8 +98,9 @@ topics, and two editor flows (`builder_edit_room`, `builder_edit_area`). It expo
   (packages/@tapestry/builder/scripts/commands/edit.ts:25)
 - `edit area [<id>]` accepts a bare or namespaced area id; strips the namespace to
   the bare id. With no argument it falls back to the area containing the current room.
-  Before triggering the flow it stashes the resolved id in the entity property
-  `__edit_area`. (packages/@tapestry/builder/scripts/commands/edit.ts:33)
+  It hands the resolved id to the flow as an initial scratch seed -
+  `flows.trigger(entityId, "builder_edit_area", { edit_area: areaId })` - rather than
+  writing an entity property. (packages/@tapestry/builder/scripts/commands/edit.ts:33)
 - `edit area` refuses if no area definition exists and tells the builder to use
   `create area` first. (packages/@tapestry/builder/scripts/commands/edit.ts:49)
 
@@ -135,8 +136,9 @@ topics, and two editor flows (`builder_edit_room`, `builder_edit_area`). It expo
 - Dynamic fields from the engine's property registry scoped to `area` are appended;
   enum-valued and bool-typed properties become choice fields, others become text fields.
   (packages/@tapestry/builder/scripts/flows/editors-area.ts:39)
-- The area under edit is resolved from `__edit_area` entity property, falling back to
-  the current room's area. (packages/@tapestry/builder/scripts/flows/editors-area.ts:14)
+- The area under edit is resolved from the flow's `edit_area` scratch key (seeded by
+  the `edit area` command at trigger time), falling back to the current room's area.
+  (packages/@tapestry/builder/scripts/flows/editors-area.ts:14)
 - AI suggestions (`~`) are enabled on Short, Description, Theme, and Lore.
   Recommendation context is `'area'`.
   (packages/@tapestry/builder/scripts/flows/editors-area.ts:94)
@@ -210,6 +212,7 @@ topics, and two editor flows (`builder_edit_room`, `builder_edit_area`). It expo
 
 ## Change Log
 
+- 2026-07-22 [flow-scratch-migration](changes/2026-07-22-flow-scratch-migration.md) - room/area editors use entity.scratch for field-edit working memory; `edit area` seeds edit_area via flows.trigger (engine >=0.1.50) instead of writing an __edit_area entity property
 - 2026-06-20 [pack-script-esm](changes/2026-06-20-pack-script-esm.md)
 - 2026-06-17 [dig-existing-exit-guard](changes/2026-06-17-dig-existing-exit-guard.md)
 - 2026-06-15 [extend-baked-in-areas](changes/2026-06-15-extend-baked-in-areas.md)

@@ -15,14 +15,14 @@ agent or contributor answers "how does X behave?" from the relevant file alone.
 | example-pack | [example-pack.md](example-pack.md) | 2026-07-03 |
 | survival | [survival.md](survival.md) | 2026-06-20 |
 | tinkers | [tinkers.md](tinkers.md) | 2026-06-20 |
-| builder | [builder.md](builder.md) | 2026-06-20 |
+| builder | [builder.md](builder.md) | 2026-07-22 |
 | viewer | [viewer.md](viewer.md) | 2026-07-03 |
 | core-init | [core-init.md](core-init.md) | 2026-07-03 |
 | core-admin | [core-admin.md](core-admin.md) | 2026-06-19 |
 | core-communication | [core-communication.md](core-communication.md) | 2026-07-03 |
-| core-navigation | [core-navigation.md](core-navigation.md) | 2026-07-04 |
+| core-navigation | [core-navigation.md](core-navigation.md) | 2026-07-22 |
 | core-combat | [core-combat.md](core-combat.md) | 2026-07-04 |
-| oracle | [oracle.md](oracle.md) | 2026-07-07 |
+| oracle | [oracle.md](oracle.md) | 2026-07-22 |
 | core-abilities | [core-abilities.md](core-abilities.md) | 2026-06-13 |
 | core-inventory | [core-inventory.md](core-inventory.md) | 2026-07-03 |
 | core-economy | [core-economy.md](core-economy.md) | 2026-07-03 |

@@ -1,6 +1,6 @@
 ---
 capability: oracle
-last-updated: 2026-07-07
+last-updated: 2026-07-22
 ---
 
 # oracle
@@ -268,6 +268,10 @@ the engine CommandRouter treats `player`/`mob` as actor-type roles and ANY other
 per-player rate limit must land before a public server carries strangers.
 (packages/@tapestry/oracle/scripts/flows/solo-flow.ts;
 packages/@tapestry/oracle/scripts/commands/solo.ts)
+
+The flow holds these answers in flow scratch (`entity.scratch`) between steps, not the
+entity property bag, so a completed solo run leaves no `solo_*` residue in `player.yaml`.
+(packages/@tapestry/oracle/scripts/flows/solo-flow.ts)
 
 ### Theme-x-balance separation
 
@@ -566,6 +570,7 @@ default to strict validation (see Rejected: room-property visited marker).
 
 ## Change Log
 
+- 2026-07-22 [flow-scratch-migration](changes/2026-07-22-flow-scratch-migration.md) - solo wizard holds its collected inputs in entity.scratch (engine >=0.1.50) instead of the entity property bag, so a completed run leaves no solo_* residue in player.yaml
 - 2026-07-06 [oracle-stage-c-items-six-axis](changes/2026-07-06-oracle-stage-c-items-six-axis.md) - items six-axis (ITEM-1 banded rarity DEGREE roll replaces the flat pick; shared ITEM-6 CONTEXT table bends both drop chance and rarity roll from killer tier + room band, kept as table data rather than a TS constant so playtest feel-tuning can retune it without a rebuild); loot now fires at all four spawn tiers (elite/miniboss/boss previously dropped zero loot); junk rarity tier added to dressing (RARITY_WEIGHTS, SCHEMA_ITEMS, fallbackItems, fill_items, both baked decks rewritten to full junk-epic rosters); epic band freezes one of 8 fixed signature names at mint; PZL puzzle-cache hookup cut (does not exist yet, out of scope per the rooms-v3 plan) and a single-roll "none band" design rejected in favor of a per-tier drop-chance gate
 - 2026-07-04 [oracle-stage-b2-combat-feel](changes/2026-07-04-oracle-stage-b2-combat-feel.md) - safe entry room (ambient-zero structural guarantee, golden-tested); entry guide NPC (no_kill, reload-safe ensureGuideAt, onSay-delivered starter kit through the unchanged grants gate + kick/bash at novice cap via abilities.learn, silent auto-grant deleted); low-level balance retune against the pinned player model (trash 2d10/1d6/wimpy-0 at L1, elite 5d10, miniboss 60, L10 proportional, boss curve untouched - swell chunks are the kill mechanic), TTK targets pinned by golden tests; loadYaml string-scalar fix (live pools were 10x the table since 0.3.x - num() coercion + original-key dict lookups + string-scalar engine stub for test parity)
 - 2026-07-04 [oracle-stage-b-tiers-mobs](changes/2026-07-04-oracle-stage-b-tiers-mobs.md) - threat-tier ladder (charged elites with frozen epithets, landmark minibosses with frozen identities + 0.4.0 keeper synthesis, once-per-run wandering boss with landmark/safe-start suppression); mobs six-axis (shared MOB-1 menace bands + banded mb- ids with flat-pick back-compat, dice-owned band-weighted disposition axis riding template selection, elite/miniboss balance rows, four new mob templates); ride-alongs (3 afar variants + distance-banded gate + 4-tail deck, sector qualifier decks + mint-time no-replacement name deal); solo opened to players (rate-limit ship dependency documented); starter-kit playtest scaffolding (grants table, spawnToInventory)

@@ -1,6 +1,6 @@
 ---
 capability: core-navigation
-last-updated: 2026-07-04
+last-updated: 2026-07-22
 ---
 
 # core-navigation
@@ -197,6 +197,12 @@ version, width, quit).
   calls tapestry.connections.remove(id) on completion.
   (packages/@tapestry/core/scripts/flows/unlink.ts:4-77)
 
+- Both flows keep their per-step working memory (chosen pack, rooms, exit types,
+  keywords, confirmation) in flow scratch (`entity.scratch`), not the entity property
+  bag, so a completed link or unlink leaves no `link_*` / `unlink_*` residue in
+  `player.yaml`. (packages/@tapestry/core/scripts/flows/link.ts;
+  packages/@tapestry/core/scripts/flows/unlink.ts)
+
 - "connections" (admin-only) with no argument lists connections for the current room via
   tapestry.connections.getForRoom. With argument "all" it lists every connection on the
   server via tapestry.connections.getAll. Each connection is formatted as
@@ -276,5 +282,6 @@ version, width, quit).
 
 ## Change Log
 
+- 2026-07-22 [flow-scratch-migration](changes/2026-07-22-flow-scratch-migration.md) - link/unlink wizards keep per-step working memory in entity.scratch (engine >=0.1.50) instead of the entity property bag, so completed flows leave no link_*/unlink_* residue in player.yaml
 - 2026-07-04 [brief-mode-command](changes/2026-07-04-brief-mode-command.md) - brief mode v1 (tapestry#42): `brief` toggle command + core-declared `brief` bool player pref; directional movement renders name/exits/entities only when on (engine >=0.1.48 sendRoomDescription flag); `look` always full
 - 2026-06-18 [command-catalog-display](changes/2026-06-18-command-catalog-display.md)
