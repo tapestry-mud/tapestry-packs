@@ -23,7 +23,9 @@
 // ASCII; braces on all control flow.
 
 import * as tapestry from "@tapestry/engine";
-import { listOwnedRuns, writeOwnedRuns, type OwnedRun } from "../owned-runs.js";
+import { listOwnedRuns, writeOwnedRuns, removeOwnedRun, type OwnedRun } from "../owned-runs.js";
+import { clearAreaCaches } from "../area-teardown.js";
+import { ensureAreaContext } from "../area-context.js";
 
 tapestry.commands.register({
     name: "solo",
@@ -110,9 +112,91 @@ function soloList(actor: any): OwnedRun[] {
     return runs;
 }
 
-// soloDiscard is a stub - Task 11 implements it for real.
-function soloDiscard(actor: any, _arg: string): void {
-    actor.send("Not implemented yet.\r\n");
+// ---------------------------------------------------------------------------
+// solo discard [n | areaId]
+//
+// Engine sweep first (authoring.deleteArea: evacuate, untrack, remove rooms,
+// clear consequences, unregister, rm -rf the area dir). Then the pack's own
+// in-memory caches. Then the owner's player-file entry. If the engine call
+// fails, nothing else runs and the world is untouched.
+//
+// Your INVENTORY is never touched (Decision C). Gear purge is stage E.
+// ---------------------------------------------------------------------------
+
+function soloDiscard(actor: any, arg: string): void {
+    const playerId = actor.entityId;
+    const runs = prunedRuns(playerId);
+    const target = arg.trim();
+
+    let areaId: string | null = null;
+
+    if (target === "") {
+        const here = actor.roomId ? ensureAreaContext(actor.roomId) : undefined;
+        if (!here) {
+            actor.send("You are not standing in a solo run. Try 'solo list'.\r\n");
+            return;
+        }
+        if (!ownsRun(runs, here)) {
+            actor.send("That run is not yours to discard. Try 'solo list'.\r\n");
+            return;
+        }
+        areaId = here;
+    } else if (/^[0-9]+$/.test(target)) {
+        const n = parseInt(target, 10);
+        if (n < 1 || n > runs.length) {
+            actor.send("No run #" + n + ". Try 'solo list'.\r\n");
+            return;
+        }
+        areaId = runs[n - 1].areaId;
+    } else {
+        const privileged = actor.hasRole("admin") || actor.hasRole("builder");
+        if (!privileged) {
+            actor.send("Discard your own runs by number. Try 'solo list'.\r\n");
+            return;
+        }
+        if (!areaExists(target)) {
+            actor.send("No such area: " + target + "\r\n");
+            return;
+        }
+        areaId = target;
+    }
+
+    const label = runLabel(runs, areaId);
+    const standingInside = actor.roomId ? ensureAreaContext(actor.roomId) === areaId : false;
+
+    const swept = (tapestry as any).authoring.deleteArea(areaId);
+    if (!swept) {
+        actor.send("Could not discard " + areaId + ". Nothing was changed.\r\n");
+        return;
+    }
+
+    clearAreaCaches(areaId);
+    removeOwnedRun(playerId, areaId);
+
+    actor.send("Discarded " + label + ".\r\n");
+    actor.send("Your inventory is untouched.\r\n");
+    if (standingInside) {
+        // deleteArea already recalled us; show where we landed.
+        tapestry.admin.executeAs(playerId, "look");
+    }
+}
+
+function ownsRun(runs: OwnedRun[], areaId: string): boolean {
+    for (let i = 0; i < runs.length; i++) {
+        if (runs[i].areaId === areaId) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function runLabel(runs: OwnedRun[], areaId: string): string {
+    for (let i = 0; i < runs.length; i++) {
+        if (runs[i].areaId === areaId) {
+            return runs[i].name + " (" + areaId + ")";
+        }
+    }
+    return areaId;
 }
 
 // Unique names: a bare `pad` would collide with another pack's same-named global

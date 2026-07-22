@@ -2,7 +2,7 @@ id: "solo"
 title: "Solo"
 category: "world"
 role: "player"
-brief: "Generate a solo oracle area and enter it."
+brief: "Generate, list, and discard solo oracle areas."
 body: |
   Solo rolls a fresh adventure area from oracle tables and drops you into its
   entry room. Every room and exit exists the moment you arrive; creatures wake
@@ -10,11 +10,15 @@ body: |
   worth finding. Dice own all facts; the LLM (if configured) adds name and
   prose dressing only.
 
-  Usage: solo
+  Usage:
+    solo               Roll a new area and enter it.
+    solo list          List the runs you created.
+    solo discard       Discard the run you are standing in.
+    solo discard <n>   Discard run number <n> from 'solo list'.
 
-  You will be prompted for:
+  Rolling a run prompts you for:
     Scenario/Idea - A pre-baked scenario (LLM off) or a free-text theme idea.
-    Name          - The area display name (blank for random).
+    Name          - The area display name (blank for a seeded name).
     Min level     - Minimum mob level (blank for random).
     Max level     - Maximum mob level (blank for random).
     Run size      - school (~20 rooms), standard (40-60), or epic (~100).
@@ -22,5 +26,9 @@ body: |
     Seed          - Blank for random; a number replays that exact area.
 
   You are handed a small starter kit on arrival - wear and wield it.
-keywords: [solo, oracle, generate, area, explore, run]
+
+  Discarding a run removes the area: its rooms, creatures, floor loot, and the
+  frozen tables it was rolled from. Anyone standing inside is recalled first.
+  Items already in your inventory are yours to keep.
+keywords: [solo, oracle, generate, area, explore, run, discard, list]
 see_also: []

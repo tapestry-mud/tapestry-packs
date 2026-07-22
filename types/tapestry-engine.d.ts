@@ -84,6 +84,7 @@ declare module "@tapestry/engine" {
     clearRoomAttribute(...args: any[]): any;
     createArea(...args: any[]): any;
     createRoom(...args: any[]): any;
+    deleteArea(...args: any[]): any;
     getArea(...args: any[]): any;
     getAreaRooms(...args: any[]): any;
     getAreas(...args: any[]): any;
