@@ -1,14 +1,14 @@
 name: "@tapestry/core"
-version: "0.1.25"
+version: "0.1.26"
 type: core
 display_name: "Tapestry Core"
 description: "Engine foundation: recall room, combat, abilities, commands, progression, mob behaviors, socials, and all gameplay systems. Content packs layer areas, races, and classes on top."
 author: "Tapestry"
 license: "AGPL-3.0"
-# Engine floor is documentation-only (the key does not bind). >=0.1.48 is where the
-# sendRoomDescription binding gained the optional brief arg; on older engines the
-# two-arg movement call still renders (extra args ignored) but brief has no effect.
-engine: ">=0.1.48"
+# Engine floor is documentation-only (the key does not bind). >=0.1.50 is where
+# FlowInstance gained entity.scratch; the link/unlink wizards use it for working
+# memory, so on older engines those flows would fail (scratch handle absent).
+engine: ">=0.1.50"
 validation: strict
 active: true
 load_order: 0

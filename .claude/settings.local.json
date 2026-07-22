@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(diff /tmp1.txt /tmp2.txt)",
+      "Bash(rm -f /tmp1.txt /tmp2.txt)"
+    ]
+  }
+}

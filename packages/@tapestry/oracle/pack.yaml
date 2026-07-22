@@ -1,5 +1,5 @@
 name: "@tapestry/oracle"
-version: "0.6.0"
+version: "0.6.1"
 type: module
 display_name: "Tapestry Oracle"
 description: >
@@ -10,7 +10,7 @@ description: >
   and balance; the LLM owns dressing and is never load-bearing.
 author: "Tapestry"
 license: "AGPL-3.0"
-engine: ">=0.1.47"
+engine: ">=0.1.50"
 validation: strict
 dependencies:
   "@tapestry/core": "^0.1.22"
