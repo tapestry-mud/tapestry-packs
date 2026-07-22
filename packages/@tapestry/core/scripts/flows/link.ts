@@ -50,18 +50,18 @@ tapestry.flows.register({
                 });
             },
             on_select: function(entity, option) {
-                entity.setProperty("link_pack", String(option.value));
-                entity.setProperty("link_show_all", "false");
-                entity.setProperty("link_room", "");
-                entity.setProperty("link_src_type", "");
-                entity.setProperty("link_src_direction", "");
-                entity.setProperty("link_src_keyword", "");
-                entity.setProperty("link_src_display", "");
-                entity.setProperty("link_tgt_type", "");
-                entity.setProperty("link_tgt_direction", "");
-                entity.setProperty("link_tgt_keyword", "");
-                entity.setProperty("link_tgt_display", "");
-                entity.setProperty("link_confirmed", "");
+                entity.scratch.set("link_pack", String(option.value));
+                entity.scratch.set("link_show_all", "false");
+                entity.scratch.set("link_room", "");
+                entity.scratch.set("link_src_type", "");
+                entity.scratch.set("link_src_direction", "");
+                entity.scratch.set("link_src_keyword", "");
+                entity.scratch.set("link_src_display", "");
+                entity.scratch.set("link_tgt_type", "");
+                entity.scratch.set("link_tgt_direction", "");
+                entity.scratch.set("link_tgt_keyword", "");
+                entity.scratch.set("link_tgt_display", "");
+                entity.scratch.set("link_confirmed", "");
             }
         },
         {
@@ -70,13 +70,13 @@ tapestry.flows.register({
             type: "choice",
             prompt: "Choose the destination room:",
             skip_if: function(entity) {
-                var pack = entity.getProperty("link_pack");
+                var pack = entity.scratch.get("link_pack");
                 var eps = tapestry.rooms.getEntryPoints(pack);
-                var showAll = entity.getProperty("link_show_all");
+                var showAll = entity.scratch.get("link_show_all");
                 return (eps.length === 0) || (showAll === "true");
             },
             options: function(entity) {
-                var pack = entity.getProperty("link_pack");
+                var pack = entity.scratch.get("link_pack");
                 var eps = tapestry.rooms.getEntryPoints(pack);
                 var options = eps.map(function(r) {
                     return {
@@ -92,11 +92,11 @@ tapestry.flows.register({
             },
             on_select: function(entity, option) {
                 if (String(option.value) === "__all__") {
-                    entity.setProperty("link_show_all", "true");
-                    entity.setProperty("link_room", "");
+                    entity.scratch.set("link_show_all", "true");
+                    entity.scratch.set("link_room", "");
                 } else {
-                    entity.setProperty("link_room", String(option.value));
-                    entity.setProperty("link_show_all", "false");
+                    entity.scratch.set("link_room", String(option.value));
+                    entity.scratch.set("link_show_all", "false");
                 }
             }
         },
@@ -106,11 +106,11 @@ tapestry.flows.register({
             type: "choice",
             prompt: "Choose the destination room:",
             skip_if: function(entity) {
-                var room = entity.getProperty("link_room");
+                var room = entity.scratch.get("link_room");
                 return (room !== null && room !== undefined && room !== "");
             },
             options: function(entity) {
-                var pack = entity.getProperty("link_pack");
+                var pack = entity.scratch.get("link_pack");
                 var rooms = tapestry.rooms.getByPack(pack);
                 return rooms.map(function(r) {
                     return {
@@ -120,7 +120,7 @@ tapestry.flows.register({
                 });
             },
             on_select: function(entity, option) {
-                entity.setProperty("link_room", String(option.value));
+                entity.scratch.set("link_room", String(option.value));
             }
         },
         {
@@ -128,14 +128,14 @@ tapestry.flows.register({
             id: "choose_target_exit",
             type: "choice",
             prompt: function(entity) {
-                var targetRoom = entity.getProperty("link_room") || "destination";
+                var targetRoom = entity.scratch.get("link_room") || "destination";
                 return "From " + targetRoom + ", which exit leads back to this room?";
             },
             options: function(entity) {
-                var targetRoomId = entity.getProperty("link_room");
+                var targetRoomId = entity.scratch.get("link_room");
                 var exits = tapestry.rooms.getExits(targetRoomId);
 
-                var pack = entity.getProperty("link_pack");
+                var pack = entity.scratch.get("link_pack");
                 var eps = tapestry.rooms.getEntryPoints(pack);
                 var suggestedDir = null;
                 eps.forEach(function(ep) {
@@ -168,8 +168,8 @@ tapestry.flows.register({
                 var val = String(option.value);
                 if (val.indexOf("direction:") === 0) {
                     var dir = val.slice("direction:".length);
-                    entity.setProperty("link_tgt_type", "direction");
-                    entity.setProperty("link_tgt_direction", dir);
+                    entity.scratch.set("link_tgt_type", "direction");
+                    entity.scratch.set("link_tgt_direction", dir);
 
                     var opposite = OPPOSITES[dir.toLowerCase()];
                     if (opposite) {
@@ -178,21 +178,21 @@ tapestry.flows.register({
                             return e.type === "direction" && !e.occupied && e.direction === opposite;
                         });
                         if (oppAvailable) {
-                            entity.setProperty("link_src_type", "direction");
-                            entity.setProperty("link_src_direction", opposite);
-                            entity.setProperty("link_src_auto", "true");
+                            entity.scratch.set("link_src_type", "direction");
+                            entity.scratch.set("link_src_direction", opposite);
+                            entity.scratch.set("link_src_auto", "true");
                         } else {
-                            entity.setProperty("link_src_auto", "false");
+                            entity.scratch.set("link_src_auto", "false");
                         }
                     } else {
-                        entity.setProperty("link_src_auto", "false");
+                        entity.scratch.set("link_src_auto", "false");
                     }
                 } else if (val === "one-way") {
-                    entity.setProperty("link_tgt_type", "one-way");
-                    entity.setProperty("link_src_auto", "false");
+                    entity.scratch.set("link_tgt_type", "one-way");
+                    entity.scratch.set("link_src_auto", "false");
                 } else {
-                    entity.setProperty("link_tgt_type", "keyword");
-                    entity.setProperty("link_src_auto", "false");
+                    entity.scratch.set("link_tgt_type", "keyword");
+                    entity.scratch.set("link_src_auto", "false");
                 }
             }
         },
@@ -202,12 +202,12 @@ tapestry.flows.register({
             type: "text",
             prompt: "Enter the keyword players will type to return (e.g. 'exit'). Optionally add a display name after a space:",
             skip_if: function(entity) {
-                return entity.getProperty("link_tgt_type") !== "keyword";
+                return entity.scratch.get("link_tgt_type") !== "keyword";
             },
             on_input: function(entity, value) {
                 var parts = value.trim().split(/\s+(.*)/);
-                entity.setProperty("link_tgt_keyword", parts[0] || "");
-                entity.setProperty("link_tgt_display", parts[1] || "");
+                entity.scratch.set("link_tgt_keyword", parts[0] || "");
+                entity.scratch.set("link_tgt_display", parts[1] || "");
             }
         },
         {
@@ -215,10 +215,10 @@ tapestry.flows.register({
             id: "choose_source_exit",
             type: "choice",
             skip_if: function(entity) {
-                return entity.getProperty("link_src_auto") === "true";
+                return entity.scratch.get("link_src_auto") === "true";
             },
             prompt: function(entity) {
-                var targetRoom = entity.getProperty("link_room") || "destination";
+                var targetRoom = entity.scratch.get("link_room") || "destination";
                 return "The opposite direction is not available. From this room, which exit leads to " + targetRoom + "?";
             },
             options: function(entity) {
@@ -241,10 +241,10 @@ tapestry.flows.register({
             on_select: function(entity, option) {
                 var val = String(option.value);
                 if (val.indexOf("direction:") === 0) {
-                    entity.setProperty("link_src_type", "direction");
-                    entity.setProperty("link_src_direction", val.slice("direction:".length));
+                    entity.scratch.set("link_src_type", "direction");
+                    entity.scratch.set("link_src_direction", val.slice("direction:".length));
                 } else {
-                    entity.setProperty("link_src_type", "keyword");
+                    entity.scratch.set("link_src_type", "keyword");
                 }
             }
         },
@@ -254,12 +254,12 @@ tapestry.flows.register({
             type: "text",
             prompt: "Enter the keyword players will type to leave (e.g. 'portal'). Optionally add a display name after a space:",
             skip_if: function(entity) {
-                return entity.getProperty("link_src_type") !== "keyword";
+                return entity.scratch.get("link_src_type") !== "keyword";
             },
             on_input: function(entity, value) {
                 var parts = value.trim().split(/\s+(.*)/);
-                entity.setProperty("link_src_keyword", parts[0] || "");
-                entity.setProperty("link_src_display", parts[1] || "");
+                entity.scratch.set("link_src_keyword", parts[0] || "");
+                entity.scratch.set("link_src_display", parts[1] || "");
             }
         },
         {
@@ -267,23 +267,23 @@ tapestry.flows.register({
             id: "confirm",
             type: "confirm",
             on_yes: function(entity) {
-                entity.setProperty("link_confirmed", "yes");
+                entity.scratch.set("link_confirmed", "yes");
             },
             on_no: function(entity) {
-                entity.setProperty("link_confirmed", "no");
+                entity.scratch.set("link_confirmed", "no");
             },
             prompt: function(entity) {
-                var srcType = entity.getProperty("link_src_type") || "?";
-                var tgtType = entity.getProperty("link_tgt_type") || "?";
-                var targetRoom = entity.getProperty("link_room") || "?";
-                var pack = entity.getProperty("link_pack") || "?";
+                var srcType = entity.scratch.get("link_src_type") || "?";
+                var tgtType = entity.scratch.get("link_tgt_type") || "?";
+                var targetRoom = entity.scratch.get("link_room") || "?";
+                var pack = entity.scratch.get("link_pack") || "?";
 
                 var srcLabel;
                 if (srcType === "direction") {
-                    srcLabel = entity.getProperty("link_src_direction") || "?";
+                    srcLabel = entity.scratch.get("link_src_direction") || "?";
                 } else if (srcType === "keyword") {
-                    var kw = entity.getProperty("link_src_keyword") || "?";
-                    var dn = entity.getProperty("link_src_display") || "";
+                    var kw = entity.scratch.get("link_src_keyword") || "?";
+                    var dn = entity.scratch.get("link_src_display") || "";
                     srcLabel = dn ? kw + " (" + dn + ")" : kw;
                 } else {
                     srcLabel = srcType;
@@ -291,10 +291,10 @@ tapestry.flows.register({
 
                 var tgtLabel;
                 if (tgtType === "direction") {
-                    tgtLabel = entity.getProperty("link_tgt_direction") || "?";
+                    tgtLabel = entity.scratch.get("link_tgt_direction") || "?";
                 } else if (tgtType === "keyword") {
-                    var tkw = entity.getProperty("link_tgt_keyword") || "?";
-                    var tdn = entity.getProperty("link_tgt_display") || "";
+                    var tkw = entity.scratch.get("link_tgt_keyword") || "?";
+                    var tdn = entity.scratch.get("link_tgt_display") || "";
                     tgtLabel = tdn ? tkw + " (" + tdn + ")" : tkw;
                 } else if (tgtType === "one-way") {
                     tgtLabel = "one-way, no return exit";
@@ -309,33 +309,33 @@ tapestry.flows.register({
         }
     ],
     on_complete: function(entity) {
-        if (entity.getProperty("link_confirmed") !== "yes") {
+        if (entity.scratch.get("link_confirmed") !== "yes") {
             entity.send("Connection cancelled.\r\n");
             return { success: false };
         }
 
         var fromRoomId = entity.roomId;
-        var toRoomId = entity.getProperty("link_room");
+        var toRoomId = entity.scratch.get("link_room");
 
-        var srcType = entity.getProperty("link_src_type");
+        var srcType = entity.scratch.get("link_src_type");
         var fromOpts = {};
         if (srcType === "direction") {
-            fromOpts = { direction: entity.getProperty("link_src_direction") };
+            fromOpts = { direction: entity.scratch.get("link_src_direction") };
         } else if (srcType === "keyword") {
             fromOpts = {
-                keyword: entity.getProperty("link_src_keyword"),
-                displayName: entity.getProperty("link_src_display") || null
+                keyword: entity.scratch.get("link_src_keyword"),
+                displayName: entity.scratch.get("link_src_display") || null
             };
         }
 
-        var tgtType = entity.getProperty("link_tgt_type");
+        var tgtType = entity.scratch.get("link_tgt_type");
         var toOpts = {};
         if (tgtType === "direction") {
-            toOpts = { direction: entity.getProperty("link_tgt_direction") };
+            toOpts = { direction: entity.scratch.get("link_tgt_direction") };
         } else if (tgtType === "keyword") {
             toOpts = {
-                keyword: entity.getProperty("link_tgt_keyword"),
-                displayName: entity.getProperty("link_tgt_display") || null
+                keyword: entity.scratch.get("link_tgt_keyword"),
+                displayName: entity.scratch.get("link_tgt_display") || null
             };
         }
 
