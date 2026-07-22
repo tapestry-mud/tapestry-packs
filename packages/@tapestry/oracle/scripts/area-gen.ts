@@ -25,6 +25,7 @@
 import * as tapestry from "@tapestry/engine";
 import { splitmix64 } from "./prng.js";
 import { seededAreaName } from "./area-namer.js";
+import { addOwnedRun } from "./owned-runs.js";
 import { soloAreaBiomePalette } from "./roster.js";
 import { runKey, setRunState } from "./run-state.js";
 import { setAreaState, getAreaState } from "./area-state.js";
@@ -119,6 +120,7 @@ const pending: Record<string, PendingGen> = {};
 // sizeBand:         "school" | "standard" | "epic" (target_rooms band).
 // forcedSeed:       optional explicit seed (shareable seeds + determinism
 //                   proofs); null rolls from time x player as before.
+// packName:         destination pack name, recorded on the owned-runs entry.
 // ---------------------------------------------------------------------------
 
 export function createSoloArea(
@@ -130,7 +132,8 @@ export function createSoloArea(
     targetNamespace: string = "oracle-run",
     bakedSetId: string = BAKED_SET_IDS[0],
     sizeBand: string = "standard",
-    forcedSeed: number | null = null
+    forcedSeed: number | null = null,
+    packName: string = ""
 ): void {
     // -----------------------------------------------------------------------
     // Step 1: Roll the area seed + target_rooms. STREAM CONTRACT: exactly ONE
@@ -275,6 +278,20 @@ export function createSoloArea(
             if (gen) {
                 tapestry.schedule.cancel(handle);
                 delete pending[playerId];
+
+                // Ownership: recorded once the graph exists, so roomCount is the real
+                // minted count rather than the rolled target. Powers `solo list` and
+                // authorizes `solo discard <n>`.
+                const minted = (tapestry as any).authoring.getAreaRooms(areaSlug);
+                addOwnedRun(playerId, {
+                    areaId: areaSlug,
+                    name: nameHint,
+                    levelRange: levelRange,
+                    roomCount: minted ? minted.length : targetRooms,
+                    seed: areaSeed,
+                    packName: packName,
+                });
+
                 tapestry.world.teleportEntity(playerId, gen.entryRoomId);
                 tapestry.world.send(playerId, "The pattern settles into place around you.");
                 // B.2: provisions are guide-delivered now - the guide spawned
