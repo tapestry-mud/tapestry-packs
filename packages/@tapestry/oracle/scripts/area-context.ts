@@ -33,6 +33,11 @@ export function getMintedSet(areaId: string): Set<string> {
     return s;
 }
 
+/** Teardown: drop the minted-type set for a discarded area. */
+export function removeMintedSet(areaId: string): void {
+    _mintedMobTypes.delete(areaId);
+}
+
 // ---------------------------------------------------------------------------
 // resolveAreaSeed
 //
