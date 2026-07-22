@@ -1,7 +1,7 @@
 // flows/solo-flow.ts - Five-step wizard for solo area generation (v2).
 //
 // Registers the oracle_solo flow. The solo command triggers this flow.
-// Steps stash answers into entity properties; on_complete reads them,
+// Steps stash answers into flow scratch; on_complete reads them,
 // validates, and calls createSoloArea.
 //
 // Level guards (spec section 7):
@@ -63,7 +63,7 @@ tapestry.flows.register({
                 });
             },
             on_select: function(entity: any, option: any) {
-                entity.setProperty("__solo_scenario", option.value);
+                entity.scratch.set("solo_scenario", option.value);
             },
         },
         {
@@ -73,7 +73,7 @@ tapestry.flows.register({
             prompt: "Describe the idea (e.g. a sunken ship):",
             skip_if: function(_entity: any) { return llmOff(); },
             on_input: function(entity: any, value: string) {
-                entity.setProperty("__solo_idea", value);
+                entity.scratch.set("solo_idea", value);
             },
         },
         {
@@ -81,7 +81,7 @@ tapestry.flows.register({
             type: "text",
             prompt: "Area name (blank for random):",
             on_input: function(entity: any, value: string) {
-                entity.setProperty("__solo_name", value);
+                entity.scratch.set("solo_name", value);
             },
         },
         {
@@ -89,7 +89,7 @@ tapestry.flows.register({
             type: "text",
             prompt: "Min level (blank for random):",
             on_input: function(entity: any, value: string) {
-                entity.setProperty("__solo_min_level", value);
+                entity.scratch.set("solo_min_level", value);
             },
         },
         {
@@ -97,7 +97,7 @@ tapestry.flows.register({
             type: "text",
             prompt: "Max level (blank for random):",
             on_input: function(entity: any, value: string) {
-                entity.setProperty("__solo_max_level", value);
+                entity.scratch.set("solo_max_level", value);
             },
         },
         {
@@ -114,7 +114,7 @@ tapestry.flows.register({
                 ];
             },
             on_select: function(entity: any, option: any) {
-                entity.setProperty("__solo_size", option.value);
+                entity.scratch.set("solo_size", option.value);
             },
         },
         {
@@ -122,7 +122,7 @@ tapestry.flows.register({
             type: "text",
             prompt: "Destination pack (blank to create one):",
             on_input: function(entity: any, value: string) {
-                entity.setProperty("__solo_dest_pack", value);
+                entity.scratch.set("solo_dest_pack", value);
             },
         },
         {
@@ -132,22 +132,22 @@ tapestry.flows.register({
             type: "text",
             prompt: "Seed (blank for random):",
             on_input: function(entity: any, value: string) {
-                entity.setProperty("__solo_seed", value);
+                entity.scratch.set("solo_seed", value);
             },
         },
     ],
     on_complete: function(entity: any) {
-        const rawName = entity.getProperty("__solo_name") || "";
-        const rawIdea = entity.getProperty("__solo_idea") || "";
-        const rawMin = entity.getProperty("__solo_min_level") || "";
-        const rawMax = entity.getProperty("__solo_max_level") || "";
-        const rawDest = entity.getProperty("__solo_dest_pack") || "";
-        const rawSize = entity.getProperty("__solo_size") || "";
-        const rawSeed = entity.getProperty("__solo_seed") || "";
+        const rawName = entity.scratch.get("solo_name") || "";
+        const rawIdea = entity.scratch.get("solo_idea") || "";
+        const rawMin = entity.scratch.get("solo_min_level") || "";
+        const rawMax = entity.scratch.get("solo_max_level") || "";
+        const rawDest = entity.scratch.get("solo_dest_pack") || "";
+        const rawSize = entity.scratch.get("solo_size") || "";
+        const rawSeed = entity.scratch.get("solo_seed") || "";
         // Scenario is an LLM-OFF-only concept. The scenario step is skipped when the LLM is on,
         // so a value here is stale from a prior LLM-off run - ignore it, or it overrides the typed
         // idea (the "typed Haunted Circus, generated endless-underdeep" bug).
-        const rawScenario = llmOff() ? (entity.getProperty("__solo_scenario") || "") : "";
+        const rawScenario = llmOff() ? (entity.scratch.get("solo_scenario") || "") : "";
         const scenario = (String(rawScenario).trim() !== "") ? scenarioById(String(rawScenario).trim()) : null;
 
         // Parse min level.
