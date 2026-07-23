@@ -1,0 +1,31 @@
+id: "mint"
+title: "Mint"
+category: "admin"
+role: "admin"
+syntax:
+  - "mint"
+  - "mint flip <templateId>"
+brief: "The admin mint bench: bake a draft thread template, then flip it open."
+body: |
+  Admin/builder only. Mint is the only way content enters the game: roll a week
+  (bake a draft template), playtest it, then flip it open so it appears on the
+  player-facing Tapestry board (`tapestry`).
+
+  Usage:
+    mint                        Start the mint wizard and bake a draft template.
+    mint flip <templateId>      Flip a draft template open (draft -> open).
+
+  Rolling a template prompts you for:
+    Scenario/Idea - A pre-baked scenario (LLM off) or a free-text theme idea.
+    Name          - The thread display name (blank for random).
+    Band floor    - Minimum level in the thread's band window (0-60).
+    Band cap      - Maximum level in the thread's band window (0-60).
+    Run size      - school (~20 rooms), standard (40-60), or epic (~100).
+    Death mode    - grind or unraveling (blank for grind).
+    Seed          - Blank for random; a number replays that exact template.
+
+  A baked template starts in "draft" state - it is hidden from `tapestry` until
+  you flip it open. Playtest a draft with `tapestry start <templateId> <level>`
+  (admin/builder can start a draft; players cannot see it until it is open).
+keywords: [mint, oracle, admin, bake, template, thread, flip, draft, open]
+see_also: [tapestry, solo]
