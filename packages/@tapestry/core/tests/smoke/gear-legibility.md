@@ -43,10 +43,21 @@ the result if its returned `id` matches the room item's own
 `resolved.id`; on a mismatch, skip the stat block and fall back to the
 pre-fix behavior for that item (name and description only) rather than
 show the wrong numbers. Steps 24-31 below exercise the collision directly
-with two same-named test-fixture items (`tapestry-core:test-worn-charm`,
-`tapestry-core:test-dropped-charm`) - one worn, a differently-modifiered one
-dropped - and prove the worn item's rarity/modifier values never leak onto
-the dropped item's banner.
+with two same-named test-fixture items (`tapestry-test-fixtures:test-worn-charm`,
+`tapestry-test-fixtures:test-dropped-charm`) - one worn, a differently-modifiered
+one dropped - and prove the worn item's rarity/modifier values never leak
+onto the dropped item's banner.
+
+These two fixture items live in the engine repo's `@tapestry/test-fixtures`
+pack (`tests/fixtures/scenario-packs/@tapestry/test-fixtures`, declared
+"NEVER PUBLISH" and staged into the managed corpus by the telnet runner),
+not in `@tapestry/core`'s own catalog - `@tapestry/core` is `type: core`,
+`active: true`, `load_order: 0`, the pack every Tapestry game depends on,
+and its `items: "areas/**/items/*.yaml"` glob would otherwise pull these
+two deliberately-contradictory same-name items into the real published
+item catalog shipped to every game. This follows the same pattern
+`ward-capability.md` already uses for `tapestry-test-fixtures:test-dummy`
+and `tapestry-test-fixtures:test-arena`.
 
 Out of scope, found while mapping every examine path for this task and
 recorded in the implementation report rather than exercised here: an item
@@ -86,11 +97,11 @@ this pack-only task's scope.
 21. Assert Gamemaster sees: `common`
 22. Assert Gamemaster sees: `Modifiers:`
 23. Assert Gamemaster sees: `+10 MaxHp`
-24. Gamemaster: `loaditem tapestry-core:test-worn-charm`
+24. Gamemaster: `loaditem tapestry-test-fixtures:test-worn-charm`
 25. Assert Gamemaster sees: `Loaded a tarnished charm into your inventory.`
 26. Gamemaster: `wear charm`
 27. Assert Gamemaster sees: `You wear a tarnished charm.`
-28. Gamemaster: `loaditem tapestry-core:test-dropped-charm`
+28. Gamemaster: `loaditem tapestry-test-fixtures:test-dropped-charm`
 29. Assert Gamemaster sees: `Loaded a tarnished charm into your inventory.`
 30. Gamemaster: `drop charm`
 31. Assert Gamemaster sees: `You drop a tarnished charm.`
