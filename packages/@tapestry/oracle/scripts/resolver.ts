@@ -208,6 +208,18 @@ export function mintMobInstanceByTypeId(areaId: string, typeId: string, level: n
 }
 
 // ---------------------------------------------------------------------------
+// effectiveItemLevel - the loot band math (Task 8): bend the run's dialed
+// level by the rolled rarity's modifier, then clamp to the 1..60 ladder.
+// Pure wrapper around balance-table's clampLevel/rarityModifier so it is
+// golden-testable under plain node (resolver.ts has no import-time engine
+// hooks - see tests/loot-band.golden.test.mjs).
+// ---------------------------------------------------------------------------
+
+export function effectiveItemLevel(level: number, rarity: string): number {
+    return clampLevel(level + rarityModifier(rarity));
+}
+
+// ---------------------------------------------------------------------------
 // mintItemInstance - roll an item type from frozen <area>:items through the
 // ITEM-1 band resolver (bent by ITEM-6 context), apply rarity modifier to
 // the level band, roll stats, freeze via writeItemTemplate, and return
@@ -233,7 +245,7 @@ export function mintItemInstance(
     const type = selectItemEntry(item1, entries, bump, rng);
     if (!type) { return null; }
     const rarity = type.rarity || "common";
-    const effectiveLevel = clampLevel(level + rarityModifier(rarity));
+    const effectiveLevel = effectiveItemLevel(level, rarity);
     const isArmor = type.balance_ref === "armor";
     const kind = isArmor ? "armor" : "weapon";
     const stats = statsFor(kind, effectiveLevel, rng);

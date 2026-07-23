@@ -141,6 +141,23 @@ tapestry.commands.register({
                     "SELF-ROOM-MOB: " + o.name + " | hp=" + (s.hp || 0) + " | max_hp=" + (s.max_hp || 0) +
                     " | str=" + (s.strength || 0) + " | dex=" + (s.dexterity || 0) + "\r\n"
                 );
+                // Task 8 loot-band spot check: report the mob's carried loot
+                // (frozen via mintItemInstance) so a scenario can compare the
+                // rolled ac/damage_dice/rarity of the SAME room's drop across
+                // two dialed-level runs from the same template - same mint
+                // decision + item type (level-independent rng), different
+                // stat band (effectiveItemLevel bends by level).
+                const carried = (e && e.inventory) ? e.inventory : [];
+                for (let j = 0; j < carried.length; j++) {
+                    const item = (tapestry as any).world.getEntity(carried[j].id);
+                    const p = (item && item.properties) ? item.properties : {};
+                    const ac = p.ac ? JSON.stringify(p.ac) : "-";
+                    const dmg = p.damage_dice !== undefined ? p.damage_dice : "-";
+                    actor.send(
+                        "SELF-ROOM-MOB-ITEM: " + o.name + " | " + (item ? item.name : carried[j].name) +
+                        " | rarity=" + (p.rarity || "-") + " | ac=" + ac + " | damage_dice=" + dmg + "\r\n"
+                    );
+                }
             }
             if (!any_npc) {
                 actor.send("SELF-ROOM-MOBS: (none)\r\n");

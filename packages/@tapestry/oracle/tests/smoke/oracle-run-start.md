@@ -27,6 +27,26 @@ captures the caller's CURRENT room as the hub/return-address before tearing down
 run (one-active-run-per-player, spec 3.1a) - starting the second run while still standing
 inside the first run's about-to-be-deleted area would capture a doomed room as the new hub.
 
+Task 8 (level-locked loot wiring) extends this same two-level walk one room further north,
+to the trash/elite room where the seed's ONLY loot draw fires in this template - a "dented
+ladle" (a common-rarity weapon). The item TYPE and rarity are level-independent rng draws
+(the level only bends `effectiveItemLevel`, which feeds `statsFor` for the roll), so the
+same-named item mints at both dialed levels with the same rarity - but WHICH occupant ends
+up carrying it can differ between levels (confirmed empirically): a higher level rolls more
+hp dice for the elite ahead of it in the same spawn-rng stream, which shifts every
+downstream draw, including the elite-vs-trash loot-slot roll. So the assertion below
+matches on the item's own fields (name/rarity/ac/damage_dice), not on which mob line
+precedes it - proving the SAME item type bands to a DIFFERENT `damage_dice` at level 10
+vs level 50, which is the actual claim (loot dials with the run level, not flat at 1).
+`oracle-admin room`'s per-mob report line was extended (Task 8) to include each occupant's
+carried-item rarity/ac/damage_dice in the SAME atomic send as the mob's stats, so this
+stays one command per room check - the wandering-mob sharp edge above bites just as hard
+on a second bare Assert appended after an already-fetched buffer (confirmed while writing
+this addition: a probe assert placed after the existing 4-assert room chain reliably raced
+the ambient mob's real-time wander tick and flaked), so this extension follows the SAME
+one-command, one-fresh-assert discipline as every other room check here rather than
+stacking more assertions onto a buffer already read.
+
 ## Setup
 - Players: Gamemaster
 
@@ -50,22 +70,28 @@ inside the first run's about-to-be-deleted area would capture a doomed room as t
 17. Assert Gamemaster sees: `Flour dusts every surface like fresh snow. The air tastes of salt and old smoke.`
 18. Assert Gamemaster sees: `SELF-ROOM-EXITS: north,south,east,west`
 19. Assert Gamemaster sees: `SELF-ROOM-MOB: tandoor beast | hp=35 | max_hp=35`
-20. Gamemaster: `leave`
-21. Assert Gamemaster sees: `a stone fountain is here`
-22. Gamemaster: `oracle-admin start oracle-week-12345678 50`
-23. Assert Gamemaster sees: `pulls taut`
-24. Gamemaster: `oracle-admin room`
-25. Assert Gamemaster sees: `SELF-ROOM-ID: oracle-run:oracle-run-12345678-`
-26. Assert Gamemaster sees: `SELF-ROOM-NAME: Raised Spice Row`
-27. Assert Gamemaster sees: `A long prep table runs the length of the room. A hundred colors wink from crowded shelves.`
-28. Assert Gamemaster sees: `SELF-ROOM-EXITS: north,south,east,west`
-29. Gamemaster: `north`
-30. Assert Gamemaster sees: `Sunken Cellar`
-31. Gamemaster: `oracle-admin room`
-32. Assert Gamemaster sees: `SELF-ROOM-NAME: Sunken Cellar`
-33. Assert Gamemaster sees: `Flour dusts every surface like fresh snow. The air tastes of salt and old smoke.`
-34. Assert Gamemaster sees: `SELF-ROOM-EXITS: north,south,east,west`
-35. Assert Gamemaster sees: `SELF-ROOM-MOB: tandoor beast | hp=`
-36. Assert Gamemaster sees: `max_hp=506`
-37. Gamemaster: `leave`
-38. Assert Gamemaster sees: `a stone fountain is here`
+20. Gamemaster: `north`
+21. Gamemaster: `oracle-admin room`
+22. Assert Gamemaster sees: `dented ladle | rarity=common | ac=- | damage_dice=2d12`
+23. Gamemaster: `leave`
+24. Assert Gamemaster sees: `a stone fountain is here`
+25. Gamemaster: `oracle-admin start oracle-week-12345678 50`
+26. Assert Gamemaster sees: `pulls taut`
+27. Gamemaster: `oracle-admin room`
+28. Assert Gamemaster sees: `SELF-ROOM-ID: oracle-run:oracle-run-12345678-`
+29. Assert Gamemaster sees: `SELF-ROOM-NAME: Raised Spice Row`
+30. Assert Gamemaster sees: `A long prep table runs the length of the room. A hundred colors wink from crowded shelves.`
+31. Assert Gamemaster sees: `SELF-ROOM-EXITS: north,south,east,west`
+32. Gamemaster: `north`
+33. Assert Gamemaster sees: `Sunken Cellar`
+34. Gamemaster: `oracle-admin room`
+35. Assert Gamemaster sees: `SELF-ROOM-NAME: Sunken Cellar`
+36. Assert Gamemaster sees: `Flour dusts every surface like fresh snow. The air tastes of salt and old smoke.`
+37. Assert Gamemaster sees: `SELF-ROOM-EXITS: north,south,east,west`
+38. Assert Gamemaster sees: `SELF-ROOM-MOB: tandoor beast | hp=`
+39. Assert Gamemaster sees: `max_hp=506`
+40. Gamemaster: `north`
+41. Gamemaster: `oracle-admin room`
+42. Assert Gamemaster sees: `dented ladle | rarity=common | ac=- | damage_dice=5d16`
+43. Gamemaster: `leave`
+44. Assert Gamemaster sees: `a stone fountain is here`
