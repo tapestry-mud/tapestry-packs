@@ -197,7 +197,40 @@ tapestry.events.on("combat.kill", function(event) {
     }
 });
 
-// Player death - create corpse, transfer gear, recall naked
+// Player death (Task 12, spec 3.5 / decision 3) - tier-scaled, NEVER strand gear.
+//
+// The old handler unconditionally spawned a corpse, unequipped every worn
+// item, and transferred the whole inventory onto it before recalling the
+// player naked - gear replacement grind that fights the hub-and-threads
+// design (punch-list item 5). This handler never creates a corpse and never
+// touches equipment/inventory; every branch keeps gear+loot on the player.
+//
+// The death mode and respawn point ride ENTIRELY on the `oracle_active_run`
+// player property, the pipe composite "<runAreaId>|<deathMode>|<entryRoomId>"
+// Task 5's startRun writes (area-gen.ts). This is the SOLE carrier - there is
+// no cross-pack read of oracle's in-memory AreaState, and no second death-mode
+// signal anywhere in core.
+//
+// Cross-pack teardown (Unraveling branch only): oracle owns `teardownRun`
+// (area-gen.ts), and oracle depends on core (pack.yaml `dependencies:
+// @tapestry/core`), never the reverse - core has zero pack dependencies by
+// design (it is the foundational pack every other pack, including oracle,
+// builds on). A literal `import { teardownRun } from "@tapestry/oracle"`
+// here would be a backwards dependency the pack graph does not support (every
+// real cross-pack import in this repo flows dependent -> its own dependency,
+// e.g. @tapestry/cooking -> @tapestry/survival, never core -> a pack that
+// depends on core). So this branch PUBLISHES "run.unraveled" with the
+// already-split runAreaId instead of calling teardownRun directly; oracle
+// registers a synchronous listener for it (area-gen.ts, self-registered via
+// the pack script glob, same pattern as consequence-hooks.ts/population.ts).
+// The engine event bus dispatches subscribers synchronously in-process (same
+// call stack, confirmed against EventBus.Publish for the ward gate above), so
+// the publish-then-listener teardown completes before this handler returns -
+// no async gap, same effective timing as a direct call would have had.
+// Task 13's brief assumed a literal direct `teardownRun(playerId, runAreaId)`
+// call for this branch specifically; that assumption does not hold given the
+// pack dependency direction, so this event is the substitute. Task 13 must
+// NOT add a second listener for the death path - only for leave/recall.
 tapestry.events.on("entity.vital.depleted", function(event) {
     if (!event.data || event.data.vital !== "hp") {
         return;
@@ -208,51 +241,73 @@ tapestry.events.on("entity.vital.depleted", function(event) {
         return;
     }
 
-    // Vitals restore on recall - drop the stale condition band.
+    // Vitals restore on death - drop the stale condition band.
     clearConditionTracking(event.sourceEntityId);
 
     var entityId = event.sourceEntityId;
     var roomId = entity.roomId;
     var playerName = entity.name;
 
-    // Create player corpse
-    var corpseId = tapestry.world.createEntity("container", "the corpse of " + playerName);
-    tapestry.world.addTag(corpseId, "corpse");
-    tapestry.world.addTag(corpseId, "container");
-    tapestry.world.addTag(corpseId, "player_corpse");
-    tapestry.world.addTag(corpseId, "no_get");
-    tapestry.world.setProperty(corpseId, "owner", entityId);
-    tapestry.world.setProperty(corpseId, "corpse_decay", 600);
-    tapestry.world.setProperty(corpseId, "corpse_created_tick", tapestry.world.getCurrentTick());
-
-    // Unequip all gear silently (removes stat modifiers, moves to inventory)
-    tapestry.equipment.unequipAllSilent(entityId);
-
-    // Transfer all inventory to corpse silently
-    tapestry.inventory.transferAllSilent(entityId, corpseId);
-
-    // Place corpse in death room
-    tapestry.world.placeEntity(corpseId, roomId);
-
-    // Notify room
+    // Notify the room. No corpse - gear/loot stay on the player in every branch.
     tapestry.world.sendToRoom(roomId, "<death>" + playerName + " has been slain!</death>\r\n");
 
-    // Restore vitals and recall
+    // Wake with full vitals regardless of branch; gear + inventory untouched.
     tapestry.stats.restoreVitals(entityId);
-    var recallRoom = tapestry.world.getProperty(entityId, "recall_room_id") || "tapestry-core:recall";
-    tapestry.world.teleportEntity(entityId, recallRoom);
 
-    // Notify player
-    tapestry.world.send(entityId, "\r\n<death>You have been slain!</death>\r\n");
-    var roomName = tapestry.world.getRoomName(roomId) || "somewhere";
-    tapestry.world.send(entityId, "<death>Your corpse remains at " + roomName + ".</death>\r\n");
-    tapestry.world.send(entityId, "You feel your spirit pulled back to safety...\r\n\r\n");
+    var raw = tapestry.world.getProperty(entityId, "oracle_active_run") || "";
+    if (raw !== "") {
+        // Split the locked composite "<runAreaId>|<deathMode>|<entryRoomId>" (Task 3/5).
+        var parts = String(raw).split("|");
+        var runAreaId = parts[0];
+        var mode = (parts.length > 1 && parts[1]) ? parts[1] : "grind";
+        var entryRoomId = (parts.length > 2 && parts[2]) ? parts[2] : (runAreaId + "-entry");
+
+        if (mode === "unraveling") {
+            var home = tapestry.returnaddress.has(entityId)
+                ? tapestry.returnaddress.get(entityId)
+                : (tapestry.world.getProperty(entityId, "recall_room_id") || "tapestry-core:recall");
+            tapestry.world.teleportEntity(entityId, home);
+            tapestry.returnaddress.clear(entityId);
+            // No cross-pack import (see header note) - oracle's listener on
+            // "run.unraveled" does the split-free teardown synchronously.
+            tapestry.events.publish("run.unraveled", {
+                entityId: entityId,
+                runAreaId: runAreaId
+            });
+            tapestry.world.send(entityId, "\r\n<death>The Unraveling takes you.</death>\r\n");
+            tapestry.world.send(entityId, "You are cast back to the hub, your gear intact, the roll lost.\r\n");
+        } else {
+            // Grind tier: respawn at the run entry, keep everything, repop now.
+            tapestry.world.teleportEntity(entityId, entryRoomId);
+            tapestry.world.resetArea(runAreaId); // Task 1 binding - repops any AUTHORED spawn-rule content
+            // Oracle's own mobs are never registered with the engine's spawn-rule
+            // system (they spawn lazily via tapestry.mobs.spawnMob on first visit -
+            // see population.ts), so world.resetArea alone does not repop them.
+            // Same cross-pack seam as "run.unraveled" above: publish, oracle's
+            // synchronous listener (population.ts) clears the run's visited-room
+            // state so the next visit spawns fresh instances (SA1).
+            tapestry.events.publish("run.grind_repop", {
+                entityId: entityId,
+                runAreaId: runAreaId,
+                entryRoomId: entryRoomId
+            });
+            tapestry.world.send(entityId, "\r\n<death>You wake at the threshold.</death>\r\n");
+            tapestry.world.send(entityId, "The path has closed behind you - the enemies return.\r\n");
+        }
+    } else {
+        // Non-run death: never strand. Wake at recall with everything.
+        var recallRoom = tapestry.world.getProperty(entityId, "recall_room_id") || "tapestry-core:recall";
+        tapestry.world.teleportEntity(entityId, recallRoom);
+        tapestry.world.send(entityId, "\r\n<death>You collapse, then wake at the recall point, battered but whole.</death>\r\n");
+    }
+
     tapestry.world.sendRoomDescription(entityId);
 
-    // Publish player death event for pack extensions
+    // Publish player death event for pack extensions - progression.ts's XP
+    // penalty listener (progression.ts:158) and groups.ts's follow-clear
+    // listener both depend on this firing for every branch above.
     tapestry.events.publish("player.death", {
         entityId: entityId,
-        corpseId: corpseId,
         roomId: roomId
     });
 });

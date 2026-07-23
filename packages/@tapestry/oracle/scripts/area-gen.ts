@@ -525,6 +525,35 @@ export function teardownRun(playerId: string, runAreaId: string): boolean {
 }
 
 // ---------------------------------------------------------------------------
+// "run.unraveled" listener (Task 12's cross-pack teardown seam)
+//
+// core's death handler (combat/output.ts) cannot import teardownRun directly:
+// oracle depends on core (pack.yaml), never the reverse, so a core -> oracle
+// import would be a backwards pack dependency. Instead the Unraveling-death
+// branch publishes "run.unraveled" with the runAreaId it already split off
+// the oracle_active_run composite, and this listener finishes the teardown.
+// The engine event bus dispatches synchronously in-process, so this runs
+// before core's publish() call returns - same effective timing as a direct
+// function call, no async gap.
+//
+// Registered at module load, self-registering via the pack script glob (same
+// pattern as consequence-hooks.ts/population.ts) - area-gen.ts is also loaded
+// transitively (solo-flow.ts/mint-flow.ts import it), so this fires either way.
+//
+// Task 13 scope note: this listener covers ONLY the death path. Task 13's own
+// exit paths (leave/recall) still need their own listener(s) on "return.used"
+// (and whatever recall.ts publishes) per its brief - do NOT register a second
+// listener for "run.unraveled" there, and do NOT assume this listener also
+// covers leave/recall (it does not; it only fires from the death handler).
+(tapestry as any).events.on("run.unraveled", function (evt: any): void {
+    const data = (evt && evt.data) ? evt.data : {};
+    const playerId = data.entityId;
+    const runAreaId = data.runAreaId;
+    if (!playerId || !runAreaId) { return; }
+    teardownRun(playerId, runAreaId);
+});
+
+// ---------------------------------------------------------------------------
 // startRun
 //
 // Per-player run start: numeric, no LLM. Validates the level against the

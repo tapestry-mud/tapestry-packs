@@ -390,3 +390,52 @@ export function registerPopulationHooks(): void {
 }
 
 registerPopulationHooks();
+
+// ---------------------------------------------------------------------------
+// "run.grind_repop" listener (Task 12's grind-death repop seam)
+//
+// Discovered while building Task 12's SA1 scenario: `world.resetArea` (Task 1)
+// wraps the engine's generic SpawnManager.RunAreaReset, which only repops
+// mobs registered through the AUTHORED spawn-rule system (RegisterAreaSpawns/
+// RegisterRoomSpawns) - the system example-pack-style content uses. Oracle
+// mobs never go through that system; they are spawned lazily via
+// `tapestry.mobs.spawnMob` on first visit (this file's registerPopulationHooks
+// above), gated by the "visited" marker set (isPopulated/markPopulated) so
+// each room spawns exactly once. `world.resetArea` is therefore a structural
+// no-op for every oracle run area - confirmed empirically (a killed, warded
+// mob's room stayed empty after `world.resetArea` with no repop of any kind).
+//
+// So core's death handler ALSO publishes "run.grind_repop" (same class of
+// seam as "run.unraveled" - core cannot import oracle's population internals
+// directly, oracle depends on core, never the reverse). This listener clears
+// BOTH the in-memory visited cache (removeVisited) AND the FROZEN "visited"
+// oracle table it lazily rehydrates from (removeVisited alone is NOT enough -
+// it only drops the cache; the very next isPopulated() call reloads the same
+// markers straight back off the persisted side-car, since removeVisited was
+// designed for teardown of a DISCARDED area, where the persisted table is
+// going away anyway - not for a live area, where it is not). Writing the
+// table to empty entries first, then dropping the cache, is what actually
+// makes the next real visit look like a first visit again - a fresh
+// `populateRoom` call, a fresh mob instance, no `cap_cleared_*` (SA1).
+//
+// The entry room is repopulated immediately (mirrors startRun's own
+// populateEntry call) since it is structurally boss-free (ambient-zero) and
+// the player lands there right away; every other room in the run stays lazy
+// (repops on the player's next real move into it, same as any first visit -
+// consistent with how population already works everywhere else).
+(tapestry as any).events.on("run.grind_repop", function (evt: any): void {
+    const data = (evt && evt.data) ? evt.data : {};
+    const areaId = data.runAreaId;
+    const entryRoomId = data.entryRoomId;
+    if (!areaId) { return; }
+    try {
+        (tapestry as any).authoring.writeOracleTable({ areaId, kind: "visited", entries: [] });
+    } catch (_err) {
+        // graceful: an unwritable table only delays repop to the next reboot
+        // rehydrate, never throws into the engine loop.
+    }
+    removeVisited(areaId);
+    if (entryRoomId) {
+        populateEntry(areaId, entryRoomId);
+    }
+});
