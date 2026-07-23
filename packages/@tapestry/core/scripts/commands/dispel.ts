@@ -29,15 +29,34 @@ tapestry.commands.register({
             return;
         }
 
-        // The tool is carried, not named: any inventory item tagged cap_<CAP>
-        // answers. No engine find-by-tag binding exists, so walk the actor's
-        // own contents (same accessor sac.ts uses for a corpse's contents).
+        // The tool is carried OR worn/wielded, not named: any item tagged
+        // cap_<CAP> answers, whichever inventory bucket it's currently in.
+        // No engine find-by-tag binding exists, so walk both buckets
+        // ourselves: getContents (same accessor sac.ts uses for a corpse's
+        // contents) for carried items, and equipment.getSlots for
+        // equipped ones -- Equip moves an item OUT of Contents into the
+        // Equipment slot dictionary (EquipmentManager.Equip calls
+        // entity.SetEquipment then entity.RemoveFromContents), so a staff
+        // the player has wielded (its own item text invites exactly this --
+        // "Level it at a ward and DISPEL", the staff's slot is `wield`) is
+        // invisible to getContents alone and was being missed here.
         var contents = tapestry.inventory.getContents(actor.entityId) || [];
         var tool = null;
         for (var j = 0; j < contents.length; j++) {
             if (tapestry.world.hasTag(contents[j].id, 'cap_' + CAP)) {
                 tool = contents[j];
                 break;
+            }
+        }
+
+        if (!tool) {
+            var slots = tapestry.equipment.getSlots(actor.entityId) || [];
+            for (var k = 0; k < slots.length; k++) {
+                if (slots[k].empty || !slots[k].itemId) { continue; }
+                if (tapestry.world.hasTag(slots[k].itemId, 'cap_' + CAP)) {
+                    tool = { id: slots[k].itemId, name: slots[k].itemName };
+                    break;
+                }
             }
         }
 
