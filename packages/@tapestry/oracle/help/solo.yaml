@@ -1,14 +1,15 @@
 id: "solo"
 title: "Solo"
-category: "world"
-role: "player"
-brief: "Generate, list, and discard solo oracle areas."
+category: "admin"
+role: "admin"
+brief: "Admin/builder: generate, list, and discard solo oracle areas."
 body: |
-  Solo rolls a fresh adventure area from oracle tables and drops you into its
-  entry room. Every room and exit exists the moment you arrive; creatures wake
-  as you explore. Landmarks anchor the map - their guardians are the fights
-  worth finding. Dice own all facts; the LLM (if configured) adds name and
-  prose dressing only.
+  Admin/builder only as of Task 7 (spec 5.1: "Players never free-roll solo") -
+  players use the Tapestry board (`tapestry`) now. Solo rolls a fresh adventure
+  area from oracle tables and drops you into its entry room. Every room and
+  exit exists the moment you arrive; creatures wake as you explore. Landmarks
+  anchor the map - their guardians are the fights worth finding. Dice own all
+  facts; the LLM (if configured) adds name and prose dressing only.
 
   Usage:
     solo               Roll a new area and enter it.
@@ -31,4 +32,4 @@ body: |
   frozen tables it was rolled from. Anyone standing inside is recalled first.
   Items already in your inventory are yours to keep.
 keywords: [solo, oracle, generate, area, explore, run, discard, list]
-see_also: []
+see_also: [tapestry, mint]

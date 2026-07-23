@@ -6,16 +6,16 @@
 //   solo discard <n>     discard run #n from `solo list`
 //   solo discard <id>    discard ANY area by full id (admin/builder only)
 //
-// Open to PLAYERS as of 0.5.0 (Travis 2026-07-04): solo is the game loop, not
-// a builder tool. ROLE SEMANTICS (engine CommandRouter): "player"/"mob" are
-// actor-type roles; anything else (admin, builder) is a PRIVILEGE gate - if
-// any privilege role is listed the actor must hold one. So the open form is
-// exactly ["player"]; admins qualify because they dispatch as source "player",
-// and the admin escape hatch checks privilege INSIDE the handler.
+// Gated to admin/builder as of Task 7/0.7.0 (Travis 2026-07-23, spec 5.1: "Players
+// never free-roll solo"): players use the Tapestry board (commands/tapestry.ts) now,
+// not the solo firehose. Was open to players 0.5.0-0.6.x; that ship dependency (a
+// per-player rate limit from the self-contained-run design, stage E / v3 async-notify
+// lifecycle) never landed before the board superseded solo as the player surface, so
+// it is moot for solo but remains relevant if solo is ever reopened.
 //
-// SHIP DEPENDENCY (documented, not built here): opening solo publicly needs
-// the per-player rate limit from the self-contained-run design (stage E /
-// v3 async-notify lifecycle) before a server has real strangers on it.
+// roles: ["admin", "builder"] is a real PRIVILEGE gate here (mirrors @tapestry/
+// builder's dig/edit/rooms/create), not the actor-type "player" role with an internal
+// isAdmin() escape hatch solo used while it was player-facing.
 //
 // The engine router is single-token, so `list` / `discard` are the first token
 // of one declared text arg, not separate commands.
@@ -30,7 +30,7 @@ import { ensureAreaContext } from "../area-context.js";
 tapestry.commands.register({
     name: "solo",
     aliases: [],
-    roles: ["player"],
+    roles: ["admin", "builder"],
     args: { target: { type: "text", required: false } },
     handler: function (actor, resolved) {
         const raw = resolved.target ? String(resolved.target).trim() : "";
