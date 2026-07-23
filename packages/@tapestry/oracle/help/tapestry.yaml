@@ -1,0 +1,24 @@
+id: "tapestry"
+title: "Tapestry"
+category: "world"
+role: "player"
+syntax:
+  - "tapestry"
+  - "tapestry list"
+  - "tapestry start <templateId> <level>"
+brief: "The Tapestry board: list open threads and pull one to start a run."
+body: |
+  The Tapestry board lists every open thread - a persistent template you can pull
+  to mint your own run of it, dialed to a level you choose within its band. Gated
+  on finishing the school thread first.
+
+  Usage:
+    tapestry                        List open threads (level band + gear hint).
+    tapestry list                   Same as bare.
+    tapestry start <id> <level>     Pull a thread and start a run at <level>.
+
+  The level you dial must fall inside the thread's band window. Starting a new
+  thread tears down any run you already have going - you can only run one
+  thread at a time.
+keywords: [tapestry, oracle, thread, board, start, run, template]
+see_also: [solo]
