@@ -1,0 +1,15 @@
+id: "tapestry-core:test-worn-charm"
+name: "a tarnished charm"
+type: "item"
+tags: []
+keywords: [charm, tarnished]
+properties:
+  slot: neck
+  weight: 1
+  rarity: common
+  description: >
+    Test fixture for gear-legibility (Task 11b finding fix): worn item
+    sharing its display name with tapestry-core:test-dropped-charm below.
+modifiers:
+  - stat: maxHp
+    value: 5

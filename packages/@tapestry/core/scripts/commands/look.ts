@@ -148,8 +148,17 @@ function lookAtTarget(actor, resolved) {
     if (details.properties && details.properties.description) {
         actor.send('  ' + details.properties.description + '\r\n');
     }
+    // examineItem takes a NAME (string), not the entity id we already have in
+    // resolved.id -- its C# search order is actor.Contents, then actor's
+    // Equipment (worn/wielded), then room floor, so if the actor is WEARING
+    // an item whose display name matches this room item's name, the
+    // Equipment fallback wins the match and hands back the actor's own worn
+    // item instead. Guard by id: only trust the result if it is actually the
+    // item we resolved. No id-based accessor exists engine-side to avoid this
+    // re-resolution outright (see task-11b-report.md investigation) -- do
+    // not remove this check without adding one.
     var roomItemStats = tapestry.inventory.examineItem(actor.entityId, resolved.name);
-    if (roomItemStats) {
+    if (roomItemStats && roomItemStats.id === resolved.id) {
         renderItemStats(actor, roomItemStats);
     }
     actor.send('<highlight>---' + Array(details.name.length + 3).join('-') + '---</highlight>\r\n');

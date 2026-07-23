@@ -26,6 +26,28 @@ rarity (the cap) confirms the fix isn't a coincidence of one item's data -
 dropped and examined, its own (different) rarity and modifier line renders
 too.
 
+A review finding on the first cut of this fix caught a latent bug in the
+room-floor branch's re-resolution call: it looks the item up by NAME
+(`tapestry.inventory.examineItem(actor.entityId, resolved.name)`), and that
+accessor's C# search order is the actor's own inventory contents, THEN the
+actor's worn/wielded equipment, THEN the room floor - so if the actor is
+wearing an item whose display name matches a different item lying in the
+room, the equipment fallback wins the name match and hands back the WORN
+item's stats mislabeled under the room item's name banner. No id-based
+lookup exists on the engine side to sidestep this (confirmed by reading
+`InventoryModule.cs`: `examineItem` takes only a string keyword, and the one
+accessor that does take an id, `getItemDetails`, only searches the actor's
+own contents and its return shape omits `modifiers`/`slotDisplay`). The fix
+is a pack-side guard: after the re-resolution call, only trust and render
+the result if its returned `id` matches the room item's own
+`resolved.id`; on a mismatch, skip the stat block and fall back to the
+pre-fix behavior for that item (name and description only) rather than
+show the wrong numbers. Steps 24-31 below exercise the collision directly
+with two same-named test-fixture items (`tapestry-core:test-worn-charm`,
+`tapestry-core:test-dropped-charm`) - one worn, a differently-modifiered one
+dropped - and prove the worn item's rarity/modifier values never leak onto
+the dropped item's banner.
+
 Out of scope, found while mapping every examine path for this task and
 recorded in the implementation report rather than exercised here: an item
 resting inside a container, and an item currently worn/wielded by the actor,
@@ -64,3 +86,17 @@ this pack-only task's scope.
 21. Assert Gamemaster sees: `common`
 22. Assert Gamemaster sees: `Modifiers:`
 23. Assert Gamemaster sees: `+10 MaxHp`
+24. Gamemaster: `loaditem tapestry-core:test-worn-charm`
+25. Assert Gamemaster sees: `Loaded a tarnished charm into your inventory.`
+26. Gamemaster: `wear charm`
+27. Assert Gamemaster sees: `You wear a tarnished charm.`
+28. Gamemaster: `loaditem tapestry-core:test-dropped-charm`
+29. Assert Gamemaster sees: `Loaded a tarnished charm into your inventory.`
+30. Gamemaster: `drop charm`
+31. Assert Gamemaster sees: `You drop a tarnished charm.`
+32. Gamemaster: `examine charm`
+33. Assert Gamemaster sees: `--- a tarnished charm ---`
+34. Assert Gamemaster sees: `never shows a same-named worn item's stats`
+35. Assert Gamemaster does not see: `+5 MaxHp`
+36. Assert Gamemaster does not see: `+9 Strength`
+37. Assert Gamemaster does not see: `Rarity:`
