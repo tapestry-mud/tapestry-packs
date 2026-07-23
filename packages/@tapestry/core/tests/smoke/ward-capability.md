@@ -23,6 +23,17 @@ picked up); a successful dispel sets `cap_cleared_ward_dispel` on the MOB
 instance (via admin `inspect`), never the room; the staff is not consumed
 (still in inventory after).
 
+Task 10 (the req_ side): the same `req_ward_dispel` tag makes a mob immune to
+damage until its own `cap_cleared_ward_dispel` is set. Steps 27+ prove the full
+ward loop on a fresh encounter - `tapestry-test-fixtures:test-dummy` (99999 HP,
+near-unhittable-back at str/dex 1), so the assertion is airtight: attacking
+while warded leaves HP exactly unchanged (the gate heals back whatever landed)
+and shows the shimmering-ward refusal; the SAME reusable staff from the steps
+above (never consumed) dispels it; attacking again lands real damage and HP
+drops. `Wait for` (not a fixed-count assert) rides out the auto-attack's
+miss/hit variance - the loop keeps swinging every pulse until a hit satisfies
+the assertion, so a stray miss can't flake the test.
+
 ## Setup
 - Players: Wanderer, Gamemaster
 
@@ -53,3 +64,21 @@ instance (via admin `inspect`), never the room; the staff is not consumed
 24. Assert Gamemaster does not see: `cap_cleared_ward_dispel`
 25. Wanderer: `inventory`
 26. Assert Wanderer sees: `a staff of dispel ward`
+27. Gamemaster: `teleport Gamemaster tapestry-test-fixtures:test-arena`
+28. Gamemaster: `teleport Wanderer tapestry-test-fixtures:test-arena`
+29. Gamemaster: `spawn tapestry-test-fixtures:test-dummy`
+30. Assert Gamemaster sees: `Spawned: a training dummy`
+31. Gamemaster: `tags add dummy req_ward_dispel`
+32. Assert Gamemaster sees: `Added tag 'req_ward_dispel' to a training dummy.`
+33. Wanderer: `kill dummy`
+34. Assert Wanderer sees: `You attack a training dummy!`
+35. Wait for Wanderer sees: `Your blow glances off a shimmering ward. Steel will not part it.`
+36. Gamemaster: `inspect dummy`
+37. Assert Gamemaster sees: `HP 99999/99999`
+38. Wanderer: `dispel`
+39. Assert Wanderer sees: `You level a staff of dispel ward. The ward parts with a sound like tearing cloth.`
+40. Wait for Wanderer sees: `a training dummy.`
+41. Gamemaster: `inspect dummy`
+42. Assert Gamemaster does not see: `HP 99999/99999`
+43. Gamemaster: `purge npc`
+44. Assert Gamemaster sees: `Purged`
