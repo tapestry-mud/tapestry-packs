@@ -554,6 +554,48 @@ export function teardownRun(playerId: string, runAreaId: string): boolean {
 });
 
 // ---------------------------------------------------------------------------
+// "return.used" / "player.teleported" listeners (Task 13's abandon-path
+// teardown seam - the leave/recall counterpart to Task 12's "run.unraveled"
+// listener above, same pattern: core publishes an exit event, oracle listens
+// and finishes the teardown, since core cannot import oracle (oracle depends
+// on core, never the reverse).
+//
+// Neither leave.ts nor recall.ts knows or cares whether the player is mid-run
+// - they fire their event unconditionally on every use. So unlike
+// "run.unraveled" (which only ever fires from the death handler, already
+// mid-run by construction), these two listeners must read oracle_active_run
+// themselves and no-op when it is empty (not in a run - ordinary hub/world
+// leave/recall, nothing to tear down).
+//
+// "return.used" (leave.ts, core/scripts/commands/leave.ts): published on
+// every successful `leave`, carrying {entityId, fromRoomId, toRoomId}.
+// "player.teleported" (recall.ts, core/scripts/commands/recall.ts): published
+// on every successful `recall`, carrying {entityId}. Confirmed by reading
+// both files - this is the ONLY publish site for each event in this repo
+// (groups.ts also listens on "player.teleported" for follow-state, but does
+// not publish it), so neither listener risks firing on an unrelated event.
+// ---------------------------------------------------------------------------
+
+function teardownActiveRunOnExit(entityId: string | undefined): void {
+    if (!entityId) { return; }
+    const raw = (tapestry as any).world.getProperty(entityId, "oracle_active_run") || "";
+    if (raw === "") { return; } // not in a run - nothing to tear down
+    const runAreaId = String(raw).split("|")[0];
+    if (!runAreaId) { return; }
+    teardownRun(entityId, runAreaId);
+}
+
+(tapestry as any).events.on("return.used", function (evt: any): void {
+    const data = (evt && evt.data) ? evt.data : {};
+    teardownActiveRunOnExit(data.entityId);
+});
+
+(tapestry as any).events.on("player.teleported", function (evt: any): void {
+    const data = (evt && evt.data) ? evt.data : {};
+    teardownActiveRunOnExit(data.entityId);
+});
+
+// ---------------------------------------------------------------------------
 // startRun
 //
 // Per-player run start: numeric, no LLM. Validates the level against the
@@ -713,9 +755,15 @@ function instantiateRunArea(
 
 // ---------------------------------------------------------------------------
 // simpleHash - deterministic hash of a string into a 32-bit unsigned integer.
+//
+// Exported (Task 13) so oracle-admin.ts's scenario-only "arealive" self-check
+// can recompute a caller's own runSlug live, server-side, without needing to
+// know the engine-generated entityId's hash ahead of time in a static
+// scenario file - same "single source of truth" motivation as runEntryRoomId
+// (D6 / validate-plan R2 LOW), just for the hash half of the derivation.
 // ---------------------------------------------------------------------------
 
-function simpleHash(s: string): number {
+export function simpleHash(s: string): number {
     let h = 0x811c9dc5;
     for (let i = 0; i < s.length; i++) {
         h ^= s.charCodeAt(i);

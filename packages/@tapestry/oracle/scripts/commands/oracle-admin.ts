@@ -21,6 +21,20 @@
 //                                            just-teleported player's occupancy in a
 //                                            freshly-minted runtime area, and no two-command
 //                                            gap for a wandering mob to slip through)
+//   oracle-admin activerun                  (self-report YOUR oracle_active_run composite,
+//                                            Task 13: proves the pointer clears on leave/recall
+//                                            teardown without a separate `inspect`/property
+//                                            command whose args-resolve gap already bit `room`)
+//   oracle-admin arealive <templateId>      (Task 13: recomputes YOUR run's area id from the
+//                                            template's seed + your own entityId - the SAME
+//                                            formula startRun uses - then reports whether
+//                                            authoring.getArea() still finds it. A static
+//                                            scenario file cannot hardcode the run area id
+//                                            (its hash half comes from the engine-generated
+//                                            entityId, unknown at write time), so this
+//                                            self-contained check stands in for a scenario
+//                                            asserting against core's `inspect area <id>`
+//                                            with a literal id - same underlying engine call.)
 //
 // bake/flip/start require admin/builder privilege (mirrors commands/solo.ts's escape hatch) -
 // every subcommand that calls a MUTATING production function (bakeTemplate/setTemplateState/
@@ -32,8 +46,8 @@
 // ASCII; braces on all control flow.
 
 import * as tapestry from "@tapestry/engine";
-import { bakeTemplate, startRun } from "../area-gen.js";
-import { setTemplateState } from "../template-registry.js";
+import { bakeTemplate, startRun, simpleHash } from "../area-gen.js";
+import { setTemplateState, getTemplate } from "../template-registry.js";
 
 function isAdmin(actor: any): boolean {
     return actor.hasRole("admin") || actor.hasRole("builder");
@@ -165,6 +179,32 @@ tapestry.commands.register({
             return;
         }
 
-        actor.send("Usage: oracle-admin bake|flip|start|whoami|room ...\r\n");
+        if (sub === "activerun") {
+            const raw = (tapestry as any).world.getProperty(actor.entityId, "oracle_active_run") || "";
+            actor.send("ACTIVE-RUN: [" + raw + "]\r\n");
+            return;
+        }
+
+        if (sub === "arealive") {
+            if (tokens.length < 2) {
+                actor.send("Usage: oracle-admin arealive <templateId>\r\n");
+                return;
+            }
+            const tpl = getTemplate(tokens[1]);
+            if (!tpl) {
+                actor.send("No such template: " + tokens[1] + "\r\n");
+                return;
+            }
+            // Same derivation as startRun's runSlug (area-gen.ts) - deterministic per
+            // template seed + caller entityId, so this recomputes rather than needing
+            // any id passed in or stashed.
+            const runSlug = "oracle-run-" + (tpl.seed >>> 0).toString(16) + "-" + simpleHash(String(actor.entityId)).toString(16);
+            const a = (tapestry as any).authoring.getArea ? (tapestry as any).authoring.getArea(runSlug) : null;
+            const exists = !!(a && a.exists);
+            actor.send("AREA-LIVE: " + (exists ? "true" : "false") + " (" + runSlug + ")\r\n");
+            return;
+        }
+
+        actor.send("Usage: oracle-admin bake|flip|start|whoami|room|activerun|arealive ...\r\n");
     },
 });
