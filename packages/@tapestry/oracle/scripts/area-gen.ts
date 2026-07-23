@@ -623,6 +623,20 @@ export function startRun(actor: any, templateId: string, level: number): void {
     const playerId = actor.entityId;
     const hubRoomId = actor.roomId; // where they pulled the thread = home
 
+    // Never pull a thread from inside a thread. The line above captures the
+    // player's CURRENT room as the return-address, and the prior-run teardown
+    // below deletes that area moments later - so a nested start would leave
+    // `leave` pointing at a room that no longer exists, and the engine's
+    // TeleportEntity removes an entity from its old room BEFORE it null-checks
+    // the target, stranding the player in no room at all. Refusing outright
+    // removes the whole class instead of patching the address: `leave` already
+    // returns the player to the real hub AND tears the run down, so the fix is
+    // in their hands and the hub is always where a run starts from.
+    if (String(hubRoomId || "").indexOf(RUN_NAMESPACE + ":") === 0) {
+        actor.send("You are still walking a thread. Leave it first, then pull another.\r\n");
+        return;
+    }
+
     // One active run per player (spec 3.1a): tear down any prior instance
     // before minting the new one, so orphan run areas cannot accumulate. If
     // the sweep fails, abort exactly like solo.ts's `solo discard` does on a

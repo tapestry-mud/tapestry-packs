@@ -17,6 +17,13 @@ silent break here is costly: without it, every abandoned run leaks a permanent o
 `startRun`'s own teardown-before-mint call, but does nothing for an area a player simply
 walked away from).
 
+Steps 12-15 cover the nested-start guard (ship validate 2026-07-23): `startRun` captures the
+player's CURRENT room as the return-address, so pulling a second thread from inside the first
+would have set that address to a room the very next teardown deletes, leaving `leave` pointing
+at nothing. `startRun` now refuses outright when the caller is already standing in a run area,
+and the guard must be non-destructive - the refusal leaves the run the player is actually in
+untouched, which is what the `AREA-LIVE: true` immediately after it proves.
+
 A static scenario file cannot hardcode the run area's id: its hash half comes from the
 engine-generated player entityId (assigned fresh per managed test run), unknown at write time.
 So this uses the `oracle-admin` harness's `arealive`/`activerun` self-checks (Task 13
@@ -45,17 +52,21 @@ startRun functions directly, admin/builder-gated) plus the real player-facing `l
 9. Assert Gamemaster sees: `SELF-ROOM-ID: oracle-run:oracle-run-12345678-`
 10. Gamemaster: `oracle-admin arealive oracle-week-12345678`
 11. Assert Gamemaster sees: `AREA-LIVE: true`
-12. Gamemaster: `leave`
-13. Assert Gamemaster sees: `a stone fountain is here`
-14. Gamemaster: `oracle-admin activerun`
-15. Assert Gamemaster sees: `ACTIVE-RUN: []`
-16. Gamemaster: `oracle-admin arealive oracle-week-12345678`
-17. Assert Gamemaster sees: `AREA-LIVE: false`
-18. Gamemaster: `oracle-admin start oracle-week-12345678 10`
-19. Assert Gamemaster sees: `pulls taut`
-20. Gamemaster: `oracle-admin room`
-21. Assert Gamemaster sees: `SELF-ROOM-ID: oracle-run:oracle-run-12345678-`
-22. Gamemaster: `oracle-admin arealive oracle-week-12345678`
-23. Assert Gamemaster sees: `AREA-LIVE: true`
-24. Gamemaster: `leave`
-25. Assert Gamemaster sees: `a stone fountain is here`
+12. Gamemaster: `oracle-admin start oracle-week-12345678 10`
+13. Assert Gamemaster sees: `still walking a thread`
+14. Gamemaster: `oracle-admin arealive oracle-week-12345678`
+15. Assert Gamemaster sees: `AREA-LIVE: true`
+16. Gamemaster: `leave`
+17. Assert Gamemaster sees: `a stone fountain is here`
+18. Gamemaster: `oracle-admin activerun`
+19. Assert Gamemaster sees: `ACTIVE-RUN: []`
+20. Gamemaster: `oracle-admin arealive oracle-week-12345678`
+21. Assert Gamemaster sees: `AREA-LIVE: false`
+22. Gamemaster: `oracle-admin start oracle-week-12345678 10`
+23. Assert Gamemaster sees: `pulls taut`
+24. Gamemaster: `oracle-admin room`
+25. Assert Gamemaster sees: `SELF-ROOM-ID: oracle-run:oracle-run-12345678-`
+26. Gamemaster: `oracle-admin arealive oracle-week-12345678`
+27. Assert Gamemaster sees: `AREA-LIVE: true`
+28. Gamemaster: `leave`
+29. Assert Gamemaster sees: `a stone fountain is here`
