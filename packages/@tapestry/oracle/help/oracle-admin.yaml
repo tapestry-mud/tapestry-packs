@@ -1,0 +1,40 @@
+id: "oracle-admin"
+title: "Oracle Admin"
+category: "admin"
+role: "admin"
+syntax:
+  - "oracle-admin bake <idea|-> <name|-> <bandFloor> <bandCap> <sizeBand> <deathMode> <forcedSeed|->"
+  - "oracle-admin flip <templateId>"
+  - "oracle-admin start <templateId> <level>"
+  - "oracle-admin whoami"
+  - "oracle-admin room"
+brief: "Temporary bench for baking/opening/starting thread templates (bakeTemplate/startRun harness)."
+body: |
+  TEMPORARY admin/scenario harness for the bakeTemplate/startRun split. Task 6 (the
+  `tapestry` board) and Task 7 (the `mint` bench) grow the real player-facing surface
+  for this; until then this is how the stack-critical determinism scenario (and an
+  admin) exercises the two functions directly.
+
+  oracle-admin bake <idea|-> <name|-> <bandFloor> <bandCap> <sizeBand> <deathMode> <forcedSeed|->
+    Admin/builder only. Runs the LLM burst (or the baked table set when the LLM is
+    off) and freezes a draft template. Use "-" for idea/name (defaults apply) and for
+    forcedSeed (random). sizeBand is school|standard|epic; deathMode is
+    grind|unraveling.
+
+  oracle-admin flip <templateId>
+    Admin/builder only. Marks a draft template "open" (stands in for `mint flip`).
+
+  oracle-admin start <templateId> <level>
+    Open to any player - the same call Task 6's board will eventually make. Mints a
+    fresh per-player run area from the template at the given level and teleports you
+    in.
+
+  oracle-admin whoami
+    Debug: prints actor.roomId next to the engine's true getEntityRoomId for your
+    entity. Read-only.
+
+  oracle-admin room
+    Self-report your own current room (id/name/desc/exits) PLUS its NPC occupants'
+    hp/max_hp/str/dex, atomically in one command. Read-only.
+keywords: [oracle, admin, bake, template, start, run, thread, debug, harness]
+see_also: [solo]
