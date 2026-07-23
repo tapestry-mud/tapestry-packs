@@ -12,11 +12,9 @@ tapestry.classes.register({
     allowed_genders: ["male", "female", "other"],
     trains_per_level: 5,
     growth_bonuses: {
-        max_hp: "constitution",
         max_movement: "dexterity"
     },
     stat_growth: {
-        max_hp: "2d6+2",
         max_movement: "1d4"
     },
     path: [

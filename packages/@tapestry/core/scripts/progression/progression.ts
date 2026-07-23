@@ -22,15 +22,15 @@ tapestry.progression.registerTrack({
         tapestry.stats.addBaseAttribute(entityId, first, 1);
         tapestry.stats.addBaseAttribute(entityId, second, 1);
 
-        // Boost vitals every level
-        tapestry.stats.addBaseAttribute(entityId, "max_hp", 5);
+        // Boost vitals every level (max_hp deliberately excluded - HP comes
+        // only from the flat race/class base + gear, never a level grind)
         tapestry.stats.addBaseAttribute(entityId, "max_resource", 3);
         tapestry.stats.addBaseAttribute(entityId, "max_movement", 2);
 
         var classId = tapestry.world.getProperty(entityId, 'class') || '';
         var classDef = classId ? tapestry.classes.get(classId) : null;
         var flavor = (classDef && classDef.level_up_flavor) || "Your skills improve.";
-        var gains = "+1 " + first + ", +1 " + second + ", +5 hp, +3 mana, +2 mv";
+        var gains = "+1 " + first + ", +1 " + second + ", +3 mana, +2 mv";
         tapestry.notifications.enqueue(entityId, "level_up", 40,
             "\r\n<highlight>*** " + flavor + " You are now level " + newLevel + "! ***</highlight>\r\n  " + gains + "\r\n");
     }
@@ -50,13 +50,14 @@ tapestry.progression.registerTrack({
         tapestry.stats.addBaseAttribute(entityId, first, 1);
         tapestry.stats.addBaseAttribute(entityId, second, 1);
         tapestry.stats.addBaseAttribute(entityId, "max_resource", 5);
-        tapestry.stats.addBaseAttribute(entityId, "max_hp", 2);
+        // max_hp deliberately excluded - HP comes only from the flat
+        // race/class base + gear, never a level grind
         tapestry.stats.addBaseAttribute(entityId, "max_movement", 1);
 
         var classId = tapestry.world.getProperty(entityId, 'class') || '';
         var classDef = classId ? tapestry.classes.get(classId) : null;
         var flavor = (classDef && classDef.level_up_flavor) || "Your magical power grows.";
-        var gains = "+1 " + first + ", +1 " + second + ", +5 mana, +2 hp, +1 mv";
+        var gains = "+1 " + first + ", +1 " + second + ", +5 mana, +1 mv";
         tapestry.notifications.enqueue(entityId, "level_up", 40,
             "\r\n<highlight>*** " + flavor + " You are now level " + newLevel + "! ***</highlight>\r\n  " + gains + "\r\n");
     }
