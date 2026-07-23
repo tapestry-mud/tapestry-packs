@@ -38,6 +38,7 @@ import {
 import { parseCoord, neighborPath, pathKey, ALL_DIRECTIONS } from "./coords.js";
 import { diceSpan } from "./six-axis.js";
 import { setRoomArea, setRoomPath, type AreaState } from "./area-state.js";
+import { RUN_NAMESPACE, runEntryRoomId } from "./run-entry.js";
 
 export interface MintResult {
     roomCount: number;
@@ -52,8 +53,23 @@ const EMPTY_POOLS: SectorPools = {
  *  chunk's synchronous side-car writes stay far under the 5s Jint entry cap. */
 const CHUNK_ROOMS = 12;
 
-/** Room id for a grid path: the entry cell keeps the historical "-entry" suffix. */
+/**
+ * Room id for a grid path: the entry cell keeps the historical "-entry" suffix.
+ *
+ * The run-entry case (namespace === RUN_NAMESPACE, path "0,0,0") delegates to
+ * runEntryRoomId instead of reproducing its formula inline - review finding 1
+ * (fix-plan pass on Task 5): startRun's oracle_active_run composite and this
+ * function's minted entry room used to be two independently-maintained string
+ * formulas that only matched because RUN_NAMESPACE happened to equal the run
+ * targetNamespace today. Routing through the shared helper makes them
+ * genuinely ONE formula, so a future edit to either can't silently desync the
+ * death handler's respawn target from the room actually minted. The non-run
+ * path (createSoloArea's solo areas, any other namespace) is untouched.
+ */
 export function roomIdFor(namespace: string, areaSlug: string, path: string): string {
+    if (namespace === RUN_NAMESPACE && path === "0,0,0") {
+        return runEntryRoomId(areaSlug);
+    }
     const suffix = path === "0,0,0" ? "entry" : pathKey(path);
     return namespace + ":" + areaSlug + "-" + suffix;
 }

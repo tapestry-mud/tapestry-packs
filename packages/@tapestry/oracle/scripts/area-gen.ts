@@ -501,14 +501,27 @@ function readTargetRooms(areaId: string): number {
 // same two-step solo.ts's `solo discard` uses) and clears the player's active-
 // run pointer. Exported for Task 12/13's death/leave listeners; used here by
 // startRun to enforce "one active run per player" (spec 3.1a).
+//
+// Mirrors solo.ts's `solo discard` failure handling exactly (review finding 3,
+// fix-plan pass on Task 5): if the engine sweep (authoring.deleteArea) fails,
+// ABORT - do NOT clear oracle_active_run and do NOT touch the in-memory
+// caches. Clearing the pointer unconditionally would orphan the run area
+// (unreachable by pointer, since the pointer got cleared anyway) with no
+// surfaced failure, exactly the gap Task 12/13's death/leave listeners would
+// otherwise inherit silently. Returns whether the teardown actually happened,
+// so callers can react the same way `solo discard` does (message + abort,
+// nothing changed) instead of proceeding as if it succeeded.
 // ---------------------------------------------------------------------------
 
-export function teardownRun(playerId: string, runAreaId: string): void {
+export function teardownRun(playerId: string, runAreaId: string): boolean {
     const swept = (tapestry as any).authoring.deleteArea(runAreaId);
-    if (swept) {
-        clearAreaCaches(runAreaId);
+    if (!swept) {
+        (tapestry as any).system?.warn("[oracle] teardownRun: sweep failed for " + runAreaId + " (player " + playerId + "); oracle_active_run left untouched.");
+        return false;
     }
+    clearAreaCaches(runAreaId);
     (tapestry as any).world.setProperty(playerId, "oracle_active_run", "");
+    return true;
 }
 
 // ---------------------------------------------------------------------------
@@ -540,12 +553,20 @@ export function startRun(actor: any, templateId: string, level: number): void {
     const hubRoomId = actor.roomId; // where they pulled the thread = home
 
     // One active run per player (spec 3.1a): tear down any prior instance
-    // before minting the new one, so orphan run areas cannot accumulate.
+    // before minting the new one, so orphan run areas cannot accumulate. If
+    // the sweep fails, abort exactly like solo.ts's `solo discard` does on a
+    // failed authoring.deleteArea - message and stop, nothing changed - rather
+    // than minting a second run on top of a prior one that may not actually
+    // be gone (review finding 3, fix-plan pass on Task 5).
     const priorRaw = (tapestry as any).world.getProperty(playerId, "oracle_active_run");
     if (priorRaw) {
         const priorAreaId = String(priorRaw).split("|")[0];
         if (priorAreaId) {
-            teardownRun(playerId, priorAreaId);
+            const torn = teardownRun(playerId, priorAreaId);
+            if (!torn) {
+                actor.send("Could not clear your prior thread run. Nothing was changed.\r\n");
+                return;
+            }
         }
     }
 

@@ -10,7 +10,7 @@
 //
 //   oracle-admin bake <idea|-> <name|-> <bandFloor> <bandCap> <sizeBand> <deathMode> <forcedSeed|->
 //   oracle-admin flip <templateId>          (setTemplateState -> "open"; stands in for `mint flip`)
-//   oracle-admin start <templateId> <level> (startRun; open to any player, same as the real call)
+//   oracle-admin start <templateId> <level> (startRun; ADMIN/BUILDER ONLY - see below)
 //   oracle-admin whoami                     (debug: actor.roomId vs the engine's true
 //                                            getEntityRoomId - the diagnostic that found the
 //                                            missing authoring.createPack(RUN_NAMESPACE) call)
@@ -22,9 +22,12 @@
 //                                            freshly-minted runtime area, and no two-command
 //                                            gap for a wandering mob to slip through)
 //
-// bake/flip require admin/builder privilege (mirrors commands/solo.ts's escape hatch); start/
-// room are open to any player - start is the player-facing operation Task 6's board will
-// eventually call, and room is a harmless read-only self-report.
+// bake/flip/start require admin/builder privilege (mirrors commands/solo.ts's escape hatch) -
+// every subcommand that calls a MUTATING production function (bakeTemplate/setTemplateState/
+// startRun) is gated. Review finding 2 (fix-plan pass on Task 5): `start` was originally left
+// open to any connected player, which let any player bypass the intended tapestry_unlocked
+// progression gate Task 6's real board will enforce - fixed here. whoami/room stay open; they
+// are harmless read-only self-reports used only for scenario assertions and debugging.
 //
 // ASCII; braces on all control flow.
 
@@ -87,6 +90,10 @@ tapestry.commands.register({
         }
 
         if (sub === "start") {
+            if (!isAdmin(actor)) {
+                actor.send("Admin/builder only.\r\n");
+                return;
+            }
             if (tokens.length < 3) {
                 actor.send("Usage: oracle-admin start <templateId> <level>\r\n");
                 return;

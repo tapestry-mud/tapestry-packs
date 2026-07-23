@@ -25,9 +25,10 @@ body: |
     Admin/builder only. Marks a draft template "open" (stands in for `mint flip`).
 
   oracle-admin start <templateId> <level>
-    Open to any player - the same call Task 6's board will eventually make. Mints a
-    fresh per-player run area from the template at the given level and teleports you
-    in.
+    Admin/builder only. Mints a fresh per-player run area from the template at the
+    given level and teleports you in. Gated (fix-plan pass, review finding 2) so this
+    temporary harness cannot be used to bypass the tapestry_unlocked progression gate
+    Task 6's real board will enforce.
 
   oracle-admin whoami
     Debug: prints actor.roomId next to the engine's true getEntityRoomId for your
