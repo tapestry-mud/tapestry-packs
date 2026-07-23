@@ -63,6 +63,30 @@ function renderWornEquipment(actor, entityId, entityName) {
     }
 }
 
+// Slot/weight/rarity/modifier lines shared by every examine surface that can
+// resolve full item stats via `inventory.examineItem` (inventory + room
+// floor items today; see look.ts's lookAtTarget for which branches call
+// this). One renderer so the surfaces can never drift - Task 11b (spec 4.3
+// gear legibility): a room-floor item used to show name+description only,
+// with no way to compare it against gear already in hand. No banner, no
+// description line, no container-contents listing - callers wrap this with
+// their own name banner (and, where the surface has one, description) so
+// that text stays exactly where each branch already puts it.
+function renderItemStats(actor, item) {
+    if (item.slotDisplay) { actor.send('  Slot: ' + item.slotDisplay + '\r\n'); }
+    if (item.weight > 0) { actor.send('  Weight: ' + item.weight + '\r\n'); }
+    if (item.rarity) {
+        actor.send('  Rarity: <item.' + item.rarity + '>' + item.rarity + '</item.' + item.rarity + '>\r\n');
+    }
+    if (item.modifiers && item.modifiers.length > 0) {
+        actor.send('  Modifiers:\r\n');
+        item.modifiers.forEach(function(m) {
+            var sign = m.value >= 0 ? '+' : '';
+            actor.send('    ' + sign + m.value + ' ' + m.stat + '\r\n');
+        });
+    }
+}
+
 function lookAtTarget(actor, resolved) {
     if (!resolved) { return false; }
 
@@ -70,18 +94,7 @@ function lookAtTarget(actor, resolved) {
         var item = tapestry.inventory.examineItem(actor.entityId, resolved.name);
         if (item) {
             actor.send('\r\n<highlight>--- ' + item.name + ' ---</highlight>\r\n');
-            if (item.slotDisplay) { actor.send('  Slot: ' + item.slotDisplay + '\r\n'); }
-            if (item.weight > 0) { actor.send('  Weight: ' + item.weight + '\r\n'); }
-            if (item.rarity) {
-                actor.send('  Rarity: <item.' + item.rarity + '>' + item.rarity + '</item.' + item.rarity + '>\r\n');
-            }
-            if (item.modifiers && item.modifiers.length > 0) {
-                actor.send('  Modifiers:\r\n');
-                item.modifiers.forEach(function(m) {
-                    var sign = m.value >= 0 ? '+' : '';
-                    actor.send('    ' + sign + m.value + ' ' + m.stat + '\r\n');
-                });
-            }
+            renderItemStats(actor, item);
             actor.send('<highlight>---' + Array(item.name.length + 3).join('-') + '---</highlight>\r\n');
             if (item.isContainer) {
                 if (item.contents && item.contents.length > 0) {
@@ -126,10 +139,18 @@ function lookAtTarget(actor, resolved) {
         return true;
     }
 
-    // item or container in room
+    // item or container in room. `getEntity` (details) is the only source for
+    // the description line, but it does not expose rarity/modifiers the way
+    // `inventory.examineItem` does - so re-resolve through that same accessor
+    // (it already covers loose room-floor items, not just inventory/equipped)
+    // and feed it through the shared renderer, same as the inventory branch.
     actor.send('\r\n<highlight>--- ' + details.name + ' ---</highlight>\r\n');
     if (details.properties && details.properties.description) {
         actor.send('  ' + details.properties.description + '\r\n');
+    }
+    var roomItemStats = tapestry.inventory.examineItem(actor.entityId, resolved.name);
+    if (roomItemStats) {
+        renderItemStats(actor, roomItemStats);
     }
     actor.send('<highlight>---' + Array(details.name.length + 3).join('-') + '---</highlight>\r\n');
     if (details.type === 'container') {
