@@ -50,3 +50,9 @@ tags:
   readable:
     description: "Item can be read to display text content"
     applies_to: [item]
+  req_ward_dispel:
+    description: "Marks an NPC encounter gated behind the ward-dispel capability; cleared per-instance on the mob via the dispel verb (never a room flag - a repop must re-ward)"
+    applies_to: [npc]
+  cap_ward_dispel:
+    description: "Marks an item as a reusable tool that answers the ward-dispel capability gate (the dispel verb); not consumed on use"
+    applies_to: [item]

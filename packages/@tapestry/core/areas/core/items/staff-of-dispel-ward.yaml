@@ -1,0 +1,13 @@
+id: "tapestry-core:staff-of-dispel-ward"
+name: "a staff of dispel ward"
+type: "item"
+tags: [cap_ward_dispel]
+keywords: [staff, dispel, ward]
+properties:
+  slot: wield
+  weight: 3
+  rarity: uncommon
+  description: >
+    A slender ash staff, its head bound in silver wire. It hums faintly near
+    a ward. Level it at a ward and DISPEL.
+modifiers: []

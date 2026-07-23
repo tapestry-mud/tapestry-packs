@@ -1,0 +1,24 @@
+id: "dispel"
+title: "Dispel"
+category: "character"
+role: "player"
+keywords: [ward, capability, staff, gate, obstacle]
+brief: "Dispel a ward blocking an encounter in the room, using a capability tool you carry."
+syntax:
+  - "dispel"
+body: |
+  Dispel breaks a ward on an encounter in your current room. You do not need
+  to name the tool - dispel checks your inventory for whatever answers the
+  ward and uses it automatically.
+
+  The tool that answers a ward is not consumed. It is reusable gear: carry
+  it, and any ward of the same kind opens the same way, wherever you find
+  it.
+
+  If there is no warded encounter here, dispel has nothing to do. If you do
+  not carry the right tool, the ward holds - go find the tool a warded
+  encounter's own description hints at.
+
+  A ward clears for that encounter only, and only for as long as the
+  encounter lives. If the same encounter ever repops, it comes back warded.
+see_also: [examine, unlock, character]
