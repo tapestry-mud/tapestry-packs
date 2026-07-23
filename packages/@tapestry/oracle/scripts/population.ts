@@ -47,6 +47,14 @@ import {
     rollDisposition, isEntryAdjacent, stirLine, ambientDensity, entrySafeDensity,
 } from "./tiers.js";
 import { ensureGuideAt } from "./guide.js";
+import { spawnLevel } from "./spawn-level.js";
+
+// Re-exported so population.ts remains the documented home of the spawn-level
+// seam (Produces: AreaState.runLevel, read here); the implementation itself
+// lives in spawn-level.ts, which has no engine-touching imports and is
+// golden-testable under plain node (population.ts registers engine hooks at
+// import time and cannot be loaded outside the Jint sandbox).
+export { spawnLevel } from "./spawn-level.js";
 
 // ---------------------------------------------------------------------------
 // Tuning constants (unchanged in kind from 0.3.x room-gen.ts)
@@ -162,6 +170,7 @@ export function populateRoom(roomId: string, areaId: string): string[] {
     const runState = getRunState(areaState.runStateKey);
     if (!runState) { return lines; }
 
+    const level = spawnLevel(areaState);
     const areaSeed = areaState.areaSeed;
     const roomSeed = hashCoord(areaSeed, path);
     const coordKey = String(roomSeed);
@@ -202,11 +211,11 @@ export function populateRoom(roomId: string, areaId: string): string[] {
         }
     }
     if (landmarkIndex >= 0 && !safeStart) {
-        const mb = mintMinibossInstance(areaId, landmarkIndex, 1, rngFor(areaSeed, coordKey + ":miniboss"));
+        const mb = mintMinibossInstance(areaId, landmarkIndex, level, rngFor(areaSeed, coordKey + ":miniboss"));
         if (mb) {
             const mbLootRng = rngFor(areaSeed, coordKey + ":miniboss-loot");
             if (rollItemDrop(item6, "miniboss", mbLootRng)) {
-                const loot = mintItemInstance(areaId, 1, mbLootRng, coordKey, 0, item1, item6, { killerTier: "miniboss", roomBand: band });
+                const loot = mintItemInstance(areaId, level, mbLootRng, coordKey, 0, item1, item6, { killerTier: "miniboss", roomBand: band });
                 if (loot) {
                     if (!mb.items) { mb.items = []; }
                     mb.items.push(loot.id);
@@ -227,10 +236,10 @@ export function populateRoom(roomId: string, areaId: string): string[] {
     // swell-capable mob" since 3.6 - the first density slot delivers it.
     let trashCount = density;
     if (band === "charged" && !safeStart && density > 0) {
-        const elite = mintEliteInstance(areaId, 1, spawnRng, mob1);
+        const elite = mintEliteInstance(areaId, level, spawnRng, mob1);
         if (elite) {
             if (rollItemDrop(item6, "elite", spawnRng)) {
-                const loot = mintItemInstance(areaId, 1, spawnRng, coordKey, 0, item1, item6, { killerTier: "elite", roomBand: band });
+                const loot = mintItemInstance(areaId, level, spawnRng, coordKey, 0, item1, item6, { killerTier: "elite", roomBand: band });
                 if (loot) {
                     if (!elite.items) { elite.items = []; }
                     elite.items.push(loot.id);
@@ -249,7 +258,6 @@ export function populateRoom(roomId: string, areaId: string): string[] {
     // 3. Ambient trash (0.3.x semantics: same stream keys, mint-vs-reuse set,
     // unconditional loot draw) + the dice-owned disposition axis.
     for (let i = 0; i < trashCount; i++) {
-        const level = 1;
         let override: any;
         if (mintedMobTypes && shouldReuse(mintedMobTypes.size, spawnRng)) {
             const mintedArr: string[] = [];
@@ -293,11 +301,11 @@ export function populateRoom(roomId: string, areaId: string): string[] {
     const bossRng = splitmix64(roomSeed + 1);
     const clockRoll = bossClockFires(runState.roomsSinceLastBoss, bossRng);
     if (clockRoll && !runState.bossFired && !isLandmarkRoom && !safeStart) {
-        const bossOverride = mintBossInstance(areaId, 1, rngFor(areaSeed, coordKey + ":boss"));
+        const bossOverride = mintBossInstance(areaId, level, rngFor(areaSeed, coordKey + ":boss"));
         if (bossOverride) {
             const bossLootRng = rngFor(areaSeed, coordKey + ":boss-loot");
             if (rollItemDrop(item6, "boss", bossLootRng)) {
-                const loot = mintItemInstance(areaId, 1, bossLootRng, coordKey, 0, item1, item6, { killerTier: "boss", roomBand: band });
+                const loot = mintItemInstance(areaId, level, bossLootRng, coordKey, 0, item1, item6, { killerTier: "boss", roomBand: band });
                 if (loot) {
                     if (!bossOverride.items) { bossOverride.items = []; }
                     bossOverride.items.push(loot.id);

@@ -149,12 +149,14 @@ export function ensureAreaContext(roomId: string): string | undefined {
         // the assembled six-axis so a reloaded area is six-axis just like at creation.
         const proseTable = (tapestry as any).oracle.table(areaId + ":prose");
         const scarsTable = (tapestry as any).oracle.table(areaId + ":scars");
+        const levelRange = normalizeLevelRange(area.levelRange);
         setAreaState(areaId, {
             areaId,
             areaSeed: seed,
             biomePalette: soloAreaBiomePalette(seed),
             theme,
-            levelRange: normalizeLevelRange(area.levelRange),
+            levelRange,
+            runLevel: levelRange[0],
             targetNamespace: ns,
             areaSlug: areaId,
             runStateKey,

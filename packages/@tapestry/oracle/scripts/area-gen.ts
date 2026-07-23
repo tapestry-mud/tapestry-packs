@@ -340,6 +340,7 @@ function buildArea(
         biomePalette,
         theme: ideaHint,
         levelRange,
+        runLevel: levelRange[0],
         targetNamespace,
         areaSlug,
         runStateKey: stateKey,

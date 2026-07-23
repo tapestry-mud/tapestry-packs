@@ -29,6 +29,10 @@ export interface AreaState {
     theme: string;
     /** Level range rolled/supplied at creation. */
     levelRange: [number, number];
+    /** The player-chosen level this RUN resolves spawns at (template/run split).
+     *  Distinct from levelRange (the template's authored band window). Defaults to
+     *  levelRange[0] when a legacy area predates the split. */
+    runLevel: number;
     /** Pack namespace prefix, e.g. "oracle-run". */
     targetNamespace: string;
     /** Bare area slug, e.g. "oracle-run-abc123". Same as areaId. */
