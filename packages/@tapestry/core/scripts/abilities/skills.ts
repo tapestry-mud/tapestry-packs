@@ -1,4 +1,5 @@
 import * as tapestry from "@tapestry/engine";
+import { isWardBlocked } from "../combat/ward.js";
 // packs/tapestry-core/scripts/abilities/skills.js
 
 tapestry.abilities.register({
@@ -37,6 +38,17 @@ tapestry.abilities.register({
     can_target: ["npc"],
     metadata: { damage_dice: "2d6+4", damage_type: "bash" },
     handler: function(user, target, context) {
+        // Boss immunity gate: entity.vital.changed (ward.ts) is the
+        // structural safety net that catches this even without this check -
+        // this pre-check just gives a clean, attacker-attributed refusal
+        // instead of "Your kick clobbers X!" printing over an HP bar that
+        // silently never moved.
+        if (isWardBlocked(target.entityId)) {
+            tapestry.world.send(user.entityId,
+                "Your kick glances off a shimmering ward. Steel will not part it.\r\n");
+            return;
+        }
+
         var prof = tapestry.abilities.getProficiency(user.entityId, "kick");
         var baseDamage = tapestry.dice.roll("2d6+4");
         var profScale = prof / 100;
@@ -68,6 +80,17 @@ tapestry.abilities.register({
     can_target: ["npc"],
     metadata: { damage_dice: "2d8+6", damage_type: "bash" },
     handler: function(user, target, context) {
+        // Boss immunity gate: entity.vital.changed (ward.ts) is the
+        // structural safety net that catches this even without this check -
+        // this pre-check just gives a clean, attacker-attributed refusal
+        // instead of "Your bash clobbers X!" printing (and stunning it) over
+        // an HP bar that silently never moved.
+        if (isWardBlocked(target.entityId)) {
+            tapestry.world.send(user.entityId,
+                "Your bash glances off a shimmering ward. Steel will not part it.\r\n");
+            return;
+        }
+
         var prof = tapestry.abilities.getProficiency(user.entityId, "bash");
         var baseDamage = tapestry.dice.roll("2d8+6");
         var profScale = prof / 100;

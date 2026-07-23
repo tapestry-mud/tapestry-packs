@@ -1,4 +1,5 @@
 ﻿import * as tapestry from "@tapestry/engine";
+import { isWardBlocked } from "../combat/ward.js";
 // packs/tapestry-core/scripts/abilities/spells.js
 
 function findCastTarget(player, targetName) {
@@ -63,6 +64,17 @@ tapestry.abilities.register({
     can_target: ["npc"],
     metadata: { damage_dice: "3d8+10", damage_type: "fire" },
     handler: function(caster, target, context) {
+        // Boss immunity gate: entity.vital.changed (ward.ts) is the
+        // structural safety net that catches this even without this check -
+        // this pre-check just gives a clean, attacker-attributed refusal
+        // instead of "Your Fireball scorches X!" printing over an HP bar
+        // that silently never moved.
+        if (isWardBlocked(target.entityId)) {
+            tapestry.world.send(caster.entityId,
+                "Your Fireball scorches a shimmering ward. Magic will not part it.\r\n");
+            return;
+        }
+
         var prof = tapestry.abilities.getProficiency(caster.entityId, "fireball");
         var baseDamage = tapestry.dice.roll("3d8+10");
         var profScale = prof / 100;

@@ -34,6 +34,23 @@ drops. `Wait for` (not a fixed-count assert) rides out the auto-attack's
 miss/hit variance - the loop keeps swinging every pulse until a hit satisfies
 the assertion, so a stray miss can't flake the test.
 
+Fix-up (review findings 1+2 on the Task 10 commit): the gate moved from
+`combat.hit` (melee-only) to `entity.vital.changed` (every HP write funnels
+through `VitalsService`, see `ward.ts`), and the heal-back now restores the
+EXACT `old - new` amount from that event instead of blindly reversing the raw
+attempted damage. Steps 45-56 prove an ability (Fireball, `cast`) is ALSO
+blocked by the ward, not just melee - closing the bypass a warded boss had via
+any `can_target:["npc"]` spell or skill. Steps 57-80 prove the exact-restore
+math on a mob whose current HP is BELOW its max (`set npc hp dummy 30`, then
+some real unwarded damage lands before tagging it warded) - a fixture where
+"restore to the exact pre-hit value" and the old bug's "restore to max" would
+visibly disagree, unlike the 99999-HP fixture above where they coincide.
+Since the runner has no variable capture, the discriminator is two literal
+`does not see` exclusions (`HP 30/30` rules out the overshoot-to-max bug,
+`HP 0/30` rules out a stuck-at-floor no-op) rather than asserting the single
+exact number, which is unknown at scenario-authoring time (real melee damage,
+not scripted).
+
 ## Setup
 - Players: Wanderer, Gamemaster
 
@@ -82,3 +99,39 @@ the assertion, so a stray miss can't flake the test.
 42. Assert Gamemaster does not see: `HP 99999/99999`
 43. Gamemaster: `purge npc`
 44. Assert Gamemaster sees: `Purged`
+45. Gamemaster: `spawn tapestry-test-fixtures:test-dummy`
+46. Assert Gamemaster sees: `Spawned: a training dummy`
+47. Gamemaster: `tags add dummy req_ward_dispel`
+48. Assert Gamemaster sees: `Added tag 'req_ward_dispel' to a training dummy.`
+49. Gamemaster: `learn Wanderer fireball 100`
+50. Assert Gamemaster sees: `Granted Fireball to Wanderer at 100% proficiency.`
+51. Wanderer: `cast fireball dummy`
+52. Wait for Wanderer sees: `Your Fireball scorches a shimmering ward. Magic will not part it.`
+53. Gamemaster: `inspect dummy`
+54. Assert Gamemaster sees: `HP 99999/99999`
+55. Gamemaster: `purge npc`
+56. Assert Gamemaster sees: `Purged`
+57. Gamemaster: `spawn tapestry-test-fixtures:test-dummy`
+58. Assert Gamemaster sees: `Spawned: a training dummy`
+59. Gamemaster: `set npc hp dummy 30`
+60. Assert Gamemaster sees: `hp set to 30 (hp and max hp).`
+61. Wanderer: `kill dummy`
+62. Assert Wanderer sees: `You attack a training dummy!`
+63. Wait for Wanderer sees: `a training dummy.`
+64. Wanderer: `consider dummy`
+65. Wait for Wanderer sees: `a training dummy.`
+66. Wanderer: `consider dummy`
+67. Wait for Wanderer sees: `a training dummy.`
+68. Gamemaster: `tags add dummy req_ward_dispel`
+69. Assert Gamemaster sees: `Added tag 'req_ward_dispel' to a training dummy.`
+70. Wait for Wanderer sees: `Your blow glances off a shimmering ward. Steel will not part it.`
+71. Gamemaster: `inspect dummy`
+72. Assert Gamemaster does not see: `HP 30/30`
+73. Assert Gamemaster does not see: `HP 0/30`
+74. Wanderer: `consider dummy`
+75. Wait for Wanderer sees: `Your blow glances off a shimmering ward. Steel will not part it.`
+76. Gamemaster: `inspect dummy`
+77. Assert Gamemaster does not see: `HP 30/30`
+78. Assert Gamemaster does not see: `HP 0/30`
+79. Gamemaster: `purge npc`
+80. Assert Gamemaster sees: `Purged`

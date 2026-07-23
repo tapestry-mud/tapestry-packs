@@ -1,5 +1,6 @@
 import * as tapestry from "@tapestry/engine";
 import { conditionIndex, conditionText } from "./condition.js";
+import { isWardBlocked } from "./ward.js";
 // --- Combat engage output ---
 tapestry.events.on("combat.engage", function(event) {
     var data = event.data || {};
@@ -52,33 +53,22 @@ function clearConditionTracking(entityId) {
 }
 
 // --- Boss immunity gate (Task 10, the req_ side of the capability web) ---
-// A mob tagged req_<cap> is immune until its OWN cap_cleared_<cap> property
-// is set (Task 9's themed verb, e.g. dispel). The clear is read off the
-// DEFENDER MOB itself, never the room, so a repopped fresh instance has no
-// clear and is warded again (SA1) - same property Task 9 writes to the mob
-// instance, read the same way here.
+// The actual gate - blocking damage and restoring HP for ANY source, not
+// just melee - lives in ward.ts, subscribed to entity.vital.changed (which
+// every HP write funnels through, unlike combat.hit which only fires for
+// melee auto-attacks). By the time combat.hit fires here, a warded target's
+// HP has ALREADY been restored upstream (entity.vital.changed fires before
+// combat.hit in the same synchronous publish chain - see ward.ts for the
+// full reasoning). This handler only needs to recognize the still-warded
+// target and swap in the refusal line instead of normal hit text; it does
+// no HP math of its own.
 //
 // combat.hit fires AFTER VitalsService.Apply has already written the damage
 // to the defender's HP (ResolveAutoAttacksPhase.cs runs Apply, then publishes
 // combat.hit for text/output - core-combat.md: "HP is already applied when
 // combat.hit fires"). Pack scripts have no pre-application hook to cancel the
-// write before it lands. So "negate the damage" here means reversing the
-// exact amount via tapestry.combat.applyDamage as the first thing this
-// handler does, before any of the normal hit text renders - net effect is
-// zero HP change and the player never sees a damage line, which reads as a
-// hard immunity.
-function isWardBlocked(defenderId) {
-    var tags = tapestry.world.getEntityTags(defenderId) || [];
-    for (var i = 0; i < tags.length; i++) {
-        if (tags[i].indexOf("req_") !== 0) { continue; }
-        var capName = tags[i].substring("req_".length);
-        var cleared = tapestry.world.getProperty(defenderId, "cap_cleared_" + capName);
-        if (!cleared) {
-            return true;
-        }
-    }
-    return false;
-}
+// write before it lands - that's why the reversal has to happen in ward.ts's
+// entity.vital.changed handler instead of here.
 
 // --- Combat hit output ---
 tapestry.events.on("combat.hit", function(event) {
@@ -88,12 +78,10 @@ tapestry.events.on("combat.hit", function(event) {
     var damage = data.damage || 0;
 
     if (isWardBlocked(targetId)) {
-        // Undo the HP write that already landed (see comment above). The
-        // message names the shape of the answer (a ward wants dispelling) -
-        // the third discoverability surface for the themed verb, spec 4.4.
-        if (damage > 0) {
-            tapestry.combat.applyDamage(targetId, -damage, data.damageType || "bash");
-        }
+        // The message names the shape of the answer (a ward wants
+        // dispelling) - the third discoverability surface for the themed
+        // verb, spec 4.4. HP was already restored by ward.ts's
+        // entity.vital.changed handler before this event fired.
         tapestry.world.send(attackerId, "Your blow glances off a shimmering ward. Steel will not part it.\r\n");
         return;
     }
