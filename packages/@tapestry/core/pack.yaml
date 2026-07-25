@@ -1,14 +1,16 @@
 name: "@tapestry/core"
-version: "0.1.26"
+version: "0.1.27"
 type: core
 display_name: "Tapestry Core"
 description: "Engine foundation: recall room, combat, abilities, commands, progression, mob behaviors, socials, and all gameplay systems. Content packs layer areas, races, and classes on top."
 author: "Tapestry"
 license: "AGPL-3.0"
-# Engine floor is documentation-only (the key does not bind). >=0.1.50 is where
-# FlowInstance gained entity.scratch; the link/unlink wizards use it for working
-# memory, so on older engines those flows would fail (scratch handle absent).
-engine: ">=0.1.50"
+# Engine floor is documentation-only (the key does not bind). >=0.1.53 is where
+# world.resetArea landed; the tier-scaled death handler (grind-tier repop) calls
+# it, so on older engines that path would fail. (0.1.50 remains the floor for
+# FlowInstance.entity.scratch, used by the link/unlink wizards - resetArea is the
+# newer of the two hard requirements.)
+engine: ">=0.1.53"
 validation: strict
 active: true
 load_order: 0
