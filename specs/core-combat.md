@@ -1,6 +1,6 @@
 ---
 capability: core-combat
-last-updated: 2026-07-04
+last-updated: 2026-07-25
 ---
 
 # core-combat
@@ -147,6 +147,29 @@ there is no standalone aggro behavior.
   `player.death` event for pack extensions.
   (packages/@tapestry/core/scripts/combat/output.ts:172-229)
 
+### tier-scaled death (never strand gear)
+
+- The `entity.vital.depleted` (hp) handler creates no corpse and touches no equipment on any
+  path. It splits the player's `oracle_active_run` composite `<runAreaId>|<deathMode>|<entryRoomId>`
+  (the sole death-mode carrier). (packs/@tapestry/core/scripts/combat/output.ts:234)
+- Grind-tier death teleports to the run entry, keeps all gear/loot, and publishes
+  `run.grind_repop` so oracle refreshes the run; a `world.resetArea` call covers any authored
+  spawn-rule content. The Unraveling ejects to the hub via the return-address and publishes
+  `run.unraveled` (oracle tears the run down). A non-run death wakes at the recall room, intact.
+  `player.death` fires on every path. (packs/@tapestry/core/scripts/combat/output.ts:257)
+
+### boss immunity gate - the ward
+
+- A mob tagged `req_<cap>` takes zero effective damage until its own `cap_cleared_<cap>` runtime
+  property is set. `isWardBlocked` is the single source of truth.
+  (packs/@tapestry/core/scripts/combat/ward.ts:13)
+- The gate listens on `entity.vital.changed` - the event every HP write funnels through - not
+  `combat.hit`, so it catches abilities and spells, and restores the exact post-clamp amount lost
+  (no overshoot). (packs/@tapestry/core/scripts/combat/ward.ts:63)
+- The `dispel` verb finds a `cap_ward_dispel`-tagged tool whether carried or wielded and writes
+  the clear on the mob instance, never a room flag, so a repopped boss is re-warded by
+  construction. (packs/@tapestry/core/scripts/commands/dispel.ts:73)
+
 ### Swell combat content (boss slice 1)
 
 Core supplies the reusable content for the engine swell loop (engine v0.1.41), so
@@ -186,6 +209,7 @@ any pack can build a swell boss as data.
 
 ## Change Log
 
+- 2026-07-25 [hub-threads-core](changes/2026-07-25-hub-threads-core.md) - tier-scaled death (no corpse, never strand gear; grind repop / Unraveling eject) and the boss-immunity ward gate + dispel verb
 - 2026-07-04 [target-condition-line](changes/2026-07-04-target-condition-line.md) - band ladder extracted to combat/condition.ts (shared by look + combat output); combat.hit emits the target condition line on band transitions only (verb = absolute damage channel, condition = relative tactical channel)
 - 2026-07-03 [vocabulary-consolidation](changes/2026-07-03-vocabulary-consolidation.md) - mob flee content on wimpy_pct (int 0-100); flee_threshold doubles converted x100; wimpy command and help read percentage
 - 2026-06-21 [swell-combat-graduation](changes/2026-06-21-swell-combat-graduation.md) - the telegraph-rung validator, sidestep/brace counters, the tune dial editor, and the swell_* dial declarations graduated into core from example-pack

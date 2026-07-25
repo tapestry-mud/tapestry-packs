@@ -1,6 +1,6 @@
 ---
 capability: core-navigation
-last-updated: 2026-07-22
+last-updated: 2026-07-25
 ---
 
 # core-navigation
@@ -98,6 +98,13 @@ version, width, quit).
   and worn-equipment list.
   (packages/@tapestry/core/scripts/commands/look.ts:71-149; packages/@tapestry/core/scripts/commands/look.ts:275-289)
 
+- Item stat rendering (slot, weight, rarity, rolled modifiers) is factored into
+  `renderItemStats`, called from both the inventory branch AND the room-floor-item branch, so
+  an item lying in the room shows the same stats as one in inventory - the gear-legibility
+  compare-before-you-pick-it-up case. The room branch re-resolves via `examineItem` by name and
+  guards on the resolved id, so a same-named worn item can never render under a room item's
+  banner. (packages/@tapestry/core/scripts/commands/look.ts:75; packages/@tapestry/core/scripts/commands/look.ts:162)
+
 - Health tiers for NPCs and players are determined by HP percentage: >=100% "is in
   perfect health", >=75% "has a few scratches", >=50% "has some small wounds", >=35% "is
   wounded", >=20% "is badly wounded", >=10% "is bleeding profusely", else "is near
@@ -136,11 +143,12 @@ version, width, quit).
 
 ### Recall
 
-- "recall" teleports the actor to the room identified by the key "tapestry-core:recall"
-  using tapestry.world.teleportEntity. On success, the actor receives a flash-of-light
-  message and the room description is displayed. On failure, "You failed to recall." is
-  sent.
-  (packages/@tapestry/core/scripts/commands/recall.ts:1-19)
+- "recall" teleports the actor to their own `recall_room_id` property, falling back to
+  "tapestry-core:recall" when it is unset, using tapestry.world.teleportEntity. On success,
+  the actor receives a flash-of-light message and the room description is displayed. On
+  failure, "You failed to recall." is sent. Reading `recall_room_id` (rather than a hardcoded
+  destination) lets a world point recall at its own hub; it matches what the death handler
+  already reads. (packages/@tapestry/core/scripts/commands/recall.ts:1-19)
 
 - There is no explicit combat or rest check in the recall command; those restrictions are
   not enforced at the command level.
@@ -282,6 +290,7 @@ version, width, quit).
 
 ## Change Log
 
+- 2026-07-25 [hub-threads-core](changes/2026-07-25-hub-threads-core.md) - recall honors the player recall_room_id property (hub-pointable); gear-legibility renderItemStats now shows slot/rarity/modifiers on room-floor items too
 - 2026-07-22 [flow-scratch-migration](changes/2026-07-22-flow-scratch-migration.md) - link/unlink wizards keep per-step working memory in entity.scratch (engine >=0.1.50) instead of the entity property bag, so completed flows leave no link_*/unlink_* residue in player.yaml
 - 2026-07-04 [brief-mode-command](changes/2026-07-04-brief-mode-command.md) - brief mode v1 (tapestry#42): `brief` toggle command + core-declared `brief` bool player pref; directional movement renders name/exits/entities only when on (engine >=0.1.48 sendRoomDescription flag); `look` always full
 - 2026-06-18 [command-catalog-display](changes/2026-06-18-command-catalog-display.md)

@@ -1,6 +1,6 @@
 ---
 capability: core-progression
-last-updated: 2026-07-03
+last-updated: 2026-07-25
 ---
 
 # core-progression
@@ -28,12 +28,14 @@ the track's `on_level_up` callback.
   on death. (packages/@tapestry/core/scripts/progression/progression.ts:15; packages/@tapestry/core/scripts/progression/progression.ts:43)
 
 - The combat track's `on_level_up` callback grants +1 to two randomly chosen stats from
-  `[str, int, wis, dex, con, luc]` (uniform distribution), plus +5 max_hp, +3 max_resource,
-  and +2 max_movement per level. (packages/@tapestry/core/scripts/progression/progression.ts:16-35)
+  `[str, int, wis, dex, con, luc]` (uniform distribution), plus +3 max_resource and
+  +2 max_movement per level. `max_hp` is deliberately not granted -- see Level-up vitals
+  (pure-gear HP) below. (packages/@tapestry/core/scripts/progression/progression.ts:16-35)
 
 - The magic track's `on_level_up` callback draws from a weighted pool
   `[int, int, wis, wis, dex, luc]` (int and wis each appear twice, doubling their
-  probability), then grants +5 max_resource, +2 max_hp, and +1 max_movement per level.
+  probability), then grants +5 max_resource and +1 max_movement per level. No `max_hp`
+  grant -- see Level-up vitals (pure-gear HP) below.
   (packages/@tapestry/core/scripts/progression/progression.ts:45-61)
 
 - On level-up, both tracks send a notification via `tapestry.notifications.enqueue` at
@@ -89,6 +91,17 @@ the track's `on_level_up` callback.
 
 - The loss message uses the `<death>` tag: `You lose N experience.`
   (packages/@tapestry/core/scripts/progression/progression.ts:173-175)
+
+### Level-up vitals (pure-gear HP)
+
+- Neither the combat nor the magic level-up track grants `max_hp`. Both grant `max_resource`
+  and `max_movement` only; the `max_hp` grants were removed so player max HP comes from the flat
+  race/class base plus gear modifiers, never a character-level grind. (The example classes'
+  `max_hp` stat-growth terms were removed for the same reason.)
+  (packages/@tapestry/core/scripts/progression/progression.ts:25;
+  packages/@tapestry/core/scripts/progression/progression.ts:53)
+- Character level therefore gates no survivability; it is a vanity number. A wear-level
+  requirement is deliberately not implemented.
 
 ### train Command
 
@@ -222,5 +235,6 @@ the track's `on_level_up` callback.
 
 ## Change Log
 
+- 2026-07-25 [hub-threads-core](changes/2026-07-25-hub-threads-core.md) - pure-gear HP: level-up tracks no longer grant max_hp; HP is flat base plus gear only, character level gates nothing
 - 2026-07-03 [vocabulary-consolidation](changes/2026-07-03-vocabulary-consolidation.md) - victim mob level read from the level.combat map instead of the scalar mob_level
 - 2026-06-20 [pack-script-esm](changes/2026-06-20-pack-script-esm.md)

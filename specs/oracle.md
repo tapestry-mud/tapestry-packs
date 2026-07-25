@@ -1,6 +1,6 @@
 ---
 capability: oracle
-last-updated: 2026-07-22
+last-updated: 2026-07-25
 ---
 
 # oracle
@@ -320,6 +320,36 @@ that player's file is harmless and is pruned lazily the next time they run `solo
   `server.yaml` all survive. An area is not a pack. Empty pack directories linger and are benign;
   pack-level GC belongs to the v3 one-pack-per-run lifecycle.
 
+### Template/run split - the thread contract (hub-and-threads v1)
+
+The player-facing surface is no longer `solo` (now admin-gated); it is a curated set of
+authored threads a player pulls from a board, each run at a level they dial.
+
+- **Bake once (authoring, LLM, slow).** `bakeTemplate` runs the expensive generation against a
+  template area - geometry, prose, roster, boss, loot placement - and freezes the tables, with
+  no player and no teleport. (packages/@tapestry/oracle/scripts/area-gen.ts:394)
+- **Run per player (numeric, instant, no LLM).** `startRun` re-runs the same seed at the
+  player's chosen level, minting a fresh per-player run area (a run slug from the template seed
+  plus a player hash) that copies the template's frozen tables. Identical deterministic geometry
+  and roster across players; distinct area ids, no shared lock; only mob/item numbers resolve to
+  the dialed level. One shared entry-room derivation keeps the `oracle_active_run` composite and
+  the minted room from drifting. (packages/@tapestry/oracle/scripts/area-gen.ts:608)
+- **Refuse a nested run start.** `startRun` refuses when the caller is already standing in a run
+  area (the current room would become a return-address that the prior-run teardown then deletes).
+  The refusal is non-destructive; the remedy is `leave`. (packages/@tapestry/oracle/scripts/area-gen.ts:636)
+- **Template registry.** Templates persist as one frozen oracle table on a fixed well-known
+  area, each row a JSON blob with band window, draft/open state, seed, and death mode - a
+  reboot-durable index. (packages/@tapestry/oracle/scripts/template-registry.ts:82;
+  packages/@tapestry/oracle/scripts/template-registry.ts:89)
+- **The board + the mint bench.** `tapestry` lists open threads and `tapestry start <id> <level>`
+  pulls one, gated on `tapestry_unlocked`. `mint` bakes a draft; `mint flip <id>` opens it.
+  (packages/@tapestry/oracle/scripts/commands/tapestry.ts:38;
+  packages/@tapestry/oracle/scripts/commands/mint.ts)
+- **Per-run teardown.** One active run per player: `startRun` tears down any prior run before
+  minting and aborts rather than orphaning on a failed sweep. `teardownRun` fires on Unraveling
+  death (`run.unraveled`) and on leave/recall (`return.used` / `player.teleported`) via one
+  no-op-when-not-in-a-run helper. (packages/@tapestry/oracle/scripts/area-gen.ts:516)
+
 ### Default naming
 
 When the player leaves BOTH the idea and the name blank, the display name is
@@ -632,6 +662,7 @@ default to strict validation (see Rejected: room-property visited marker).
 
 ## Change Log
 
+- 2026-07-25 [hub-threads-oracle](changes/2026-07-25-hub-threads-oracle.md) - template/run split (bake once, re-roll per player at a dialed level), the thread-template registry, the Tapestry board + admin mint bench, level-locked loot, per-run teardown on death/leave/recall, and the nested-run-start guard
 - 2026-07-22 [solo-area-lifecycle-naming](changes/2026-07-22-solo-area-lifecycle-naming.md) - `solo list` / `solo discard [n|areaId]` run lifecycle riding the engine's `authoring.deleteArea` sweep (owned-runs `oracle_runs` player property, admin escape hatch, lazy prune of stale entries, per-area cache teardown); blank runs get a deterministic seeded `qualifier x place` name from its own sub-stream instead of `"the wilds"`, geometry unchanged; engine floor raised to >=0.1.51
 - 2026-07-22 [flow-scratch-migration](changes/2026-07-22-flow-scratch-migration.md) - solo wizard holds its collected inputs in entity.scratch (engine >=0.1.50) instead of the entity property bag, so a completed run leaves no solo_* residue in player.yaml
 - 2026-07-06 [oracle-stage-c-items-six-axis](changes/2026-07-06-oracle-stage-c-items-six-axis.md) - items six-axis (ITEM-1 banded rarity DEGREE roll replaces the flat pick; shared ITEM-6 CONTEXT table bends both drop chance and rarity roll from killer tier + room band, kept as table data rather than a TS constant so playtest feel-tuning can retune it without a rebuild); loot now fires at all four spawn tiers (elite/miniboss/boss previously dropped zero loot); junk rarity tier added to dressing (RARITY_WEIGHTS, SCHEMA_ITEMS, fallbackItems, fill_items, both baked decks rewritten to full junk-epic rosters); epic band freezes one of 8 fixed signature names at mint; PZL puzzle-cache hookup cut (does not exist yet, out of scope per the rooms-v3 plan) and a single-roll "none band" design rejected in favor of a per-tier drop-chance gate
