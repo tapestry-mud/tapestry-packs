@@ -620,6 +620,24 @@ boss-slain/looted) and walk-in scar lines (`room-revisit.ts`) are unchanged.
 (packages/@tapestry/oracle/scripts/six-axis.ts; packages/@tapestry/oracle/scripts/room-compose.ts;
 packages/@tapestry/oracle/scripts/consequence-hooks.ts)
 
+### Consequence hooks - room-cleared exit hint
+
+When all non-boss mobs in a room die, the `mob.death` event hook fires for each death.
+The non-boss branch checks if any NPCs remain in the room via
+`(tapestry as any).world.getEntitiesInRoom(roomId, "npc")` -- the engine removes the dead
+mob BEFORE publishing the event, and corpses are containers (not npcs), so 0 remaining
+means the room is cleared. When a room clears, the hook stamps it with the `looted`
+consequence and prints the hint message: "Nothing more stirs here. If the thread feels
+done, LEAVE returns you to the hub." This guides the player that they can use the LEAVE
+command to return to the hub when ready.
+
+Boss deaths (identified by template_id containing "swell-boss") stamp with `boss-slain`
+instead and do not print the room-cleared message. First-visit tracking already records
+when rooms are visited; the looted stamp marks consequence state for the duration of the
+room's ephemeral lifespan (evicted by the engine's repop tick on reboot).
+(packages/@tapestry/oracle/scripts/consequence-hooks.ts:72-80;
+packages/@tapestry/oracle/tests/smoke/cleared-room-exit-hint.md)
+
 ### Pack content glob
 
 `pack.yaml` declares `oracle: "areas/**/*-oracle-table.yaml"`; destination packs declare the
@@ -692,6 +710,7 @@ default to strict validation (see Rejected: room-property visited marker).
 
 ## Change Log
 
+- 2026-07-27 [oracle-cleared-thread-exit-hint](changes/2026-07-27-oracle-cleared-thread-exit-hint.md) - when the last non-boss mob in a room dies, print the exit hint "Nothing more stirs here. If the thread feels done, LEAVE returns you to the hub."
 - 2026-07-27 [gear-carries-hp](changes/2026-07-27-gear-carries-hp.md) - minted loot and starter-kit gear now push a real `maxHp` stat modifier (read off the master balance table's already-rolled `max_hp` figure) into `writeItemTemplate`'s `modifiers` array at all four loot tiers and the starter kit's weapon/armor pieces, closing A1 (gear previously rolled `max_hp` on paper but granted zero live HP); Option 2 (flat per-level HP, AC-only gear) considered and rejected in favor of wiring the existing roll through
 - 2026-07-25 [hub-threads-oracle](changes/2026-07-25-hub-threads-oracle.md) - template/run split (bake once, re-roll per player at a dialed level), the thread-template registry, the Tapestry board + admin mint bench, level-locked loot, per-run teardown on death/leave/recall, and the nested-run-start guard
 - 2026-07-22 [solo-area-lifecycle-naming](changes/2026-07-22-solo-area-lifecycle-naming.md) - `solo list` / `solo discard [n|areaId]` run lifecycle riding the engine's `authoring.deleteArea` sweep (owned-runs `oracle_runs` player property, admin escape hatch, lazy prune of stale entries, per-area cache teardown); blank runs get a deterministic seeded `qualifier x place` name from its own sub-stream instead of `"the wilds"`, geometry unchanged; engine floor raised to >=0.1.51
