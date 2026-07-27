@@ -1,0 +1,12 @@
+id: "hint"
+title: "Hint"
+category: "character"
+role: "player"
+keywords: [guide, help, stuck]
+brief: "Ask for a hint, the same as saying HINT aloud."
+syntax:
+  - "hint"
+body: |
+  Hint asks aloud for a hint, exactly as if you had said HINT to whoever
+  is listening. If no one nearby answers, nothing happens.
+see_also: [consider, character]
