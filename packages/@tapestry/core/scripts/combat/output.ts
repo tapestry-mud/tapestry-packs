@@ -107,6 +107,31 @@ tapestry.events.on("combat.hit", function(event) {
     sendConditionTransition(attackerId, targetId, targetName, roomId);
 });
 
+// --- Swell counter damage visibility (S2-20b) ---
+// SwellClockManager.ApplyDamage funnels through VitalsService.Apply with
+// reason "combat.swell", which fires entity.vital.changed but never
+// combat.hit (that only fires for melee auto-attacks) - so a countered
+// swell's real HP loss never triggered the shared condition-band line.
+// Same band ladder as look/combat.hit (condition.js), so a countered
+// swell and a melee hit read consistently.
+tapestry.events.on("entity.vital.changed", function(event) {
+    var data = event.data || {};
+    if (data.vital !== "hp" || data.reason !== "combat.swell") { return; }
+    var newValue = typeof data.new === "number" ? data.new : 0;
+    var oldValue = typeof data.old === "number" ? data.old : 0;
+    if (newValue >= oldValue) { return; }
+    var targetId = event.sourceEntityId;
+    var entity = tapestry.world.getEntity(targetId);
+    var targetName = entity && entity.name ? entity.name : "it";
+    if (event.roomId) {
+        var stats = tapestry.stats.get(targetId);
+        if (!stats) { return; }
+        var band = conditionIndex(stats.hp, stats.maxHp);
+        var line = "<combat_status>" + targetName + " " + conditionText(band) + ".</combat_status>\r\n";
+        tapestry.world.sendToRoom(event.roomId, line);
+    }
+});
+
 // --- Combat miss output ---
 tapestry.events.on("combat.miss", function(event) {
     var attackerId = event.sourceEntityId;

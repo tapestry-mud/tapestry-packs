@@ -1,6 +1,6 @@
 ---
 capability: core-combat
-last-updated: 2026-07-25
+last-updated: 2026-07-27
 ---
 
 # core-combat
@@ -202,6 +202,23 @@ any pack can build a swell boss as data.
   accepts swell bosses in core and in any pack that depends on core.
   (packages/@tapestry/core/properties.yml:30)
 
+- A countered swell's real HP loss is made visible with the same condition-band
+  line combat.hit uses. `SwellClockManager.ApplyDamage` funnels through
+  `VitalsService.Apply` with reason `combat.swell`, which fires
+  `entity.vital.changed` but never `combat.hit` (that only fires for melee
+  auto-attacks), so before this a countered swell's chunk damage never
+  triggered any room-visible condition text. A listener on
+  `entity.vital.changed` broadcasts `<combat_status>[target]
+  [condition].</combat_status>` to the room whenever `data.vital === "hp"`,
+  `data.reason === "combat.swell"`, and the new value is lower than the old
+  value, reusing `conditionIndex`/`conditionText` (the same band ladder as
+  `look` and `combat.hit`). Unlike `combat.hit`'s condition line, this
+  broadcast has no per-target dedup against the last-seen band - there is no
+  attacker id on this event to key it by - so it fires unconditionally on
+  every swell-damage decrease; acceptable because a countered swell is a
+  rare, once-per-cycle, telegraphed event, not a per-tick spam risk.
+  (packages/@tapestry/core/scripts/combat/output.ts:57)
+
 ## Rejected and Reverted
 
 - `aggro` mob behavior (packages/@tapestry/core/scripts/mobs/behaviors.ts):
@@ -214,6 +231,7 @@ any pack can build a swell boss as data.
 
 ## Change Log
 
+- 2026-07-27 [threadwalker-swell-legibility](changes/2026-07-27-threadwalker-swell-legibility.md) - a countered swell's real chunk damage now broadcasts the same condition-band line as combat.hit (entity.vital.changed, reason combat.swell)
 - 2026-07-25 [hub-threads-core](changes/2026-07-25-hub-threads-core.md) - tier-scaled death (no corpse, never strand gear; grind repop / Unraveling eject) and the boss-immunity ward gate + dispel verb
 - 2026-07-04 [target-condition-line](changes/2026-07-04-target-condition-line.md) - band ladder extracted to combat/condition.ts (shared by look + combat output); combat.hit emits the target condition line on band transitions only (verb = absolute damage channel, condition = relative tactical channel)
 - 2026-07-03 [vocabulary-consolidation](changes/2026-07-03-vocabulary-consolidation.md) - mob flee content on wimpy_pct (int 0-100); flee_threshold doubles converted x100; wimpy command and help read percentage
