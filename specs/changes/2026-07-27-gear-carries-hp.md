@@ -48,6 +48,25 @@ or is kit-granted a single armor piece now sees max HP rise by exactly that piec
 admin bench, starts a run at level 1, wears the kit-granted head slot, and asserts the `inspect`
 Vitals denominator moved off the pre-gear baseline.
 
+**Also folded into this release: the boss room is tagged `no_wander` at spawn time.**
+Right after `population.ts`'s wandering-boss `spawnMob` call, the pack now calls the
+engine's new `tapestry.world.addRoomTag(roomId, "no_wander")` write binding (Part A Task 2)
+so the boss's room carries the same `no_wander` tag the `wander` behavior already honored --
+and that `CombatManager.AttemptFlee` now ALSO prefers to avoid as a flee destination.
+Closes S2-13: a low-HP trash mob fleeing near a freshly-spawned boss could previously pick
+that boss's room as its escape route, turning a clean first contact into an unplanned 2v1.
+(packages/@tapestry/oracle/scripts/population.ts:314-324) Proven end to end by a new smoke
+scenario (packages/@tapestry/oracle/tests/smoke/boss-room-no-wander.md) that bakes/starts a
+small deterministic run, walks the exact three-move path (found by replaying the pack's own
+`bossClockFires`/`computeStructure` against the built `dist/` offline) that makes the
+wandering boss fire on the third room visited, and asserts core's admin `inspect room` shows
+`no_wander` in the room's Flags line -- confirmed by a negative-control run (the tag call
+temporarily stripped from `dist/`) that the same assertion fails without the fix (`Flags:
+(none)`, boss occupants still present). This is folded in here rather than its own change
+record because it is a small, self-contained companion fix in the same release; it is
+independent of the gear-carries-HP mechanic above and touches no other file this record
+already lists.
+
 ## Rejected and Reverted
 
 - **Option 2 - flat per-level HP with AC-only gear survivability** (considered and rejected

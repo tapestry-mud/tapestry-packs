@@ -316,6 +316,12 @@ export function populateRoom(roomId: string, areaId: string): string[] {
                 roomId,
                 override: bossOverride,
             });
+            // Engine Part A Task 2: tag the boss's room no_wander so a fleeing
+            // low-HP trash mob (CombatManager.AttemptFlee) and the existing
+            // `wander` behavior both refuse to route another mob in here,
+            // closing S2-13 (trash mob flees into the boss room, turning
+            // first contact into a 2v1).
+            (tapestry as any).world.addRoomTag(roomId, "no_wander");
             lines.push(stirLine("boss", String(bossOverride.name || "something vast")));
         }
         runState.bossFired = true;

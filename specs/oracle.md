@@ -432,6 +432,14 @@ pity timer exactly as it reset the 0.4.0 counter.
 (packages/@tapestry/oracle/scripts/population.ts:bossClockFires;
 packages/@tapestry/oracle/scripts/run-state.ts)
 
+The instant the wandering boss spawns, its room is tagged `no_wander` via the engine's
+`tapestry.world.addRoomTag` write binding -- an engine-registered tag, not a pack-declared
+one, so no `tags.yml` entry is needed. This closes S2-13: without the tag, a fleeing
+low-HP trash mob (`CombatManager.AttemptFlee`) or a wandering mob (the existing `wander`
+behavior, which already honored `no_wander`) could route into the boss's room, turning a
+clean first contact into an unplanned 2v1.
+(packages/@tapestry/oracle/scripts/population.ts:314-324)
+
 ### Mobs six-axis - MOB-1 menace bands + the disposition axis
 
 The mob tables are six-axis (campaign stage B, per the 2026-06-25 v2 exploration):
