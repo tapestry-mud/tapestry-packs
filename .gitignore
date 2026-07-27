@@ -4,3 +4,5 @@ dist/
 
 # Claude Code machine-local permission allowlist (never commit)
 .claude/settings.local.json
+
+.worktrees/
