@@ -353,8 +353,20 @@ authored threads a player pulls from a board, each run at a level they dial.
 - **The board + the mint bench.** `tapestry` lists open threads and `tapestry start <id> [level]`
   pulls one, gated on `tapestry_unlocked`; the level is optional (defaults to the player's own
   combat level - see above). `mint` bakes a draft; `mint flip <id>` opens it.
-  (packages/@tapestry/oracle/scripts/commands/tapestry.ts:38;
+  (packages/@tapestry/oracle/scripts/commands/tapestry.ts:55;
   packages/@tapestry/oracle/scripts/commands/mint.ts)
+- **Short board handles: ordinal, prefix, and `start` is optional.** The board numbers each open
+  row 1-based in listing order (`1) oracle-week-...`, `2) ...`); `resolveTemplateRef` accepts that
+  ordinal, the full templateId, or any unambiguous prefix of a templateId among currently-open
+  threads, and resolves all three the same way before handing off to `startRun`. A prefix that
+  matches more than one open thread, or an ordinal outside the open-thread count, resolves to
+  nothing (`No such thread. Use its board number or full id.`) rather than guessing. The `start`
+  keyword itself is optional: `tapestry <number or id> [level]` resolves and pulls a thread exactly
+  like `tapestry start <number or id> [level]` when the first token is not `list`/`start` and DOES
+  resolve to an open thread - if it does not resolve, the handler falls through to the usage
+  string instead of trying to start anything. Ordinals are listing-order, not stable identity -
+  they shift if a thread's board position changes (a new thread opens ahead of it), so they are a
+  convenience for the CURRENT listing, never a saved reference. (packages/@tapestry/oracle/scripts/commands/tapestry.ts:38-124)
 - **Per-run teardown.** One active run per player: `startRun` tears down any prior run before
   minting and aborts rather than orphaning on a failed sweep. `teardownRun` fires on Unraveling
   death (`run.unraveled`) and on leave/recall (`return.used` / `player.teleported`) via one

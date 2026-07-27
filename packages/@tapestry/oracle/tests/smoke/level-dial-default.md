@@ -52,7 +52,7 @@ flips one.
 8. Gamemaster: `set player tapestry_unlocked Wanderer true`
 9. Assert Gamemaster sees: `set to`
 10. Wanderer: `tapestry`
-11. Assert Wanderer sees: `Pull a thread: tapestry start <id> <level>`
+11. Assert Wanderer sees: `Pull a thread: tapestry start <number or id> [level]`
 12. Assert Wanderer sees: `<level> sets the difficulty dial - it does not scale to your gear. Higher is harder.`
 13. Wanderer: `tapestry start oracle-week-12345678`
 14. Assert Wanderer sees: `No level given - defaulting to your own level (50).`

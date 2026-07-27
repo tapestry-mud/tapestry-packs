@@ -32,6 +32,6 @@ under test; `Gamemaster` (admin) only does setup (bake/flip/unlock).
 13. Assert Wanderer sees: `oracle-week-12345678`
 14. Assert Wanderer sees: `week-test`
 15. Assert Wanderer sees: `[levels 10-50]`
-16. Assert Wanderer sees: `Pull a thread: tapestry start <id> <level>`
+16. Assert Wanderer sees: `Pull a thread: tapestry start <number or id> [level]`
 17. Wanderer: `tapestry start oracle-week-12345678 10`
 18. Assert Wanderer sees: `The thread pulls taut and draws you in.`

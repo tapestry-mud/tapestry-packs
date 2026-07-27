@@ -35,6 +35,23 @@ import * as tapestry from "@tapestry/engine";
 import { listTemplates } from "../template-registry.js";
 import { startRun } from "../area-gen.js";
 
+function openTemplates(): ReturnType<typeof listTemplates> {
+    return listTemplates().filter((t) => t.state === "open");
+}
+
+function resolveTemplateRef(ref: string): string | null {
+    const open = openTemplates();
+    const ordinal = parseInt(ref, 10);
+    if (!isNaN(ordinal) && String(ordinal) === ref && ordinal >= 1 && ordinal <= open.length) {
+        return open[ordinal - 1].templateId;
+    }
+    const exact = open.find((t) => t.templateId === ref);
+    if (exact) { return exact.templateId; }
+    const prefixMatches = open.filter((t) => t.templateId.indexOf(ref) === 0);
+    if (prefixMatches.length === 1) { return prefixMatches[0].templateId; }
+    return null;
+}
+
 tapestry.commands.register({
     name: "tapestry",
     aliases: [],
@@ -58,7 +75,12 @@ tapestry.commands.register({
 
         if (sub === "start") {
             if (tokens.length < 2) {
-                actor.send("Usage: tapestry start <id> [level]\r\n");
+                actor.send("Usage: tapestry start <number or id> [level]\r\n");
+                return;
+            }
+            const resolvedId = resolveTemplateRef(tokens[1]);
+            if (!resolvedId) {
+                actor.send("No such thread. Use its board number or full id.\r\n");
                 return;
             }
             let level: number;
@@ -75,11 +97,31 @@ tapestry.commands.register({
                 explicitLevel = false;
                 actor.send("No level given - defaulting to your own level (" + level + ").\r\n");
             }
-            startRun(actor, tokens[1], level, explicitLevel);
+            startRun(actor, resolvedId, level, explicitLevel);
             return;
         }
 
-        actor.send("Usage: tapestry | tapestry start <id> [level]\r\n");
+        const bareResolved = resolveTemplateRef(sub);
+        if (bareResolved) {
+            let level: number;
+            let explicitLevel: boolean;
+            if (tokens.length >= 2) {
+                level = parseInt(tokens[1], 10);
+                if (isNaN(level)) {
+                    actor.send("Level must be a number.\r\n");
+                    return;
+                }
+                explicitLevel = true;
+            } else {
+                level = tapestry.progression.getLevel(actor.entityId, "combat") || 1;
+                explicitLevel = false;
+                actor.send("No level given - defaulting to your own level (" + level + ").\r\n");
+            }
+            startRun(actor, bareResolved, level, explicitLevel);
+            return;
+        }
+
+        actor.send("Usage: tapestry | tapestry start <number or id> [level] | tapestry <number or id> [level]\r\n");
     },
 });
 
@@ -88,7 +130,7 @@ tapestry.commands.register({
 // ---------------------------------------------------------------------------
 
 function boardList(actor: any): void {
-    const open = listTemplates().filter((t) => t.state === "open");
+    const open = openTemplates();
     if (open.length === 0) {
         actor.send("No threads are open yet.\r\n");
         return;
@@ -97,11 +139,11 @@ function boardList(actor: any): void {
     for (let i = 0; i < open.length; i++) {
         const t = open[i];
         actor.send(
-            "  " + t.templateId + "  " + t.name +
+            "  " + (i + 1) + ") " + t.templateId + "  " + t.name +
             "  [levels " + t.bandFloor + "-" + t.bandCap + "]" +
             "  gear: ~" + t.bandFloor + "+\r\n"
         );
     }
-    actor.send("Pull a thread: tapestry start <id> <level>\r\n");
+    actor.send("Pull a thread: tapestry start <number or id> [level]\r\n");
     actor.send("<level> sets the difficulty dial - it does not scale to your gear. Higher is harder.\r\n");
 }
