@@ -57,20 +57,29 @@ tapestry.commands.register({
         }
 
         if (sub === "start") {
-            if (tokens.length < 3) {
-                actor.send("Usage: tapestry start <id> <level>\r\n");
+            if (tokens.length < 2) {
+                actor.send("Usage: tapestry start <id> [level]\r\n");
                 return;
             }
-            const level = parseInt(tokens[2], 10);
-            if (isNaN(level)) {
-                actor.send("Level must be a number.\r\n");
-                return;
+            let level: number;
+            let explicitLevel: boolean;
+            if (tokens.length >= 3) {
+                level = parseInt(tokens[2], 10);
+                if (isNaN(level)) {
+                    actor.send("Level must be a number.\r\n");
+                    return;
+                }
+                explicitLevel = true;
+            } else {
+                level = tapestry.progression.getLevel(actor.entityId, "combat") || 1;
+                explicitLevel = false;
+                actor.send("No level given - defaulting to your own level (" + level + ").\r\n");
             }
-            startRun(actor, tokens[1], level);
+            startRun(actor, tokens[1], level, explicitLevel);
             return;
         }
 
-        actor.send("Usage: tapestry | tapestry start <id> <level>\r\n");
+        actor.send("Usage: tapestry | tapestry start <id> [level]\r\n");
     },
 });
 
@@ -94,4 +103,5 @@ function boardList(actor: any): void {
         );
     }
     actor.send("Pull a thread: tapestry start <id> <level>\r\n");
+    actor.send("<level> sets the difficulty dial - it does not scale to your gear. Higher is harder.\r\n");
 }

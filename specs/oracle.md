@@ -334,6 +334,15 @@ authored threads a player pulls from a board, each run at a level they dial.
   and roster across players; distinct area ids, no shared lock; only mob/item numbers resolve to
   the dialed level. One shared entry-room derivation keeps the `oracle_active_run` composite and
   the minted room from drifting. (packages/@tapestry/oracle/scripts/area-gen.ts:608)
+- **The level dial defaults, is explained, and warns on over-dial.** `tapestry start <id>` with
+  no level defaults to the player's own combat progression level (`tapestry.progression.getLevel`,
+  falling back to 1) rather than erroring, and tells the player it did so. The board listing
+  explains up front that the dial sets difficulty and does not scale to the player's gear. When a
+  level IS given explicitly and it outpaces the player's own level, `startRun` warns before
+  starting - the run still starts either way; the warning only fires for an explicit dial, never
+  for a defaulted one, since a defaulted level is by construction never above the player's own.
+  (packages/@tapestry/oracle/scripts/commands/tapestry.ts;
+  packages/@tapestry/oracle/scripts/area-gen.ts:608-624)
 - **Refuse a nested run start.** `startRun` refuses when the caller is already standing in a run
   area (the current room would become a return-address that the prior-run teardown then deletes).
   The refusal is non-destructive; the remedy is `leave`. (packages/@tapestry/oracle/scripts/area-gen.ts:636)
@@ -341,8 +350,9 @@ authored threads a player pulls from a board, each run at a level they dial.
   area, each row a JSON blob with band window, draft/open state, seed, and death mode - a
   reboot-durable index. (packages/@tapestry/oracle/scripts/template-registry.ts:82;
   packages/@tapestry/oracle/scripts/template-registry.ts:89)
-- **The board + the mint bench.** `tapestry` lists open threads and `tapestry start <id> <level>`
-  pulls one, gated on `tapestry_unlocked`. `mint` bakes a draft; `mint flip <id>` opens it.
+- **The board + the mint bench.** `tapestry` lists open threads and `tapestry start <id> [level]`
+  pulls one, gated on `tapestry_unlocked`; the level is optional (defaults to the player's own
+  combat level - see above). `mint` bakes a draft; `mint flip <id>` opens it.
   (packages/@tapestry/oracle/scripts/commands/tapestry.ts:38;
   packages/@tapestry/oracle/scripts/commands/mint.ts)
 - **Per-run teardown.** One active run per player: `startRun` tears down any prior run before

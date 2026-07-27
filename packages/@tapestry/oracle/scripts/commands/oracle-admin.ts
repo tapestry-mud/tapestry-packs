@@ -113,7 +113,7 @@ tapestry.commands.register({
                 return;
             }
             const level = parseInt(tokens[2], 10);
-            startRun(actor, tokens[1], level);
+            startRun(actor, tokens[1], level, true);
             return;
         }
 

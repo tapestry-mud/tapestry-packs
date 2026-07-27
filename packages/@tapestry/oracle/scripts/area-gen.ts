@@ -605,7 +605,7 @@ function teardownActiveRunOnExit(entityId: string | undefined): void {
 // then hands off to instantiateRunArea for the geometry+populate+teleport.
 // ---------------------------------------------------------------------------
 
-export function startRun(actor: any, templateId: string, level: number): void {
+export function startRun(actor: any, templateId: string, level: number, explicitLevel: boolean): void {
     const tpl = getTemplate(templateId);
     if (!tpl) {
         actor.send("No such thread.\r\n");
@@ -618,6 +618,12 @@ export function startRun(actor: any, templateId: string, level: number): void {
     if (level < tpl.bandFloor || level > tpl.bandCap) {
         actor.send("Pick a level between " + tpl.bandFloor + " and " + tpl.bandCap + ".\r\n");
         return;
+    }
+    if (explicitLevel) {
+        const playerLevel = tapestry.progression.getLevel(actor.entityId, "combat") || 1;
+        if (level > playerLevel) {
+            actor.send("Dialing " + level + " against your own level " + playerLevel + " - this will be hard. Gear up first if you are not sure.\r\n");
+        }
     }
 
     const playerId = actor.entityId;
