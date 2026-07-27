@@ -91,83 +91,85 @@ run unchanged.
 20. Assert Wanderer sees: `You level a staff of dispel ward. The ward parts with a sound like tearing cloth.`
 21. Wanderer: `dispell`
 22. Assert Wanderer sees: `There is nothing here to dispel.`
-23. Gamemaster: `inspect goblin`
-24. Assert Gamemaster sees: `cap_cleared_ward_dispel`
-25. Gamemaster: `inspect room`
-26. Assert Gamemaster does not see: `cap_cleared_ward_dispel`
-27. Wanderer: `inventory`
-28. Assert Wanderer sees: `a staff of dispel ward`
-29. Gamemaster: `purge npc`
-30. Assert Gamemaster sees: `Purged`
-31. Gamemaster: `spawn tapestry-example-pack:goblin`
-32. Assert Gamemaster sees: `Spawned: a goblin`
-33. Gamemaster: `tags add goblin req_ward_dispel`
-34. Assert Gamemaster sees: `Added tag 'req_ward_dispel' to a goblin.`
-35. Wanderer: `wield staff`
-36. Assert Wanderer sees: `You wield a staff of dispel ward.`
-37. Wanderer: `inventory`
-38. Assert Wanderer sees: `You are carrying nothing.`
-39. Wanderer: `dispel`
-40. Assert Wanderer sees: `You level a staff of dispel ward. The ward parts with a sound like tearing cloth.`
-41. Gamemaster: `inspect goblin`
-42. Assert Gamemaster sees: `cap_cleared_ward_dispel`
-43. Wanderer: `remove staff`
-44. Assert Wanderer sees: `You remove a staff of dispel ward.`
-45. Wanderer: `inventory`
-46. Assert Wanderer sees: `a staff of dispel ward`
-47. Gamemaster: `purge npc`
-48. Assert Gamemaster sees: `Purged`
-49. Gamemaster: `teleport Gamemaster tapestry-test-fixtures:test-arena`
-50. Gamemaster: `teleport Wanderer tapestry-test-fixtures:test-arena`
-51. Gamemaster: `spawn tapestry-test-fixtures:test-dummy`
-52. Assert Gamemaster sees: `Spawned: a training dummy`
-53. Gamemaster: `tags add dummy req_ward_dispel`
-54. Assert Gamemaster sees: `Added tag 'req_ward_dispel' to a training dummy.`
-55. Wanderer: `kill dummy`
-56. Assert Wanderer sees: `You attack a training dummy!`
-57. Wait for Wanderer sees: `Your blow glances off a shimmering ward. Steel will not part it.`
-58. Gamemaster: `inspect dummy`
-59. Assert Gamemaster sees: `HP 99999/99999`
-60. Wanderer: `dispel`
-61. Assert Wanderer sees: `You level a staff of dispel ward. The ward parts with a sound like tearing cloth.`
-62. Wait for Wanderer sees: `a training dummy.`
-63. Gamemaster: `inspect dummy`
-64. Assert Gamemaster does not see: `HP 99999/99999`
-65. Gamemaster: `purge npc`
-66. Assert Gamemaster sees: `Purged`
-67. Gamemaster: `spawn tapestry-test-fixtures:test-dummy`
-68. Assert Gamemaster sees: `Spawned: a training dummy`
-69. Gamemaster: `tags add dummy req_ward_dispel`
-70. Assert Gamemaster sees: `Added tag 'req_ward_dispel' to a training dummy.`
-71. Gamemaster: `learn Wanderer fireball 100`
-72. Assert Gamemaster sees: `Granted Fireball to Wanderer at 100% proficiency.`
-73. Wanderer: `cast fireball dummy`
-74. Wait for Wanderer sees: `Your Fireball scorches a shimmering ward. Magic will not part it.`
-75. Gamemaster: `inspect dummy`
-76. Assert Gamemaster sees: `HP 99999/99999`
-77. Gamemaster: `purge npc`
-78. Assert Gamemaster sees: `Purged`
-79. Gamemaster: `spawn tapestry-test-fixtures:test-dummy`
-80. Assert Gamemaster sees: `Spawned: a training dummy`
-81. Gamemaster: `set npc hp dummy 30`
-82. Assert Gamemaster sees: `hp set to 30 (hp and max hp).`
-83. Wanderer: `kill dummy`
-84. Assert Wanderer sees: `You attack a training dummy!`
-85. Wait for Wanderer sees: `a training dummy.`
-86. Wanderer: `consider dummy`
+23. Wanderer: `disp`
+24. Assert Wanderer sees: `There is nothing here to dispel.`
+25. Gamemaster: `inspect goblin`
+26. Assert Gamemaster sees: `cap_cleared_ward_dispel`
+27. Gamemaster: `inspect room`
+28. Assert Gamemaster does not see: `cap_cleared_ward_dispel`
+29. Wanderer: `inventory`
+30. Assert Wanderer sees: `a staff of dispel ward`
+31. Gamemaster: `purge npc`
+32. Assert Gamemaster sees: `Purged`
+33. Gamemaster: `spawn tapestry-example-pack:goblin`
+34. Assert Gamemaster sees: `Spawned: a goblin`
+35. Gamemaster: `tags add goblin req_ward_dispel`
+36. Assert Gamemaster sees: `Added tag 'req_ward_dispel' to a goblin.`
+37. Wanderer: `wield staff`
+38. Assert Wanderer sees: `You wield a staff of dispel ward.`
+39. Wanderer: `inventory`
+40. Assert Wanderer sees: `You are carrying nothing.`
+41. Wanderer: `dispel`
+42. Assert Wanderer sees: `You level a staff of dispel ward. The ward parts with a sound like tearing cloth.`
+43. Gamemaster: `inspect goblin`
+44. Assert Gamemaster sees: `cap_cleared_ward_dispel`
+45. Wanderer: `remove staff`
+46. Assert Wanderer sees: `You remove a staff of dispel ward.`
+47. Wanderer: `inventory`
+48. Assert Wanderer sees: `a staff of dispel ward`
+49. Gamemaster: `purge npc`
+50. Assert Gamemaster sees: `Purged`
+51. Gamemaster: `teleport Gamemaster tapestry-test-fixtures:test-arena`
+52. Gamemaster: `teleport Wanderer tapestry-test-fixtures:test-arena`
+53. Gamemaster: `spawn tapestry-test-fixtures:test-dummy`
+54. Assert Gamemaster sees: `Spawned: a training dummy`
+55. Gamemaster: `tags add dummy req_ward_dispel`
+56. Assert Gamemaster sees: `Added tag 'req_ward_dispel' to a training dummy.`
+57. Wanderer: `kill dummy`
+58. Assert Wanderer sees: `You attack a training dummy!`
+59. Wait for Wanderer sees: `Your blow glances off a shimmering ward. Steel will not part it.`
+60. Gamemaster: `inspect dummy`
+61. Assert Gamemaster sees: `HP 99999/99999`
+62. Wanderer: `dispel`
+63. Assert Wanderer sees: `You level a staff of dispel ward. The ward parts with a sound like tearing cloth.`
+64. Wait for Wanderer sees: `a training dummy.`
+65. Gamemaster: `inspect dummy`
+66. Assert Gamemaster does not see: `HP 99999/99999`
+67. Gamemaster: `purge npc`
+68. Assert Gamemaster sees: `Purged`
+69. Gamemaster: `spawn tapestry-test-fixtures:test-dummy`
+70. Assert Gamemaster sees: `Spawned: a training dummy`
+71. Gamemaster: `tags add dummy req_ward_dispel`
+72. Assert Gamemaster sees: `Added tag 'req_ward_dispel' to a training dummy.`
+73. Gamemaster: `learn Wanderer fireball 100`
+74. Assert Gamemaster sees: `Granted Fireball to Wanderer at 100% proficiency.`
+75. Wanderer: `cast fireball dummy`
+76. Wait for Wanderer sees: `Your Fireball scorches a shimmering ward. Magic will not part it.`
+77. Gamemaster: `inspect dummy`
+78. Assert Gamemaster sees: `HP 99999/99999`
+79. Gamemaster: `purge npc`
+80. Assert Gamemaster sees: `Purged`
+81. Gamemaster: `spawn tapestry-test-fixtures:test-dummy`
+82. Assert Gamemaster sees: `Spawned: a training dummy`
+83. Gamemaster: `set npc hp dummy 30`
+84. Assert Gamemaster sees: `hp set to 30 (hp and max hp).`
+85. Wanderer: `kill dummy`
+86. Assert Wanderer sees: `You attack a training dummy!`
 87. Wait for Wanderer sees: `a training dummy.`
 88. Wanderer: `consider dummy`
 89. Wait for Wanderer sees: `a training dummy.`
-90. Gamemaster: `tags add dummy req_ward_dispel`
-91. Assert Gamemaster sees: `Added tag 'req_ward_dispel' to a training dummy.`
-92. Wait for Wanderer sees: `Your blow glances off a shimmering ward. Steel will not part it.`
-93. Gamemaster: `inspect dummy`
-94. Assert Gamemaster does not see: `HP 30/30`
-95. Assert Gamemaster does not see: `HP 0/30`
-96. Wanderer: `consider dummy`
-97. Wait for Wanderer sees: `Your blow glances off a shimmering ward. Steel will not part it.`
-98. Gamemaster: `inspect dummy`
-99. Assert Gamemaster does not see: `HP 30/30`
-100. Assert Gamemaster does not see: `HP 0/30`
-101. Gamemaster: `purge npc`
-102. Assert Gamemaster sees: `Purged`
+90. Wanderer: `consider dummy`
+91. Wait for Wanderer sees: `a training dummy.`
+92. Gamemaster: `tags add dummy req_ward_dispel`
+93. Assert Gamemaster sees: `Added tag 'req_ward_dispel' to a training dummy.`
+94. Wait for Wanderer sees: `Your blow glances off a shimmering ward. Steel will not part it.`
+95. Gamemaster: `inspect dummy`
+96. Assert Gamemaster does not see: `HP 30/30`
+97. Assert Gamemaster does not see: `HP 0/30`
+98. Wanderer: `consider dummy`
+99. Wait for Wanderer sees: `Your blow glances off a shimmering ward. Steel will not part it.`
+100. Gamemaster: `inspect dummy`
+101. Assert Gamemaster does not see: `HP 30/30`
+102. Assert Gamemaster does not see: `HP 0/30`
+103. Gamemaster: `purge npc`
+104. Assert Gamemaster sees: `Purged`

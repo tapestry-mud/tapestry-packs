@@ -20,6 +20,10 @@ tapestry.commands.register({
         var gated = null;
         for (var i = 0; i < mobs.length; i++) {
             if (tapestry.world.hasTag(mobs[i].id, 'req_' + CAP)) {
+                // Skip mobs whose ward has already been cleared.
+                if (tapestry.world.getProperty(mobs[i].id, 'cap_cleared_' + CAP)) {
+                    continue;
+                }
                 gated = mobs[i];
                 break;
             }
