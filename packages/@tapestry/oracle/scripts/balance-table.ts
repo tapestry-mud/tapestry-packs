@@ -70,12 +70,14 @@ export function statsFor(kind: string, level: number, rng: () => number): Record
     }
     if (kind === "weapon") {
         const band = data.weapon.damage[nearestAnchor(data.weapon.anchors, L)];
-        return { damage: weightedPick(band, rng) };
+        const maxHp = interpolateNumeric(data.weapon.anchors, data.weapon.max_hp, L);
+        return { damage: weightedPick(band, rng), max_hp: maxHp };
     }
     if (kind === "armor") {
         const ac = interpolateNumeric(data.armor.anchors, data.armor.ac, L);
         const slots = data.armor.slots[nearestAnchor(data.armor.anchors, L)];
-        return { ac, slots: slots.join(",") };
+        const maxHp = interpolateNumeric(data.armor.anchors, data.armor.max_hp, L);
+        return { ac, slots: slots.join(","), max_hp: maxHp };
     }
     if (kind === "boss") {
         const hp = interpolateNumeric(data.boss.anchors, data.boss.hp, L);

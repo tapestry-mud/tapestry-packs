@@ -31,9 +31,11 @@ weapon:
     20: [{ w: 60, value: "4d10" }, { w: 40, value: "3d12" }]
     40: [{ w: 60, value: "6d12" }, { w: 40, value: "5d16" }]
     60: [{ w: 60, value: "9d12" }, { w: 40, value: "8d16" }]
+  max_hp: [5, 12, 25, 55, 100]
 armor:
   anchors: [1, 10, 20, 40, 60]
   ac:    [-1, -3, -5, -9, -14]          # interpolates continuously, rounded to int
+  max_hp: [3, 8, 18, 40, 75]
   slots:
     1:  [head, hands, feet]
     10: [head, hands, feet, body]
@@ -64,6 +66,11 @@ elite:
     20: [{ w: 100, value: "5d10" }]
     40: [{ w: 100, value: "8d12" }]
     60: [{ w: 100, value: "12d12" }]
+# 2026-07-27 gear-carries-HP (design decision, Travis): FIRST-PASS values.
+# Tune during the week-one retune (playtest gate) before flip - these are
+# not balanced against real playtest data yet. Armor rolls a smaller
+# PER-PIECE amount (up to 7 worn pieces stack at the top band); weapon
+# rolls more since only one wield slot exists.
 miniboss:
   anchors: [1, 10, 20, 40, 60]
   hp:     [60, 210, 750, 2000, 4200]    # interpolates continuously (B.2: L1/L10 rescaled)
