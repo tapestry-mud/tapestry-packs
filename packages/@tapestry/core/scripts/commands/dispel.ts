@@ -8,6 +8,7 @@ var CAP = 'ward_dispel';
 
 tapestry.commands.register({
     name: 'dispel',
+    aliases: ['dispell', 'disp'],
     roles: ['player'],
     args: {},
     handler: function(actor, resolved) {

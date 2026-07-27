@@ -2,10 +2,12 @@ id: "dispel"
 title: "Dispel"
 category: "character"
 role: "player"
-keywords: [ward, capability, staff, gate, obstacle]
+keywords: [ward, capability, staff, gate, obstacle, dispell, disp]
 brief: "Dispel a ward blocking an encounter in the room, using a capability tool you carry."
 syntax:
   - "dispel"
+  - "dispell"
+  - "disp"
 body: |
   Dispel breaks a ward on an encounter in your current room. You do not need
   to name the tool - dispel checks your inventory for whatever answers the
