@@ -1,6 +1,6 @@
 ---
 capability: core-progression
-last-updated: 2026-07-25
+last-updated: 2026-07-27
 ---
 
 # core-progression
@@ -235,6 +235,7 @@ the track's `on_level_up` callback.
 
 ## Change Log
 
+- 2026-07-27 [gear-carries-hp](changes/2026-07-27-gear-carries-hp.md) - closes the gap the 2026-07-25 pure-gear-HP change left open: oracle-minted loot and starter-kit gear now actually push a `maxHp` stat modifier (previously the balance table rolled a `max_hp` figure for every weapon/armor piece and nothing ever turned it into a live stat)
 - 2026-07-25 [hub-threads-core](changes/2026-07-25-hub-threads-core.md) - pure-gear HP: level-up tracks no longer grant max_hp; HP is flat base plus gear only, character level gates nothing
 - 2026-07-03 [vocabulary-consolidation](changes/2026-07-03-vocabulary-consolidation.md) - victim mob level read from the level.combat map instead of the scalar mob_level
 - 2026-06-20 [pack-script-esm](changes/2026-06-20-pack-script-esm.md)

@@ -1,6 +1,6 @@
 ---
 capability: oracle
-last-updated: 2026-07-25
+last-updated: 2026-07-27
 ---
 
 # oracle
@@ -662,6 +662,7 @@ default to strict validation (see Rejected: room-property visited marker).
 
 ## Change Log
 
+- 2026-07-27 [gear-carries-hp](changes/2026-07-27-gear-carries-hp.md) - minted loot and starter-kit gear now push a real `maxHp` stat modifier (read off the master balance table's already-rolled `max_hp` figure) into `writeItemTemplate`'s `modifiers` array at all four loot tiers and the starter kit's weapon/armor pieces, closing A1 (gear previously rolled `max_hp` on paper but granted zero live HP); Option 2 (flat per-level HP, AC-only gear) considered and rejected in favor of wiring the existing roll through
 - 2026-07-25 [hub-threads-oracle](changes/2026-07-25-hub-threads-oracle.md) - template/run split (bake once, re-roll per player at a dialed level), the thread-template registry, the Tapestry board + admin mint bench, level-locked loot, per-run teardown on death/leave/recall, and the nested-run-start guard
 - 2026-07-22 [solo-area-lifecycle-naming](changes/2026-07-22-solo-area-lifecycle-naming.md) - `solo list` / `solo discard [n|areaId]` run lifecycle riding the engine's `authoring.deleteArea` sweep (owned-runs `oracle_runs` player property, admin escape hatch, lazy prune of stale entries, per-area cache teardown); blank runs get a deterministic seeded `qualifier x place` name from its own sub-stream instead of `"the wilds"`, geometry unchanged; engine floor raised to >=0.1.51
 - 2026-07-22 [flow-scratch-migration](changes/2026-07-22-flow-scratch-migration.md) - solo wizard holds its collected inputs in entity.scratch (engine >=0.1.50) instead of the entity property bag, so a completed run leaves no solo_* residue in player.yaml
