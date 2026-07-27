@@ -149,6 +149,11 @@ there is no standalone aggro behavior.
 
 ### tier-scaled death (never strand gear)
 
+- "Tier-scaled death" describes only the respawn and gear-strand consequences branch (grind
+  repop vs Unraveling eject), not XP loss. The XP death penalty is flat: 10% of
+  within-level progress on any death, regardless of tier or context. See core-progression.md's
+  "Death Penalty" section for XP-loss details.
+  
 - The `entity.vital.depleted` (hp) handler creates no corpse and touches no equipment on any
   path. It splits the player's `oracle_active_run` composite `<runAreaId>|<deathMode>|<entryRoomId>`
   (the sole death-mode carrier). (packs/@tapestry/core/scripts/combat/output.ts:234)

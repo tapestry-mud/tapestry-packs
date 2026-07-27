@@ -86,8 +86,10 @@ the track's `on_level_up` callback.
 - On `player.death`, every registered track with `death_penalty > 0` deducts XP. The
   amount deducted is `Math.floor(progressInLevel * death_penalty)` where `progressInLevel`
   is `info.xp - info.currentLevelThreshold`. Loss cannot drop a player below the current
-  level floor because only within-level progress is used as the base.
-  (packages/@tapestry/core/scripts/progression/progression.ts:155-179)
+  level floor because only within-level progress is used as the base. The death penalty
+  rate is flat across every death regardless of run tier or other context: 10% of
+  within-level progress is lost on any death. (packages/@tapestry/core/scripts/progression/progression.ts:155-179;
+  packages/@tapestry/core/scripts/progression/progression.ts:16; packages/@tapestry/core/scripts/progression/progression.ts:45)
 
 - The loss message uses the `<death>` tag: `You lose N experience.`
   (packages/@tapestry/core/scripts/progression/progression.ts:173-175)
