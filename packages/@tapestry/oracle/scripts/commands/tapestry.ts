@@ -60,7 +60,7 @@ tapestry.commands.register({
     handler: function (actor, resolved) {
         const unlocked = tapestry.world.getProperty(actor.entityId, "tapestry_unlocked");
         if (!unlocked) {
-            actor.send("The Tapestry hangs dark. Finish the school first.\r\n");
+            actor.send("The Tapestry hangs dark. Walk south from the Waystone Hall to find the school first.\r\n");
             return;
         }
 
