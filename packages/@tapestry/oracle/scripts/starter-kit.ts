@@ -103,6 +103,7 @@ export function grantStarterKit(
     // Weapon.
     const weaponStats = statsFor("weapon", level, rng);
     const weaponId = areaId + ":kit-" + playerId + "-wield";
+    const weaponMaxHp = Number((weaponStats as any).max_hp) || 0;
     const wroteWeapon = (tapestry as any).authoring.writeItemTemplate({
         areaId,
         id: weaponId,
@@ -111,6 +112,7 @@ export function grantStarterKit(
         desc: KIT_DESCS.wield,
         type: "item",
         properties: { rarity: "common", slot: "wield", damage_dice: String(weaponStats.damage) },
+        modifiers: weaponMaxHp > 0 ? [{ stat: "maxHp", value: weaponMaxHp }] : [],
     });
     if (wroteWeapon) {
         const spawned = (tapestry as any).items.spawnToInventory(weaponId, playerId);
@@ -120,6 +122,7 @@ export function grantStarterKit(
     // Armor: the low-level slot trio, one AC roll shared (same balance row).
     const armorStats = statsFor("armor", level, rng);
     const acVal = Number((armorStats as any).ac) || 0;
+    const armorMaxHp = Number((armorStats as any).max_hp) || 0;
     for (let i = 0; i < KIT_ARMOR_SLOTS.length; i++) {
         const slot = KIT_ARMOR_SLOTS[i];
         const itemId = areaId + ":kit-" + playerId + "-" + slot;
@@ -135,6 +138,7 @@ export function grantStarterKit(
                 slot,
                 ac: { slash: acVal, pierce: acVal, bash: acVal, exotic: acVal },
             },
+            modifiers: armorMaxHp > 0 ? [{ stat: "maxHp", value: armorMaxHp }] : [],
         });
         if (!wrote) { continue; }
         const spawned = (tapestry as any).items.spawnToInventory(itemId, playerId);

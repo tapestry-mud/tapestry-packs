@@ -266,6 +266,12 @@ export function mintItemInstance(
         properties.damage_dice = String(stats.damage);
     }
 
+    const modifiers: Array<{ stat: string; value: number }> = [];
+    const maxHpVal = Number((stats as any).max_hp) || 0;
+    if (maxHpVal > 0) {
+        modifiers.push({ stat: "maxHp", value: maxHpVal });
+    }
+
     // SIGNATURE (ITEM-5): the top ITEM-1 band freezes a unique proper name
     // once at mint, overriding the rolled type's dressing name. Same drop,
     // two signatures = two different named items - the deck is small (8
@@ -296,6 +302,7 @@ export function mintItemInstance(
         desc: type.desc,
         type: "item",
         properties,
+        modifiers,
     });
     if (!written) { return null; }
     return { id: frozenId, base: baseId, name };
