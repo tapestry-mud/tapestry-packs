@@ -29,9 +29,6 @@ tags:
   shop:
     description: "NPC operates as a vendor with shop_sells inventory"
     applies_to: [npc]
-  no_wander:
-    description: "Mobs will not wander into this room"
-    applies_to: [room]
   recall_point:
     description: "Valid teleport/recall destination"
     applies_to: [room]
