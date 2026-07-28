@@ -109,7 +109,7 @@ export function registerGuideHooks(): void {
                 }
                 if (/\b(hint|hints|where|lost|way|road|landmark|boss)\b/.test(lower)) {
                     (tapestry as any).mobs.command(mob.entityId, "say Follow the roads - they run straight to the landmarks, and something worth fighting holds each one.");
-                    (tapestry as any).mobs.command(mob.entityId, "say Size up what you meet before you swing. The deep chambers are not kind.", 1.5);
+                    (tapestry as any).mobs.command(mob.entityId, "say CONSIDER what you meet before you swing, and it will size things up for you. The deep chambers are not kind.", 1.5);
                     return;
                 }
                 (tapestry as any).mobs.command(mob.entityId, "say Say HELLO when you are ready to be outfitted, or ask for a HINT.");
