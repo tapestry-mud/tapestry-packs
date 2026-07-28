@@ -140,6 +140,10 @@ Composed (non-landmark) rooms assemble from their sector's pools:
 - **Slot-filled landmark references**: appended at mint from computed geometry -- one of the
   landmark's afar VARIANTS (up to 3 frozen per landmark) plus a dice-owned 4-tail direction
   deck, or a slot-filled `{dir}` pool line (8-way `dirWord`; vertical uses a fixed template).
+  The 4-tail deck names the landmark explicitly ("The <name> lies to the <dir> of here.")
+  rather than using a bare pronoun -- an LLM-authored afar sentence isn't guaranteed to give
+  "it" a physical-object antecedent, so the tail can't lean on one; the vertical template
+  (above/below) already named the landmark for the same reason.
   DISTANCE-BANDED seeded gate: 0.45 within 2D distance 3 of the landmark, 0.25 beyond
   (the 0.4.0 flat gate put one fixed afar sentence in 17/41 rooms); always-on for the entry
   room and rooms adjacent to their landmark. Four rng draws happen unconditionally so the

@@ -509,10 +509,10 @@ export function landmarkRefLine(
     if (variant < 0.5 && afars.length > 0) {
         const afar = afars[Math.floor(afarPick * afars.length)];
         const tails = [
-            " It lies to the " + dir + " of here.",
-            " It stands " + dir + " of here.",
-            " From here, it is " + dir + ".",
-            " The way " + dir + " leads toward it.",
+            " The " + landmark.name + " lies to the " + dir + " of here.",
+            " The " + landmark.name + " stands " + dir + " of here.",
+            " From here, the " + landmark.name + " is " + dir + ".",
+            " The way " + dir + " leads toward the " + landmark.name + ".",
         ];
         return afar + tails[Math.floor(lineRoll * tails.length)];
     }
