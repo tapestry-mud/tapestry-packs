@@ -584,18 +584,46 @@ packages/@tapestry/oracle/templates/mobs/guide.yaml)
 
 **Idempotent across a grind-tier death repop.** A player who already collected the kit/
 abilities and then dies grind-tier never gets re-prompted or re-outfitted after waking at
-the entry room. The run-start path (`startRun` -> `instantiateRunArea`) sends only "The
-thread pulls taut and draws you in." on both first mint and every later grind repop -- it
-never sends an unconditional outfit prompt. Grind death's repop seam (core's
-`entity.vital.depleted` handler publishing `run.grind_repop`) re-invokes `populateEntry`
-directly, which re-spawns the guide (`ensureGuideAt`'s template-id presence check no-ops
-since one is already there) but never re-grants anything. `deliverProvisions`'s own kit/
-ability gates (grant table lookup + `abilities.getProficiency` absence check) are keyed on
-player id, not on any per-run or per-life state, so a repeat "hello" after death falls
-through to the idle line ("You carry all I can give. Ask for a HINT if the pattern
-confuses you.") exactly as a repeat "hello" would on a live character that never died.
+the entry room. First mint (`startRun` -> `instantiateRunArea`) sends "The thread pulls
+taut and draws you in." -- that path fires exactly once, at run creation, and a grind
+repop never re-invokes it. A grind-tier death runs a completely different path: core's
+`entity.vital.depleted` handler (`packages/@tapestry/core/scripts/combat/output.ts`,
+the grind branch around line 319) teleports the player back to the entry room, sends the
+DISTINCT wake line "You wake at the threshold." (never "The thread pulls taut..."), and
+publishes `run.grind_repop`, which oracle's `population.ts` listener answers by calling
+`populateEntry` directly -- never `instantiateRunArea` or `buildArea`. `populateEntry`
+re-spawns the guide (`ensureGuideAt`'s template-id presence check no-ops since one is
+already there) but never re-grants anything. `deliverProvisions`'s own kit/ability gates
+(grant table lookup + `abilities.getProficiency` absence check) are keyed on player id,
+not on any per-run or per-life state, so a repeat "hello" after death falls through to the
+idle line ("You carry all I can give. Ask for a HINT if the pattern confuses you.")
+exactly as a repeat "hello" would on a live character that never died.
+
+This guarantee is proven only for the population/wake path (the wake message itself, plus
+the guide's own `onSay` handler). It does NOT cover the guide's separate idle-chatter
+channel, which is a distinct, NOT-yet-verified risk: `templates/mobs/guide.yaml` sets
+`idle_chance: 0.3` / `idle_interval: 30` and lists the literal outfit-prompt string ("Say
+HELLO when you are ready to be outfitted, or ask for a HINT.") as an `idle_command`; core's
+`mob.ai.tick` handler (`packages/@tapestry/core/scripts/mobs/idle.ts`) fires that command
+with NO per-player or outfitted-state gate once 30 ticks have elapsed since the guide's
+last action. An already-outfitted player who lingers near the guide can still be
+proactively re-sent that exact prompt text through this channel. The committed smoke
+test's negative assertion (`guide-idempotency.md` step 18) runs within seconds of
+respawn -- far under the 30-tick interval -- so it exercises the wake/population path only
+and cannot exercise the idle-chatter risk either way. A deterministic smoke-test assertion
+for the idle channel was judged impractical with the current tooling: one mob-AI tick is a
+real second (10 game-loop ticks at the default 100ms `TickRateMs`), so 30 ticks alone
+consumes the telnet-runner's entire 30s `Wait for ... sees` ceiling before `idle_chance`
+even gets its first per-tick roll, the expected wait including that roll is closer to ~33s,
+the tail is unbounded (geometric, no cap), and neither the engine nor the test harness
+exposes an admin/test seam to force-advance or skip mob-AI ticks. See Task 17 (ambient
+chatter variety) for related follow-up; this idle-chatter gap should be closed there or
+with a purpose-built long-running test, not treated as covered by this idempotency proof.
 (packages/@tapestry/oracle/scripts/guide.ts:59-98;
 packages/@tapestry/oracle/scripts/area-gen.ts:702-774;
+packages/@tapestry/core/scripts/combat/output.ts:304-321;
+packages/@tapestry/core/scripts/mobs/idle.ts;
+packages/@tapestry/oracle/templates/mobs/guide.yaml;
 packages/@tapestry/oracle/tests/smoke/guide-idempotency.md)
 
 ### Item delivery - freeze + ride mob inventory
