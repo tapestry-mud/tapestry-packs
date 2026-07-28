@@ -1,6 +1,6 @@
 ---
 capability: core-combat
-last-updated: 2026-07-27
+last-updated: 2026-07-28
 ---
 
 # core-combat
@@ -228,6 +228,54 @@ any pack can build a swell boss as data.
   posture, safe rooms, and admin exemption. The sole consumer (LF trolloc) was
   migrated to `base_disposition: hostile`. Hostility is now disposition-only.
   (packages/@tapestry/core/scripts/mobs/behaviors.ts, git log commit d42d285)
+
+- **Deferred (engine-scope, gameplay) - A3 instant boss-room aggro.** A
+  boss-tier room's aggro fires synchronously and instantly the moment a
+  player enters, with no telegraph window. Fixing this requires an engine
+  change to `MobAIManager.OnPlayerEnteredRoom`'s synchronous aggro dispatch;
+  no pack-side lever (property, tag, or event hook) exists to defer or gate
+  it. Deferred 2026-07-27 per Travis; tracked as an engine-lane roadmap item,
+  not implemented in any pack. (Tapestry.Engine/Mobs/MobAIManager.cs:320-326)
+
+- **Deferred (engine-scope, UX bug) - opener-gates-first-room-render
+  (B1/S2-2).** `FlowEngine.FinalizeCreating` hardcodes a
+  fallback-room-then-motd/look ordering, so the engine's own motd/look pair
+  always renders before any pack-authored first-room opener prose can run,
+  with no config surface for a pack to reorder or suppress it. Same
+  "no pack lever exists at all" shape as the A3 item above, but this one was
+  **not** explicitly re-confirmed with Travis this session - it is recorded
+  here on the strength of that identical shape, and should be flagged to him
+  directly rather than assumed settled. (Tapestry.Engine/Flow/FlowEngine.cs:200-247)
+
+- **Deferred (engine-scope, gameplay) - silent quest-reward item grant.**
+  Confirmed during Task 21's work (threadwalker repo, a separate task in
+  this same plan) that `QuestRewardDispatcher.Dispatch` grants quest reward
+  items via `_inventory.PickUp(player, item, silent: true)` - genuinely
+  silent, no item-grant message at all, for school's "first-thread" reward
+  item. This is a different bug from the ordering issue Task 21 actually
+  fixed: S2-8's "hand closes on something real" narrative already covers the
+  flavor text, but the mechanical item-grant confirmation is simply never
+  sent, by design (`silent: true`). Needs an engine-level fix; at minimum
+  threadwalker could work around it by sending its own confirmation message
+  after `onCompleted` fires, if such a hook exists - genuinely undetermined,
+  documented here as found, not resolved.
+  (Tapestry.Engine/Quests/QuestRewardDispatcher.cs:57-65)
+
+- **Deferred (testing-infrastructure, not a gameplay bug) - growing
+  `--all-packs` smoke-suite flakiness.** The full
+  `node tests/tools/telnet-runner.js --all-packs --managed` smoke suite
+  (threadwalker repo) has shown non-deterministic failure counts across many
+  verification runs during this plan (observed ranging from 24/28 to 27/28
+  passed across different runs, with different specific files failing each
+  time), caused by shared Wanderer/Gamemaster/test-dummy account state
+  leaking across scenario files that all run inside one long-lived managed
+  server process. This is a test-harness isolation gap (likely needs either
+  a fresh managed server per scenario file, or an explicit state-reset step
+  between files), not a gameplay bug - it makes the aggregate `--all-packs`
+  pass count an unreliable verification signal on its own. Per-file isolated
+  runs (which this plan's tasks have mostly used) remain trustworthy. Kept
+  distinct from the three engine-gameplay/UX items above: this one does not
+  require Travis's engine sign-off, it needs test-harness work.
 
 ## Change Log
 
