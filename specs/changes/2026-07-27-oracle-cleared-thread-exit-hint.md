@@ -1,5 +1,5 @@
 ---
-release: 0.8.1
+release: unreleased
 specs: [oracle.md]
 ---
 

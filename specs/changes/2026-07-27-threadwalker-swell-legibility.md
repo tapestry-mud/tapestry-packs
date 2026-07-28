@@ -1,5 +1,5 @@
 ---
-release: 0.1.28
+release: unreleased
 specs: [core-combat.md]
 ---
 

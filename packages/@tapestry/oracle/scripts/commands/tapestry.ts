@@ -39,7 +39,23 @@ function openTemplates(): ReturnType<typeof listTemplates> {
     return listTemplates().filter((t) => t.state === "open");
 }
 
-function resolveTemplateRef(ref: string): string | null {
+// Mirrors commands/oracle-admin.ts's own isAdmin check (same admin/builder role gate).
+function isAdmin(actor: any): boolean {
+    return actor.hasRole("admin") || actor.hasRole("builder");
+}
+
+// Final review fix (finding 2): before Task 11, `start`/bare-id handling passed the raw
+// token straight to startRun, which has its own `tpl.state !== "open" && !isAdmin(actor)`
+// bypass (area-gen.ts) - so an admin could target an unflipped DRAFT template by its exact
+// id (Task 9's Human Gate 1 bake-and-test workflow, and any future re-bake, depend on this).
+// Task 11's ordinal/prefix resolution filtered ALL lookups through openTemplates(), which
+// silently dropped that admin capability for this command (oracle-admin.ts's own separate
+// `start` subcommand never used this helper, so IT still worked - but the shipped `tapestry`
+// command lost it). Restored here: an admin/builder's EXACT-id match is checked against every
+// template (draft or open) before falling back to the open-only ordinal/prefix logic below.
+// Ordinal and prefix matching stay open-only for everyone - board numbers/prefixes only ever
+// make sense against what the board actually lists, and drafts are never listed there.
+function resolveTemplateRef(ref: string, admin: boolean): string | null {
     const open = openTemplates();
     const ordinal = parseInt(ref, 10);
     if (!isNaN(ordinal) && String(ordinal) === ref && ordinal >= 1 && ordinal <= open.length) {
@@ -47,6 +63,10 @@ function resolveTemplateRef(ref: string): string | null {
     }
     const exact = open.find((t) => t.templateId === ref);
     if (exact) { return exact.templateId; }
+    if (admin) {
+        const anyExact = listTemplates().find((t) => t.templateId === ref);
+        if (anyExact) { return anyExact.templateId; }
+    }
     const prefixMatches = open.filter((t) => t.templateId.indexOf(ref) === 0);
     if (prefixMatches.length === 1) { return prefixMatches[0].templateId; }
     return null;
@@ -78,7 +98,7 @@ tapestry.commands.register({
                 actor.send("Usage: tapestry start <number or id> [level]\r\n");
                 return;
             }
-            const resolvedId = resolveTemplateRef(tokens[1]);
+            const resolvedId = resolveTemplateRef(tokens[1], isAdmin(actor));
             if (!resolvedId) {
                 actor.send("No such thread. Use its board number or full id.\r\n");
                 return;
@@ -101,7 +121,7 @@ tapestry.commands.register({
             return;
         }
 
-        const bareResolved = resolveTemplateRef(sub);
+        const bareResolved = resolveTemplateRef(sub, isAdmin(actor));
         if (bareResolved) {
             let level: number;
             let explicitLevel: boolean;

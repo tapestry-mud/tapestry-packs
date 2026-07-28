@@ -16,9 +16,9 @@ the same room together.
 
 Both the spoken form and the bare-command form are exercised against the SAME guide
 instance, back to back, and each is asserted against the exact two-line response
-`onSay` sends for a hint match (guide.ts:110-113, current text as of this fix - Task 20
-is a LATER, not-yet-run task that will reword this to explicitly name CONSIDER, so this
-scenario deliberately asserts today's actual strings rather than the future ones).
+`onSay` sends for a hint match (guide.ts:110-113). Task 20 has since reworded the
+second line to explicitly name CONSIDER; this scenario asserts that current text
+(final review fix: the assertions below were stale against the pre-Task-20 wording).
 
 ## Setup
 - Players: Gamemaster
@@ -28,7 +28,7 @@ scenario deliberately asserts today's actual strings rather than the future ones
 2. Assert Gamemaster sees: `Spawned: a weathered guide`
 3. Gamemaster: `say hint`
 4. Assert Gamemaster sees: `Follow the roads - they run straight to the landmarks, and something worth fighting holds each one.`
-5. Assert Gamemaster sees: `Size up what you meet before you swing. The deep chambers are not kind.`
+5. Assert Gamemaster sees: `CONSIDER what you meet before you swing, and it will size things up for you. The deep chambers are not kind.`
 6. Gamemaster: `hint`
 7. Assert Gamemaster sees: `Follow the roads - they run straight to the landmarks, and something worth fighting holds each one.`
-8. Assert Gamemaster sees: `Size up what you meet before you swing. The deep chambers are not kind.`
+8. Assert Gamemaster sees: `CONSIDER what you meet before you swing, and it will size things up for you. The deep chambers are not kind.`
