@@ -18,7 +18,7 @@ under test; `Gamemaster` (admin) only does setup (bake/flip/unlock).
 
 ## Steps
 1. Wanderer: `tapestry`
-2. Assert Wanderer sees: `The Tapestry hangs dark. Finish the school first.`
+2. Assert Wanderer sees: `The Tapestry hangs dark. Walk south from the Waystone Hall to find the school first.`
 3. Assert Wanderer does not see: `pulls taut`
 4. Gamemaster: `oracle-admin bake - week-test 10 50 standard grind 305419896`
 5. Assert Gamemaster sees: `baked as draft`
