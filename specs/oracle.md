@@ -582,6 +582,22 @@ HELLO/HINT. The creation teleport sends a one-line pointer at the guide instead 
 (packages/@tapestry/oracle/scripts/guide.ts; packages/@tapestry/oracle/scripts/starter-kit.ts;
 packages/@tapestry/oracle/templates/mobs/guide.yaml)
 
+**Idempotent across a grind-tier death repop.** A player who already collected the kit/
+abilities and then dies grind-tier never gets re-prompted or re-outfitted after waking at
+the entry room. The run-start path (`startRun` -> `instantiateRunArea`) sends only "The
+thread pulls taut and draws you in." on both first mint and every later grind repop -- it
+never sends an unconditional outfit prompt. Grind death's repop seam (core's
+`entity.vital.depleted` handler publishing `run.grind_repop`) re-invokes `populateEntry`
+directly, which re-spawns the guide (`ensureGuideAt`'s template-id presence check no-ops
+since one is already there) but never re-grants anything. `deliverProvisions`'s own kit/
+ability gates (grant table lookup + `abilities.getProficiency` absence check) are keyed on
+player id, not on any per-run or per-life state, so a repeat "hello" after death falls
+through to the idle line ("You carry all I can give. Ask for a HINT if the pattern
+confuses you.") exactly as a repeat "hello" would on a live character that never died.
+(packages/@tapestry/oracle/scripts/guide.ts:59-98;
+packages/@tapestry/oracle/scripts/area-gen.ts:702-774;
+packages/@tapestry/oracle/tests/smoke/guide-idempotency.md)
+
 ### Item delivery - freeze + ride mob inventory
 
 Loot now fires at ALL FOUR spawn tiers (stage C, 0.6.0) -- through 0.5.x only the trash loop
@@ -647,6 +663,18 @@ default to strict validation (see Rejected: room-property visited marker).
 (packages/@tapestry/oracle/pack.yaml:22-23)
 
 ## Rejected and Reverted
+
+- Tombstone: S2-17 "guide re-prompts an already-outfitted player after death" -- investigated
+  (2026-07-27) and found ALREADY RESOLVED, not fixed by new code in this patch. The
+  unconditional "Say HELLO to be outfitted for the road" message the finding worried about
+  lives only in the disused `solo`/`buildArea` creation path (area-gen.ts:311); the live
+  per-player run path (`tapestry start` / board -> `startRun` -> `instantiateRunArea`) never
+  sent it in the first place, and a grind-tier death repop only re-invokes `populateEntry`,
+  never `buildArea`. guide.ts's own `onSay` handler already gated the kit/ability grant on
+  already-granted state before this task ran. Verified end to end against a live boot
+  (`guide-idempotency.md`): outfit once, force death, confirm no unprompted re-outfit message
+  on wake, confirm a repeat "hello" answers with the idle line, not a re-grant. No fix was
+  needed or applied.
 
 - Per-instance disposition override -- the stage-B disposition axis was first sketched as a
   spawn-override field. Rejected: the engine `SpawnOverride`/`ParseOverride`/`ApplyOverride`
