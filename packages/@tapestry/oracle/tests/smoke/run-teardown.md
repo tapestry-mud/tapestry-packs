@@ -53,7 +53,7 @@ startRun functions directly, admin/builder-gated) plus the real player-facing `l
 10. Gamemaster: `oracle-admin arealive oracle-week-12345678`
 11. Assert Gamemaster sees: `AREA-LIVE: true`
 12. Gamemaster: `oracle-admin start oracle-week-12345678 10`
-13. Assert Gamemaster sees: `still walking a thread`
+13. Assert Gamemaster sees: `You are still walking a thread. Leave it or recall to end it, then pull another.`
 14. Gamemaster: `oracle-admin arealive oracle-week-12345678`
 15. Assert Gamemaster sees: `AREA-LIVE: true`
 16. Gamemaster: `leave`

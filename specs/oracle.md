@@ -345,7 +345,12 @@ authored threads a player pulls from a board, each run at a level they dial.
   packages/@tapestry/oracle/scripts/area-gen.ts:608-624)
 - **Refuse a nested run start.** `startRun` refuses when the caller is already standing in a run
   area (the current room would become a return-address that the prior-run teardown then deletes).
-  The refusal is non-destructive; the remedy is `leave`. (packages/@tapestry/oracle/scripts/area-gen.ts:636)
+  The refusal is non-destructive; the remedy is `leave` or `recall` - the refusal message names
+  both. It cannot name the specific active thread: the only handle available at refusal time is
+  `oracle_active_run`'s runSlug (`oracle-run-<hex>-<hex>`), a per-player id derived independently
+  of `templateId` (`oracle-week-<hex>`), and the run area carries no retrievable attribute pointing
+  back to its originating templateId - so the wording stays generic ("a thread") rather than
+  attempting a lookup that can never resolve. (packages/@tapestry/oracle/scripts/area-gen.ts:641)
 - **Template registry.** Templates persist as one frozen oracle table on a fixed well-known
   area, each row a JSON blob with band window, draft/open state, seed, and death mode - a
   reboot-durable index. (packages/@tapestry/oracle/scripts/template-registry.ts:82;

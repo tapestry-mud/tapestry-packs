@@ -639,7 +639,18 @@ export function startRun(actor: any, templateId: string, level: number, explicit
     // returns the player to the real hub AND tears the run down, so the fix is
     // in their hands and the hub is always where a run starts from.
     if (String(hubRoomId || "").indexOf(RUN_NAMESPACE + ":") === 0) {
-        actor.send("You are still walking a thread. Leave it first, then pull another.\r\n");
+        // NOTE: this refusal cannot name the specific active thread. getTemplate()
+        // is keyed by templateId ("oracle-week-<hex>", see bakeTemplate above), but
+        // the only handle available here is oracle_active_run's runSlug
+        // ("oracle-run-<hex>-<hex>", see startRun below) - a different derived id
+        // that never matches a templateId in the registry, so getTemplate(runSlug)
+        // would always return undefined. instantiateRunArea also does not stash
+        // tpl.templateId as a retrievable area attribute on the run area (only
+        // "seed"/"level_range"/"reset_interval" are set - see instantiateRunArea),
+        // so there is no other way to recover the template name from a runSlug
+        // either. Generic wording, not a broken lookup - but still names the way
+        // out, which does not depend on the name resolving.
+        actor.send("You are still walking a thread. Leave it or recall to end it, then pull another.\r\n");
         return;
     }
 
