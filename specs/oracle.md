@@ -1,6 +1,6 @@
 ---
 capability: oracle
-last-updated: 2026-07-27
+last-updated: 2026-08-01
 ---
 
 # oracle
@@ -502,6 +502,21 @@ properties. (packages/@tapestry/oracle/scripts/tiers.ts;
 packages/@tapestry/oracle/data/six-axis/_default/MOB-1.yaml;
 packages/@tapestry/oracle/data/master-balance.yml)
 
+**Behavior correction (0.9.1 hotfix): armor's `ac` anchor row is positive.** The engine's
+`CalculateArmorClass` is additive -- a worn item's `ac[damageType]` RAISES the wearer's
+effective AC, making the defender harder to hit (`totalRoll >= AC` is the hit test). Both
+`mintItemInstance` and `grantStarterKit` copy the master-balance `armor.ac` roll straight into
+`properties.ac` with no sign flip, so the table row must itself already be the raise amount.
+0.9.0 shipped `armor.ac: [-1, -3, -5, -9, -14]` (negative, growing more negative at higher
+levels), which meant every minted and starter-kit armor piece in that release LOWERED the
+wearer's effective AC instead of raising it -- armor made the wearer easier to hit, the exact
+inverse of the intended and engine-tested contract. Corrected to `[1, 3, 5, 9, 14]`; no other
+balance figure in this release changed. (packages/@tapestry/oracle/data/master-balance.yml:35-40;
+packages/@tapestry/oracle/scripts/resolver.ts:260-262;
+packages/@tapestry/oracle/scripts/starter-kit.ts:124,139;
+Tapestry.Engine/Combat/HitResolver.cs:CalculateArmorClass;
+Tapestry.Engine.Tests/Combat/HitResolverTests.cs:CalculateArmorClass_OneEquippedPiece_RaisesAC)
+
 ### Items six-axis - ITEM-1 rarity bands + ITEM-6 context
 
 The item tables are six-axis too (stage C, 0.6.0), the same shape as stage B's mobs six-axis:
@@ -775,6 +790,7 @@ default to strict validation (see Rejected: room-property visited marker).
 
 ## Change Log
 
+- 2026-08-01 [armor-ac-sign-hotfix](changes/2026-08-01-armor-ac-sign-hotfix.md) - corrects a sign inversion in the just-shipped 0.9.0 `armor.ac` master-balance anchor row (`[-1,-3,-5,-9,-14]` -> `[1,3,5,9,14]`); the engine's additive AC formula meant every minted and starter-kit armor piece was lowering the wearer's effective AC instead of raising it
 - 2026-07-27 [oracle-cleared-thread-exit-hint](changes/2026-07-27-oracle-cleared-thread-exit-hint.md) - when the last non-boss mob in a room dies, print the exit hint "Nothing more stirs here. If the thread feels done, LEAVE returns you to the hub."
 - 2026-07-27 [gear-carries-hp](changes/2026-07-27-gear-carries-hp.md) - minted loot and starter-kit gear now push a real `maxHp` stat modifier (read off the master balance table's already-rolled `max_hp` figure) into `writeItemTemplate`'s `modifiers` array at all four loot tiers and the starter kit's weapon/armor pieces, closing A1 (gear previously rolled `max_hp` on paper but granted zero live HP); Option 2 (flat per-level HP, AC-only gear) considered and rejected in favor of wiring the existing roll through
 - 2026-07-27 [level-dial-default-and-warning](changes/2026-07-27-level-dial-default-and-warning.md) - `tapestry start <id>` with no level now defaults to the player's own combat level instead of erroring, and the board listing explains the level dial does not scale to gear; `startRun` gained an `explicitLevel` parameter and warns (without blocking) when an explicit level outpaces the player's own level
