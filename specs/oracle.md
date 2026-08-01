@@ -410,7 +410,13 @@ B.2 retuned the LOW-LEVEL anchors against a pinned player model (geared skill-le
 (a real fight), L10 anchors rescaled proportionally with the 20/40/60 anchors untouched.
 The boss curve is deliberately untouched: the swell chunk (15% of boss maxHp per countered
 swell, a swell-boss template dial) is what kills a 200 HP L1 boss (~7 clean counters);
-attrition never does. Trash `wimpy_pct` is 0 at L1 (interpolating back to the old curve by
+attrition never does. That reasoning holds only within a single unbroken engagement,
+which is not how the fight is actually played: a geared L1 player survives roughly 22s of
+boss damage while landing ~8 clean counters at the shipped rank-1 dial (12%, not the 15%
+this paragraph reasons from) needs ~75s, so the fight necessarily spans several
+flee-and-recover cycles. The boss therefore carries `no_regen` (2026-08-01) - without it the
+~28 HP it regained during each recovery exceeded a whole engagement of auto-attack output at
+the observed starter hit rate, making the fight net-negative and unwinnable at any HP total. Trash `wimpy_pct` is 0 at L1 (interpolating back to the old curve by
 L10) and the hostile/wary TEMPLATES carry wimpy 0 to match -- all solo trash currently mints
 at L1 and `SpawnOverride` cannot carry wimpy, so the template IS the L1 value; skittish keeps
 65 because that approximation IS the timid disposition. TTK targets are pinned by golden

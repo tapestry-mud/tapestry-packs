@@ -9,7 +9,16 @@
 id: "tapestry-oracle:swell-boss"
 name: "a guardian"
 type: "npc"
-tags: []
+# no_regen: a boss must not heal between engagements. It is a stationary
+# set-piece and the swell chunk is the intended kill path (see master-balance.yml),
+# but a level-1 player survives about 22s of the fight while landing all ~8 clean
+# counters needs ~75s - so the fight is necessarily fought across several
+# flee-and-recover cycles, and the design math never subtracted what the boss
+# healed in between. At the observed starter hit rate that regen exceeded a whole
+# engagement's auto-attack output, making the fight net-negative and unwinnable
+# at any HP total. The tag removes the leak rather than papering over it with a
+# damage buff.
+tags: [no_regen]
 base_disposition: hostile
 keywords: [boss, guardian]
 behavior: stationary
