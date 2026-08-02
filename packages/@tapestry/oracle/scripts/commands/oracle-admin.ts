@@ -10,7 +10,7 @@
 //
 //   oracle-admin bake <idea|-> <name|-> <bandFloor> <bandCap> <sizeBand> <deathMode> <forcedSeed|->
 //   oracle-admin flip <templateId>          (setTemplateState -> "open"; stands in for `mint flip`)
-//   oracle-admin start <templateId> <level> (startRun; ADMIN/BUILDER ONLY - see below)
+//   oracle-admin start <templateId> [unraveling] (startRun; ADMIN/BUILDER ONLY - see below)
 //   oracle-admin whoami                     (debug: actor.roomId vs the engine's true
 //                                            getEntityRoomId - the diagnostic that found the
 //                                            missing authoring.createPack(RUN_NAMESPACE) call)
@@ -39,9 +39,9 @@
 // bake/flip/start require admin/builder privilege (mirrors commands/solo.ts's escape hatch) -
 // every subcommand that calls a MUTATING production function (bakeTemplate/setTemplateState/
 // startRun) is gated. Review finding 2 (fix-plan pass on Task 5): `start` was originally left
-// open to any connected player, which let any player bypass the intended tapestry_unlocked
-// progression gate Task 6's real board will enforce - fixed here. whoami/room stay open; they
-// are harmless read-only self-reports used only for scenario assertions and debugging.
+// open to any connected player, which let any player bypass the PORTAL - now the only way a
+// real player ever enters a thread - fixed here. whoami/room stay open; they are harmless
+// read-only self-reports used only for scenario assertions and debugging.
 //
 // ASCII; braces on all control flow.
 
@@ -108,12 +108,18 @@ tapestry.commands.register({
                 actor.send("Admin/builder only.\r\n");
                 return;
             }
-            if (tokens.length < 3) {
-                actor.send("Usage: oracle-admin start <templateId> <level>\r\n");
+            if (tokens.length < 2) {
+                actor.send("Usage: oracle-admin start <templateId> [unraveling]\r\n");
                 return;
             }
-            const level = parseInt(tokens[2], 10);
-            startRun(actor, tokens[1], level, true);
+            const tpl = getTemplate(tokens[1]);
+            if (!tpl) {
+                actor.send("No such template.\r\n");
+                return;
+            }
+            const band = { min: tpl.bandFloor, max: tpl.bandCap, unravelingBoost: 3 };
+            const mode = (tokens.length > 2 && String(tokens[2]).toLowerCase() === "unraveling") ? "unraveling" : "normal";
+            startRun(actor, tokens[1], band, mode as "normal" | "unraveling", actor.roomId);
             return;
         }
 

@@ -12,17 +12,23 @@ properties:
       persist path on the player file.
     type: string
     applies_to: [player]
-  tapestry_unlocked:
-    description: >
-      Set true when the player finishes the school thread. Gates access to the
-      Tapestry board (the real threads). The one v1 trophy - functional, not cosmetic.
-    type: bool
-    applies_to: [player]
   oracle_active_run:
     description: >
-      The player's active thread run as a pipe composite "<runAreaId>|<deathMode>|<entryRoomId>"
-      (deathMode is grind or unraveling), or empty. The composite lets the core death path read
+      The player's active thread run as a pipe composite "<runAreaId>|<mode>|<entryRoomId>"
+      (mode is normal or unraveling), or empty. The composite lets the core death path read
       the run's tier and respawn point without importing oracle's in-memory state; teardown
       splits off the run area id. Cleared to empty on exit.
+    type: string
+    applies_to: [player]
+  oracle_run_template:
+    description: >
+      The templateId of the player's active thread run. Lets the clear sequence know
+      which thread to grant credit for and where to send the player back to.
+    type: string
+    applies_to: [player]
+  oracle_run_return:
+    description: >
+      The room id the player pulled their active thread from - where they are sent
+      back to on a clear or a leave.
     type: string
     applies_to: [player]

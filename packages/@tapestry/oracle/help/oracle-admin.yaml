@@ -5,7 +5,7 @@ role: "admin"
 syntax:
   - "oracle-admin bake <idea|-> <name|-> <bandFloor> <bandCap> <sizeBand> <deathMode> <forcedSeed|->"
   - "oracle-admin flip <templateId>"
-  - "oracle-admin start <templateId> <level>"
+  - "oracle-admin start <templateId> [unraveling]"
   - "oracle-admin whoami"
   - "oracle-admin room"
 brief: "Temporary bench for baking/opening/starting thread templates (bakeTemplate/startRun harness)."
@@ -24,11 +24,11 @@ body: |
   oracle-admin flip <templateId>
     Admin/builder only. Marks a draft template "open" (stands in for `mint flip`).
 
-  oracle-admin start <templateId> <level>
-    Admin/builder only. Mints a fresh per-player run area from the template at the
-    given level and teleports you in. Gated (fix-plan pass, review finding 2) so this
-    temporary harness cannot be used to bypass the tapestry_unlocked progression gate
-    Task 6's real board will enforce.
+  oracle-admin start <templateId> [unraveling]
+    Admin/builder only. Mints a fresh per-player run area from the template (band
+    synthesized from the template's own bandFloor/bandCap) and teleports you in.
+    Gated (fix-plan pass, review finding 2) so this temporary harness cannot be used
+    to bypass the PORTAL, which is now the only way a real player enters a thread.
 
   oracle-admin whoami
     Debug: prints actor.roomId next to the engine's true getEntityRoomId for your

@@ -76,7 +76,6 @@ export function registerConsequenceHooks(): void {
             const remaining = (tapestry as any).world.getEntitiesInRoom(roomId, "npc");
             if (!remaining || remaining.length === 0) {
                 stampForRoom(roomId, "looted");
-                (tapestry as any).world.sendToRoom(roomId, "Nothing more stirs here. If the thread feels done, LEAVE returns you to the hub.\r\n");
             }
         } catch (_err) {
             // graceful: a hook failure must never crash the engine loop.

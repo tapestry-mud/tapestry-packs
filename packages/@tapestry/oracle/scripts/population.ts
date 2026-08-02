@@ -44,10 +44,9 @@ import { pureDegree, DEFAULT_SPAN, placeLandmarks, landmarkPath } from "./struct
 import { diceSpan, resolveBands } from "./six-axis.js";
 import { pathKey } from "./coords.js";
 import {
-    CONTEXT_BUMP, DISPOSITION_TEMPLATES, TIER_TEMPLATES, ENTRY_PATH,
+    CONTEXT_BUMP, DISPOSITION_TEMPLATES, TIER_TEMPLATES,
     rollDisposition, isEntryAdjacent, stirLine, ambientDensity, entrySafeDensity,
 } from "./tiers.js";
-import { ensureGuideAt } from "./guide.js";
 import { spawnLevel } from "./spawn-level.js";
 import { furthestLandmarkIndex } from "./lair.js";
 import { mobTierLevels } from "./level-resolution.js";
@@ -351,9 +350,6 @@ export function populateRoom(roomId: string, areaId: string): string[] {
 
 export function populateEntry(areaId: string, entryRoomId: string): void {
     markPopulated(areaId, entryRoomId);
-    // Guide first (NPC path), then the tier ladder (dice path, ambient-zero
-    // at entry by the tiers.ambientDensity structural rule).
-    ensureGuideAt(areaId, entryRoomId);
     populateRoom(entryRoomId, areaId);
 }
 
@@ -378,16 +374,6 @@ export function registerPopulationHooks(): void {
             const areaId = ensureAreaContext(toRoom);
             if (!areaId) {
                 return; // not an oracle room - cheap refusal.
-            }
-            // B.2: the starter kit is guide-delivered now (say hello to the
-            // guide at entry) - the stage-B silent auto-grant is gone. The
-            // guide itself is transient (spawnMob mobs do not survive a
-            // reboot) while the entry room's visited marker is frozen, so
-            // every arrival at the entry cell re-ensures the guide
-            // (presence-checked - never a double-spawn). Runs BEFORE the
-            // revisit gate on purpose.
-            if (getRoomPath(toRoom) === ENTRY_PATH) {
-                ensureGuideAt(areaId, toRoom);
             }
             if (isPopulated(areaId, toRoom)) {
                 return; // backtrack/revisit: spawns happen exactly once.

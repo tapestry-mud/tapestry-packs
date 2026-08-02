@@ -40,13 +40,14 @@ import { clearAreaCaches } from "./area-teardown.js";
 import { runEntryRoomId, RUN_NAMESPACE } from "./run-entry.js";
 import { furthestLandmarkIndex } from "./lair.js";
 import { initSeal } from "./seal.js";
+import { normalRunLevel, unravelingRunLevel, type PortalBand } from "./level-resolution.js";
 
 // Re-exported so area-gen.ts remains the documented module-scope home for the shared
 // entry-room derivation (Task 5, D6 / validate-plan R2 LOW); the implementation itself
 // lives in run-entry.ts, which has no engine-touching imports and is golden-testable
-// under plain node (area-gen.ts pulls in population.js -> guide.js, which calls
-// tapestry.mobs.registerScript at import time and cannot be loaded outside the Jint
-// sandbox) - same split as population.ts/spawn-level.ts.
+// under plain node (area-gen.ts pulls in population.js, which registers engine hooks
+// at import time and cannot be loaded outside the Jint sandbox) - same split as
+// population.ts/spawn-level.ts.
 export { runEntryRoomId } from "./run-entry.js";
 
 // ---------------------------------------------------------------------------
@@ -307,10 +308,6 @@ export function createSoloArea(
 
                 tapestry.world.teleportEntity(playerId, gen.entryRoomId);
                 tapestry.world.send(playerId, "The pattern settles into place around you.");
-                // B.2: provisions are guide-delivered now - the guide spawned
-                // with the entry room (populateEntry); point the creator at it
-                // instead of silently auto-granting the kit.
-                tapestry.world.send(playerId, "A weathered guide waits here. Say HELLO to be outfitted for the road.");
                 tapestry.admin.executeAs(playerId, "look");
             }
         });
@@ -601,68 +598,52 @@ function teardownActiveRunOnExit(entityId: string | undefined): void {
 // ---------------------------------------------------------------------------
 // startRun
 //
-// Per-player run start: numeric, no LLM. Validates the level against the
-// template's band window, tears down any prior active run (one run per
-// player - spec 3.1a), mints a fresh per-player run area from the template
-// seed, sets the return-address to the hub room, records oracle_active_run,
-// then hands off to instantiateRunArea for the geometry+populate+teleport.
+// Per-player run start: numeric, no LLM. The level DIAL is deleted (spec 2.1) -
+// entry is walking through a portal, so there is no argument to supply and no band
+// window to validate against a typed number. The caller (threadwalker's portal
+// fixture) hands over the portal's wiring and the mode; this resolves the level,
+// tears down any prior active run (one run per player, spec 3.1a), mints a fresh
+// per-player run area from the template seed, sets the return-address to the room
+// the player walked in FROM, records oracle_active_run, then hands off to
+// instantiateRunArea.
+//
+// Returns true when the run started. A false return means nothing changed and the
+// player is still standing where they were - the caller must not narrate a transit.
 // ---------------------------------------------------------------------------
 
-export function startRun(actor: any, templateId: string, level: number, explicitLevel: boolean): void {
+export function startRun(
+    actor: any,
+    templateId: string,
+    band: PortalBand,
+    mode: "normal" | "unraveling",
+    returnRoomId: string
+): boolean {
     const tpl = getTemplate(templateId);
     if (!tpl) {
-        actor.send("No such thread.\r\n");
-        return;
+        actor.send("That thread is not woven yet.\r\n");
+        return false;
     }
     if (tpl.state !== "open" && !isAdmin(actor)) {
         actor.send("That thread is not open yet.\r\n");
-        return;
-    }
-    if (level < tpl.bandFloor || level > tpl.bandCap) {
-        actor.send("Pick a level between " + tpl.bandFloor + " and " + tpl.bandCap + ".\r\n");
-        return;
-    }
-    if (explicitLevel) {
-        const playerLevel = tapestry.progression.getLevel(actor.entityId, "combat") || 1;
-        if (level > playerLevel) {
-            actor.send("Dialing " + level + " against your own level " + playerLevel + " - this will be hard. Gear up first if you are not sure.\r\n");
-        }
+        return false;
     }
 
     const playerId = actor.entityId;
-    const hubRoomId = actor.roomId; // where they pulled the thread = home
+    const playerLevel = tapestry.progression.getLevel(playerId, "combat") || 1;
+    const level = mode === "unraveling"
+        ? unravelingRunLevel(band)
+        : normalRunLevel(playerLevel, band);
 
-    // Never pull a thread from inside a thread. The line above captures the
-    // player's CURRENT room as the return-address, and the prior-run teardown
-    // below deletes that area moments later - so a nested start would leave
-    // `leave` pointing at a room that no longer exists, and the engine's
-    // TeleportEntity removes an entity from its old room BEFORE it null-checks
-    // the target, stranding the player in no room at all. Refusing outright
-    // removes the whole class instead of patching the address: `leave` already
-    // returns the player to the real hub AND tears the run down, so the fix is
-    // in their hands and the hub is always where a run starts from.
-    if (String(hubRoomId || "").indexOf(RUN_NAMESPACE + ":") === 0) {
-        // NOTE: this refusal cannot name the specific active thread. getTemplate()
-        // is keyed by templateId ("oracle-week-<hex>", see bakeTemplate above), but
-        // the only handle available here is oracle_active_run's runSlug
-        // ("oracle-run-<hex>-<hex>", see startRun below) - a different derived id
-        // that never matches a templateId in the registry, so getTemplate(runSlug)
-        // would always return undefined. instantiateRunArea also does not stash
-        // tpl.templateId as a retrievable area attribute on the run area (only
-        // "seed"/"level_range"/"reset_interval" are set - see instantiateRunArea),
-        // so there is no other way to recover the template name from a runSlug
-        // either. Generic wording, not a broken lookup - but still names the way
-        // out, which does not depend on the name resolving.
+    // Never pull a thread from inside a thread. The return-address below captures
+    // the caller's room, and the prior-run teardown deletes that area moments
+    // later - so a nested start would leave `leave` pointing at a room that no
+    // longer exists, and TeleportEntity removes an entity from its old room BEFORE
+    // it null-checks the target, stranding the player in no room at all.
+    if (String(returnRoomId || "").indexOf(RUN_NAMESPACE + ":") === 0) {
         actor.send("You are still walking a thread. Leave it or recall to end it, then pull another.\r\n");
-        return;
+        return false;
     }
 
-    // One active run per player (spec 3.1a): tear down any prior instance
-    // before minting the new one, so orphan run areas cannot accumulate. If
-    // the sweep fails, abort exactly like solo.ts's `solo discard` does on a
-    // failed authoring.deleteArea - message and stop, nothing changed - rather
-    // than minting a second run on top of a prior one that may not actually
-    // be gone (review finding 3, fix-plan pass on Task 5).
     const priorRaw = (tapestry as any).world.getProperty(playerId, "oracle_active_run");
     if (priorRaw) {
         const priorAreaId = String(priorRaw).split("|")[0];
@@ -670,29 +651,27 @@ export function startRun(actor: any, templateId: string, level: number, explicit
             const torn = teardownRun(playerId, priorAreaId);
             if (!torn) {
                 actor.send("Could not clear your prior thread run. Nothing was changed.\r\n");
-                return;
+                return false;
             }
         }
     }
 
-    // Unique run area from the template seed (deterministic geometry, per-player id).
     const runSlug = "oracle-run-" + (tpl.seed >>> 0).toString(16) + "-" + simpleHash(String(playerId)).toString(16);
-    // ONE shared derivation for the entry-room id (D6 / validate-plan R2 LOW): both the
-    // composite carrier written here AND the geometry mint in instantiateRunArea call
-    // runEntryRoomId, so the death handler's respawn target and the room actually
-    // minted can never drift.
     const entryRoomId = runEntryRoomId(runSlug);
 
-    // Set the return-address so `leave` works (engine service, previously never called).
-    tapestry.returnaddress.set(String(playerId), hubRoomId);
-    // Record the active run as the pipe COMPOSITE "<runAreaId>|<deathMode>|<entryRoomId>" so
-    // the core death handler (Task 12) reads the tier AND the respawn point without importing
-    // oracle's in-memory state. This is the ONLY death-mode carrier - do NOT also stash the
-    // mode on AreaState.
-    (tapestry as any).world.setProperty(playerId, "oracle_active_run", runSlug + "|" + tpl.deathMode + "|" + entryRoomId);
+    tapestry.returnaddress.set(String(playerId), returnRoomId);
+    // The composite is the SOLE carrier of mode and respawn point for the core
+    // death handler: "<runAreaId>|<mode>|<entryRoomId>". Mode is now normal or
+    // unraveling; core treats an unknown value (including a legacy "grind") as
+    // normal. Do NOT also stash the mode on AreaState.
+    (tapestry as any).world.setProperty(playerId, "oracle_active_run", runSlug + "|" + mode + "|" + entryRoomId);
+    // The thread's own identity, so the clear sequence knows which thread to grant
+    // and where to send the player back to.
+    (tapestry as any).world.setProperty(playerId, "oracle_run_template", templateId);
+    (tapestry as any).world.setProperty(playerId, "oracle_run_return", returnRoomId);
 
-    // Load the template's frozen tables and drive the existing geometry+populate path at `level`.
     instantiateRunArea(actor, tpl, runSlug, level);
+    return true;
 }
 
 // ---------------------------------------------------------------------------
