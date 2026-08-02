@@ -109,8 +109,19 @@ export function grantThread(playerId: string, templateId: string, templateName: 
         (tapestry as any).world.addTag(spawned.id, "soulbound");
         (tapestry as any).world.addTag(spawned.id, "no_sell");
     } catch (_tagErr) {
-        // graceful: a failed tag application never blocks the grant - the item
-        // still reaches the player, only the binding enforcement is degraded.
+        // The item still reaches the player - a failed tag application never
+        // blocks the grant - but the anti-share/anti-sell binding is now
+        // degraded, silently, on a give-away key item. Loud, because nothing
+        // downstream has any other way to learn the gate did not apply.
+        try {
+            (tapestry as any).system?.warn(
+                "[oracle] grantThread: soulbound/no_sell tag failed to apply to "
+                + spawned.id + " (thread of " + templateName + ", player " + playerId
+                + "); the item is NOT bound. " + ((_tagErr as any) && (_tagErr as any).message ? (_tagErr as any).message : String(_tagErr))
+            );
+        } catch (_warnErr) {
+            // graceful: a missing warn binding never blocks the grant.
+        }
     }
     return true;
 }
