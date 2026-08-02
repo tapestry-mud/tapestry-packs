@@ -39,7 +39,7 @@ import { getTemplate, registerTemplate, type ThreadTemplate } from "./template-r
 import { clearAreaCaches } from "./area-teardown.js";
 import { runEntryRoomId, RUN_NAMESPACE } from "./run-entry.js";
 import { furthestLandmarkIndex } from "./lair.js";
-import { initSeal } from "./seal.js";
+import { initSeal, objectiveLine } from "./seal.js";
 import { normalRunLevel, unravelingRunLevel, type PortalBand } from "./level-resolution.js";
 
 // Re-exported so area-gen.ts remains the documented module-scope home for the shared
@@ -767,9 +767,35 @@ function instantiateRunArea(
     const entryRoomId = runEntryRoomId(runSlug);
     mintAreaGeometry(state, function (): void {
         populateEntry(runSlug, entryRoomId);
-        tapestry.world.teleportEntity(playerId, entryRoomId);
-        tapestry.world.send(playerId, "The thread pulls taut and draws you in.");
-        tapestry.admin.executeAs(playerId, "look");
+        // Short transit beat, then the teleport. The teleport belongs in
+        // onComplete and never at cutscene start (weaver-opener.js:66's warning):
+        // a player who disconnects mid-beat must not land inside a run they never
+        // arrived in. A thread start has no LLM in it, so this is a door, not a
+        // loading screen - keep it to three beats.
+        const beats = [
+            { text: "You put a hand to the weave and it gives, the way water gives.", pauseAfter: 12 },
+            { text: "Thread closes over you. Somewhere far off, a pattern takes your weight.", pauseAfter: 12 },
+            { text: "Then ground.", pauseAfter: 0 },
+        ];
+        (tapestry as any).cutscene.play(playerId, beats, { skippable: true }, function (): void {
+            try {
+                tapestry.world.teleportEntity(playerId, entryRoomId);
+                tapestry.admin.executeAs(playerId, "look");
+                // Spec 5.4: the run STATES ITS OBJECTIVE ON ENTRY. Without this the
+                // player arrives knowing only that they are somewhere, which is
+                // section 1's complaint ("the objective is invisible") surviving the
+                // fix that was supposed to remove it (review F3). The seal total is
+                // already known here - initSeal ran at mint - so this is a readout,
+                // not new machinery. It goes AFTER the look so it is the last thing
+                // on screen rather than something the room description buries.
+                const objective = objectiveLine(runSlug);
+                if (objective !== "") {
+                    tapestry.world.send(playerId, "\r\n" + objective + "\r\n");
+                }
+            } catch (_err) {
+                // graceful: never throw out of a cutscene callback.
+            }
+        });
     });
 }
 
