@@ -10,17 +10,54 @@ import * as tapestry from "@tapestry/engine";
 // isWardBlocked is the single source of truth for "is this defender
 // currently immune", shared by every damage-dealing surface in the pack
 // (melee output, spells, skills) so the check never drifts between them.
+//
+// The single source of truth, now literally rather than aspirationally (R2-F2).
+// An earlier revision added outstandingCaps beside isWardBlocked's own identical
+// loop over req_ tags and cap_cleared_ properties, in a file whose header calls
+// isWardBlocked "the single source of truth... so the check never drifts between
+// them" - two implementations of one rule, which is exactly the drift that comment
+// warns about. One scan; the boolean is derived from it.
 export function isWardBlocked(defenderId) {
+    return outstandingCaps(defenderId).length > 0;
+}
+
+// The uncleared capability gates on a defender, in tag order. isWardBlocked answers
+// "is it immune"; this answers "why", which is what the player needs when more than
+// one gate is stacked (F5).
+export function outstandingCaps(defenderId) {
+    var out = [];
     var tags = tapestry.world.getEntityTags(defenderId) || [];
     for (var i = 0; i < tags.length; i++) {
         if (tags[i].indexOf("req_") !== 0) { continue; }
         var capName = tags[i].substring("req_".length);
-        var cleared = tapestry.world.getProperty(defenderId, "cap_cleared_" + capName);
-        if (!cleared) {
-            return true;
+        if (!tapestry.world.getProperty(defenderId, "cap_cleared_" + capName)) {
+            out.push(capName);
         }
     }
-    return false;
+    return out;
+}
+
+// Prose per capability. An unknown cap falls back to its own name rather than being
+// silently dropped, so a pack that invents a gate still gets a legible refusal.
+var CAP_PROSE = {
+    ward_dispel: "a shimmering ward",
+    seal: "a seal it did not make"
+};
+
+export function refusalFor(defenderId, targetName) {
+    var caps = outstandingCaps(defenderId);
+    if (caps.length === 0) { return ""; }
+    var parts = [];
+    for (var i = 0; i < caps.length; i++) {
+        parts.push(CAP_PROSE[caps[i]] || caps[i]);
+    }
+    if (parts.length === 1) {
+        return parts[0] + " turns the blow aside from " + targetName + ".\r\n";
+    }
+    // More than one gate: say so explicitly and name every one, or the player
+    // clears the gate they know about and reads the identical refusal again.
+    var joined = parts.slice(0, parts.length - 1).join(", ") + " and " + parts[parts.length - 1];
+    return targetName + " is held by more than one thing: " + joined + ". Both must give before steel will reach it.\r\n";
 }
 
 // --- The root gate: entity.vital.changed, not combat.hit ---
@@ -96,6 +133,6 @@ tapestry.events.on("entity.vital.changed", function(event) {
     var entity = tapestry.world.getEntity(targetId);
     var targetName = entity && entity.name ? entity.name : "it";
     if (event.roomId) {
-        tapestry.world.sendToRoom(event.roomId, "A shimmering ward turns the blow aside from " + targetName + ".\r\n");
+        tapestry.world.sendToRoom(event.roomId, refusalFor(targetId, targetName));
     }
 });

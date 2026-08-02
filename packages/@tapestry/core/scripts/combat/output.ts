@@ -1,6 +1,6 @@
 import * as tapestry from "@tapestry/engine";
 import { conditionIndex, conditionText } from "./condition.js";
-import { isWardBlocked } from "./ward.js";
+import { isWardBlocked, refusalFor } from "./ward.js";
 // --- Combat engage output ---
 tapestry.events.on("combat.engage", function(event) {
     var data = event.data || {};
@@ -82,7 +82,7 @@ tapestry.events.on("combat.hit", function(event) {
         // dispelling) - the third discoverability surface for the themed
         // verb, spec 4.4. HP was already restored by ward.ts's
         // entity.vital.changed handler before this event fired.
-        tapestry.world.send(attackerId, "Your blow glances off a shimmering ward. Steel will not part it.\r\n");
+        tapestry.world.send(attackerId, refusalFor(targetId, data.targetName || "something"));
         return;
     }
 

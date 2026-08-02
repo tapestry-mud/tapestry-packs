@@ -11,6 +11,12 @@ tapestry.commands.register({
         var item = resolved.item;
         var target = resolved.target;
 
+        var itemTags = tapestry.world.getEntityTags(item.id) || [];
+        if (itemTags.indexOf('soulbound') !== -1) {
+            actor.send(item.name + ' is bound to you. It will not leave your hand.\r\n');
+            return;
+        }
+
         actor.send('You give ' + item.name + ' to ' + target.name + '.\r\n');
         tapestry.world.send(target.id, actor.name + ' gives you ' + item.name + '.\r\n');
         actor.sendToRoom(actor.name + ' gives ' + item.name + ' to ' + target.name + '.\r\n');

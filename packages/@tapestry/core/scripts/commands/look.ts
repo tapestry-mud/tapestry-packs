@@ -95,6 +95,18 @@ function lookAtTarget(actor, resolved) {
         if (item) {
             actor.send('\r\n<highlight>--- ' + item.name + ' ---</highlight>\r\n');
             renderItemStats(actor, item);
+            // A readable surface carries its content in `text`, not `description` (that is
+            // what `read` prints). Without this, looking at a readable fixture renders an
+            // empty box - cosmetic on a signpost, fatal on the Tapestry, which is the only
+            // index of the game (S2-6). Show the text on look too; `read` still works and
+            // is still what a consumable book path goes through.
+            var invLookTags = tapestry.world.getEntityTags(item.id) || [];
+            if (invLookTags.indexOf('readable') !== -1) {
+                var invLookText = tapestry.world.getProperty(item.id, 'text');
+                if (invLookText) {
+                    actor.send('  ' + String(invLookText).split('\r\n').join('\r\n  ') + '\r\n');
+                }
+            }
             actor.send('<highlight>---' + Array(item.name.length + 3).join('-') + '---</highlight>\r\n');
             if (item.isContainer) {
                 if (item.contents && item.contents.length > 0) {
@@ -147,6 +159,18 @@ function lookAtTarget(actor, resolved) {
     actor.send('\r\n<highlight>--- ' + details.name + ' ---</highlight>\r\n');
     if (details.properties && details.properties.description) {
         actor.send('  ' + details.properties.description + '\r\n');
+    }
+    // A readable surface carries its content in `text`, not `description` (that is
+    // what `read` prints). Without this, looking at a readable fixture renders an
+    // empty box - cosmetic on a signpost, fatal on the Tapestry, which is the only
+    // index of the game (S2-6). Show the text on look too; `read` still works and
+    // is still what a consumable book path goes through.
+    var lookTags = tapestry.world.getEntityTags(resolved.id) || [];
+    if (lookTags.indexOf('readable') !== -1) {
+        var lookText = tapestry.world.getProperty(resolved.id, 'text');
+        if (lookText) {
+            actor.send('  ' + String(lookText).split('\r\n').join('\r\n  ') + '\r\n');
+        }
     }
     // examineItem takes a NAME (string), not the entity id we already have in
     // resolved.id -- its C# search order is actor.Contents, then actor's

@@ -53,3 +53,6 @@ tags:
   cap_ward_dispel:
     description: "Marks an item as a reusable tool that answers the ward-dispel capability gate (the dispel verb); not consumed on use"
     applies_to: [item]
+  soulbound:
+    description: "Item is bound to its holder and cannot be handed to another player; the thread keys use this so a veteran cannot hand a fresh character a high-week Unraveling key"
+    applies_to: [item]
