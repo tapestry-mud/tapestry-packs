@@ -499,15 +499,17 @@ function readTargetRooms(areaId: string): number {
 //
 // Deletes a run area (engine sweep + this pack's own in-memory caches, the
 // same two-step solo.ts's `solo discard` uses) and clears the player's active-
-// run pointer. Exported for Task 12/13's death/leave listeners; used here by
-// startRun to enforce "one active run per player" (spec 3.1a).
+// run pointer. Exported for Task 13's leave/recall listeners below; used here
+// by startRun to enforce "one active run per player" (spec 3.1a). Death no
+// longer calls this (Task 10, spec 2.3): the Unraveling resets a run in place
+// instead of tearing it down.
 //
 // Mirrors solo.ts's `solo discard` failure handling exactly (review finding 3,
 // fix-plan pass on Task 5): if the engine sweep (authoring.deleteArea) fails,
 // ABORT - do NOT clear oracle_active_run and do NOT touch the in-memory
 // caches. Clearing the pointer unconditionally would orphan the run area
 // (unreachable by pointer, since the pointer got cleared anyway) with no
-// surfaced failure, exactly the gap Task 12/13's death/leave listeners would
+// surfaced failure, exactly the gap the leave/recall listeners would
 // otherwise inherit silently. Returns whether the teardown actually happened,
 // so callers can react the same way `solo discard` does (message + abort,
 // nothing changed) instead of proceeding as if it succeeded.
@@ -525,47 +527,19 @@ export function teardownRun(playerId: string, runAreaId: string): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// "run.unraveled" listener (Task 12's cross-pack teardown seam)
-//
-// core's death handler (combat/output.ts) cannot import teardownRun directly:
-// oracle depends on core (pack.yaml), never the reverse, so a core -> oracle
-// import would be a backwards pack dependency. Instead the Unraveling-death
-// branch publishes "run.unraveled" with the runAreaId it already split off
-// the oracle_active_run composite, and this listener finishes the teardown.
-// The engine event bus dispatches synchronously in-process, so this runs
-// before core's publish() call returns - same effective timing as a direct
-// function call, no async gap.
-//
-// Registered at module load, self-registering via the pack script glob (same
-// pattern as consequence-hooks.ts/population.ts) - area-gen.ts is also loaded
-// transitively (solo-flow.ts/mint-flow.ts import it), so this fires either way.
-//
-// Task 13 scope note: this listener covers ONLY the death path. Task 13's own
-// exit paths (leave/recall) still need their own listener(s) on "return.used"
-// (and whatever recall.ts publishes) per its brief - do NOT register a second
-// listener for "run.unraveled" there, and do NOT assume this listener also
-// covers leave/recall (it does not; it only fires from the death handler).
-(tapestry as any).events.on("run.unraveled", function (evt: any): void {
-    const data = (evt && evt.data) ? evt.data : {};
-    const playerId = data.entityId;
-    const runAreaId = data.runAreaId;
-    if (!playerId || !runAreaId) { return; }
-    teardownRun(playerId, runAreaId);
-});
-
-// ---------------------------------------------------------------------------
 // "return.used" / "player.teleported" listeners (Task 13's abandon-path
-// teardown seam - the leave/recall counterpart to Task 12's "run.unraveled"
-// listener above, same pattern: core publishes an exit event, oracle listens
-// and finishes the teardown, since core cannot import oracle (oracle depends
-// on core, never the reverse).
+// teardown seam: core publishes an exit event, oracle listens and finishes
+// the teardown, since core cannot import oracle (oracle depends on core,
+// never the reverse). Death no longer tears the run down at all (Task 10,
+// spec 2.3 - the Unraveling resets in place via "run.repop" instead), so
+// voluntary abandon via leave/recall is the only path left that ends a run
+// through teardownRun.
 //
 // Neither leave.ts nor recall.ts knows or cares whether the player is mid-run
-// - they fire their event unconditionally on every use. So unlike
-// "run.unraveled" (which only ever fires from the death handler, already
-// mid-run by construction), these two listeners must read oracle_active_run
-// themselves and no-op when it is empty (not in a run - ordinary hub/world
-// leave/recall, nothing to tear down).
+// - they fire their event unconditionally on every use. So unlike a death-path
+// listener (which would only ever fire already mid-run by construction), these
+// two listeners must read oracle_active_run themselves and no-op when it is
+// empty (not in a run - ordinary hub/world leave/recall, nothing to tear down).
 //
 // "return.used" (leave.ts, core/scripts/commands/leave.ts): published on
 // every successful `leave`, carrying {entityId, fromRoomId, toRoomId}.

@@ -50,7 +50,7 @@ import {
 import { spawnLevel } from "./spawn-level.js";
 import { furthestLandmarkIndex } from "./lair.js";
 import { mobTierLevels } from "./level-resolution.js";
-import { sealBoss, sealBroken, noteMinibossSlain, initSeal } from "./seal.js";
+import { sealBoss, sealBroken, noteMinibossSlain, initSeal, resetSeal, objectiveLine } from "./seal.js";
 
 // Re-exported so population.ts remains the documented home of the spawn-level
 // seam (Produces: AreaState.runLevel, read here); the implementation itself
@@ -418,7 +418,7 @@ registerPopulationHooks();
 });
 
 // ---------------------------------------------------------------------------
-// "run.grind_repop" listener (Task 12's grind-death repop seam)
+// "run.repop" listener (Task 10, spec 2.3: the death model flip)
 //
 // Discovered while building Task 12's SA1 scenario: `world.resetArea` (Task 1)
 // wraps the engine's generic SpawnManager.RunAreaReset, which only repops
@@ -431,25 +431,25 @@ registerPopulationHooks();
 // no-op for every oracle run area - confirmed empirically (a killed, warded
 // mob's room stayed empty after `world.resetArea` with no repop of any kind).
 //
-// So core's death handler ALSO publishes "run.grind_repop" (same class of
-// seam as "run.unraveled" - core cannot import oracle's population internals
-// directly, oracle depends on core, never the reverse). This listener clears
-// BOTH the in-memory visited cache (removeVisited) AND the FROZEN "visited"
-// oracle table it lazily rehydrates from (removeVisited alone is NOT enough -
-// it only drops the cache; the very next isPopulated() call reloads the same
-// markers straight back off the persisted side-car, since removeVisited was
-// designed for teardown of a DISCARDED area, where the persisted table is
-// going away anyway - not for a live area, where it is not). Writing the
-// table to empty entries first, then dropping the cache, is what actually
-// makes the next real visit look like a first visit again - a fresh
-// `populateRoom` call, a fresh mob instance, no `cap_cleared_*` (SA1).
+// So core's death handler publishes "run.repop" on the Unraveling branch only
+// (core cannot import oracle's population internals directly, oracle depends
+// on core, never the reverse). This listener clears BOTH the in-memory
+// visited cache (removeVisited) AND the FROZEN "visited" oracle table it
+// lazily rehydrates from (removeVisited alone is NOT enough - it only drops
+// the cache; the very next isPopulated() call reloads the same markers
+// straight back off the persisted side-car, since removeVisited was designed
+// for teardown of a DISCARDED area, where the persisted table is going away
+// anyway - not for a live area, where it is not). Writing the table to empty
+// entries first, then dropping the cache, is what actually makes the next
+// real visit look like a first visit again - a fresh `populateRoom` call, a
+// fresh mob instance, no `cap_cleared_*` (SA1).
 //
 // The entry room is repopulated immediately (mirrors startRun's own
 // populateEntry call) since it is structurally boss-free (ambient-zero) and
 // the player lands there right away; every other room in the run stays lazy
 // (repops on the player's next real move into it, same as any first visit -
 // consistent with how population already works everywhere else).
-(tapestry as any).events.on("run.grind_repop", function (evt: any): void {
+(tapestry as any).events.on("run.repop", function (evt: any): void {
     const data = (evt && evt.data) ? evt.data : {};
     const areaId = data.runAreaId;
     const entryRoomId = data.entryRoomId;
@@ -461,7 +461,24 @@ registerPopulationHooks();
         // rehydrate, never throws into the engine loop.
     }
     removeVisited(areaId);
+    // Repop and the seal are the SAME switch (spec 2.3): the minibosses come back,
+    // so the lair re-locks. A boss that respawns later is re-tagged by sealBoss's
+    // own broken-check at spawn; a boss still standing from before is not, which
+    // is correct - it dies to the fresh gauntlet or it does not.
+    resetSeal(areaId);
     if (entryRoomId) {
         populateEntry(areaId, entryRoomId);
+    }
+    // Restate the objective (spec 5.4; review R2-F3). This is the third surface
+    // that needs it and the one where it matters most: the seal just went from
+    // broken back to N keepers and every one of them is alive again. Saying
+    // nothing here means the run materially reset in silence, which is the
+    // "objective is invisible" complaint reappearing at the worst moment.
+    const playerId = data.entityId;
+    if (playerId) {
+        const objective = objectiveLine(areaId);
+        if (objective !== "") {
+            (tapestry as any).world.send(playerId, objective + "\r\n");
+        }
     }
 });

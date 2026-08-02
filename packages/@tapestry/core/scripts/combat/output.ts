@@ -236,26 +236,25 @@ tapestry.events.on("combat.kill", function(event) {
 // no cross-pack read of oracle's in-memory AreaState, and no second death-mode
 // signal anywhere in core.
 //
-// Cross-pack teardown (Unraveling branch only): oracle owns `teardownRun`
-// (area-gen.ts), and oracle depends on core (pack.yaml `dependencies:
+// Cross-pack repop (Unraveling branch only, spec 2.3): the death model
+// flipped - the Unraveling no longer tears the run down, it resets it in
+// place. Both branches respawn at the same room; only the Unraveling repops
+// the area and re-locks the seal. oracle owns the repop machinery
+// (population.ts), and oracle depends on core (pack.yaml `dependencies:
 // @tapestry/core`), never the reverse - core has zero pack dependencies by
 // design (it is the foundational pack every other pack, including oracle,
-// builds on). A literal `import { teardownRun } from "@tapestry/oracle"`
-// here would be a backwards dependency the pack graph does not support (every
-// real cross-pack import in this repo flows dependent -> its own dependency,
-// e.g. @tapestry/cooking -> @tapestry/survival, never core -> a pack that
-// depends on core). So this branch PUBLISHES "run.unraveled" with the
-// already-split runAreaId instead of calling teardownRun directly; oracle
-// registers a synchronous listener for it (area-gen.ts, self-registered via
-// the pack script glob, same pattern as consequence-hooks.ts/population.ts).
-// The engine event bus dispatches subscribers synchronously in-process (same
-// call stack, confirmed against EventBus.Publish for the ward gate above), so
-// the publish-then-listener teardown completes before this handler returns -
-// no async gap, same effective timing as a direct call would have had.
-// Task 13's brief assumed a literal direct `teardownRun(playerId, runAreaId)`
-// call for this branch specifically; that assumption does not hold given the
-// pack dependency direction, so this event is the substitute. Task 13 must
-// NOT add a second listener for the death path - only for leave/recall.
+// builds on). A literal `import { ... } from "@tapestry/oracle"` here would
+// be a backwards dependency the pack graph does not support (every real
+// cross-pack import in this repo flows dependent -> its own dependency, e.g.
+// @tapestry/cooking -> @tapestry/survival, never core -> a pack that depends
+// on core). So this branch PUBLISHES "run.repop" with the already-split
+// runAreaId/entryRoomId instead of calling into oracle directly; oracle
+// registers a synchronous listener for it (population.ts, self-registered via
+// the pack script glob, same pattern as consequence-hooks.ts). The engine
+// event bus dispatches subscribers synchronously in-process (same call stack,
+// confirmed against EventBus.Publish for the ward gate above), so the
+// publish-then-listener repop completes before this handler returns - no
+// async gap, same effective timing as a direct call would have had.
 tapestry.events.on("entity.vital.depleted", function(event) {
     if (!event.data || event.data.vital !== "hp") {
         return;
@@ -281,43 +280,44 @@ tapestry.events.on("entity.vital.depleted", function(event) {
 
     var raw = tapestry.world.getProperty(entityId, "oracle_active_run") || "";
     if (raw !== "") {
-        // Split the locked composite "<runAreaId>|<deathMode>|<entryRoomId>" (Task 3/5).
+        // Split the locked composite "<runAreaId>|<mode>|<entryRoomId>".
         var parts = String(raw).split("|");
         var runAreaId = parts[0];
-        var mode = (parts.length > 1 && parts[1]) ? parts[1] : "grind";
+        var mode = (parts.length > 1 && parts[1]) ? parts[1] : "normal";
         var entryRoomId = (parts.length > 2 && parts[2]) ? parts[2] : (runAreaId + "-entry");
 
+        // BOTH branches respawn in the same room. The only difference is whether
+        // the area comes back with you.
+        tapestry.world.teleportEntity(entityId, entryRoomId);
+
         if (mode === "unraveling") {
-            var home = tapestry.returnaddress.has(entityId)
-                ? tapestry.returnaddress.get(entityId)
-                : (tapestry.world.getProperty(entityId, "recall_room_id") || "tapestry-core:recall");
-            tapestry.world.teleportEntity(entityId, home);
-            tapestry.returnaddress.clear(entityId);
-            // No cross-pack import (see header note) - oracle's listener on
-            // "run.unraveled" does the split-free teardown synchronously.
-            tapestry.events.publish("run.unraveled", {
-                entityId: entityId,
-                runAreaId: runAreaId
-            });
+            // The Unraveling resets in place: everything repops and the seal
+            // re-locks. Losing a long run is the cost, and it is a real one.
+            // Same cross-pack seam as before - core cannot import oracle
+            // (oracle depends on core, never the reverse), so core publishes and
+            // oracle's synchronous listener does the work.
+            //
+            // ORDER (review R3-F3): the death lines are sent BEFORE the publish.
+            // The event bus dispatches subscribers synchronously, in-process, so
+            // oracle's listener runs to completion inside this publish call - and
+            // that listener sends the restated objective. Publishing first would put
+            // "3 keepers hold the seal" on screen before "The Unraveling takes you,"
+            // so the player would read the consequence before the death. Same
+            // ordering class as review 1's F2, and the fix is the same: say what
+            // happened, then say what it means.
             tapestry.world.send(entityId, "\r\n<death>The Unraveling takes you.</death>\r\n");
-            tapestry.world.send(entityId, "You are cast back to the hub, your gear intact, the roll lost.\r\n");
-        } else {
-            // Grind tier: respawn at the run entry, keep everything, repop now.
-            tapestry.world.teleportEntity(entityId, entryRoomId);
-            tapestry.world.resetArea(runAreaId); // Task 1 binding - repops any AUTHORED spawn-rule content
-            // Oracle's own mobs are never registered with the engine's spawn-rule
-            // system (they spawn lazily via tapestry.mobs.spawnMob on first visit -
-            // see population.ts), so world.resetArea alone does not repop them.
-            // Same cross-pack seam as "run.unraveled" above: publish, oracle's
-            // synchronous listener (population.ts) clears the run's visited-room
-            // state so the next visit spawns fresh instances (SA1).
-            tapestry.events.publish("run.grind_repop", {
+            tapestry.world.send(entityId, "You wake at the threshold with everything you carried. The pattern has re-knit itself behind you, whole.\r\n");
+            tapestry.events.publish("run.repop", {
                 entityId: entityId,
                 runAreaId: runAreaId,
                 entryRoomId: entryRoomId
             });
+        } else {
+            // Normal run: nothing repops. Everything you killed stays dead, so a
+            // boss can be chipped across deaths and the walk back is short. This
+            // is what removes S2-25's structural problem without hand-tuning.
             tapestry.world.send(entityId, "\r\n<death>You wake at the threshold.</death>\r\n");
-            tapestry.world.send(entityId, "The path has closed behind you - the enemies return.\r\n");
+            tapestry.world.send(entityId, "Everything you put down is still down. Go again.\r\n");
         }
     } else {
         // Non-run death: never strand. Wake at recall with everything.
