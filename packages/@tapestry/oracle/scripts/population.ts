@@ -21,22 +21,23 @@
 // engine), so a marker-persisted room stays as the player left it - the same
 // outcome shipped 0.3.x had for materialized rooms.
 //
-// WHAT spawns is unchanged from 0.3.x (campaign stage A moves only WHERE):
-// same rng stream keys (coordKey ":spawn"/":boss"), same mint-vs-reuse set,
-// same loot draw, same boss clock slope, same level-1 flat band. Spawn density
-// now reads the PURE geometry band (pressure no longer biases the band - the
-// boss clock remains the only deliberate path-dependent channel).
+// WHAT spawns is unchanged from 0.3.x (campaign stage A moves only WHERE) for
+// trash/elite: same rng stream keys (coordKey ":spawn"), same mint-vs-reuse set,
+// same loot draw, same level-1 flat band. Spawn density reads the PURE geometry
+// band (pressure no longer biases the band). The boss clock pity timer is GONE
+// (spec 5.2): the boss has an address now (lair.ts's furthest landmark), sealed
+// behind the run's other minibosses (seal.ts) - nothing path-dependent left.
 //
 // ASCII; braces on all control flow.
 
 import * as tapestry from "@tapestry/engine";
-import { splitmix64, hashCoord } from "./prng.js";
+import { hashCoord } from "./prng.js";
 import {
     rngFor, mintMobInstance, mintBossInstance, mintItemInstance, mintMobInstanceByTypeId,
     mintEliteInstance, mintMinibossInstance, shouldReuse,
 } from "./resolver.js";
 import { rollItemDrop, dropChanceFor } from "./item-tiers.js";
-import { getAreaState, getRoomPath } from "./area-state.js";
+import { getAreaState, getRoomArea, getRoomPath } from "./area-state.js";
 import { ensureAreaContext, getMintedSet } from "./area-context.js";
 import { getRunState } from "./run-state.js";
 import { pureDegree, DEFAULT_SPAN, placeLandmarks, landmarkPath } from "./structure.js";
@@ -48,6 +49,9 @@ import {
 } from "./tiers.js";
 import { ensureGuideAt } from "./guide.js";
 import { spawnLevel } from "./spawn-level.js";
+import { furthestLandmarkIndex } from "./lair.js";
+import { mobTierLevels } from "./level-resolution.js";
+import { sealBoss, sealBroken, noteMinibossSlain, initSeal } from "./seal.js";
 
 // Re-exported so population.ts remains the documented home of the spawn-level
 // seam (Produces: AreaState.runLevel, read here); the implementation itself
@@ -60,20 +64,8 @@ export { spawnLevel } from "./spawn-level.js";
 // Tuning constants (unchanged in kind from 0.3.x room-gen.ts)
 // ---------------------------------------------------------------------------
 
-/** Probability climbs this fraction per room since the last boss spawn. */
-const BOSS_CLOCK_SLOPE = 0.07;
-
 // Per-band ambient density moved to tiers.DENSITY (B.2) so the entry-zero
 // structural guarantee (tiers.ambientDensity) is golden-testable beside it.
-
-// ---------------------------------------------------------------------------
-// bossClockFires (moved from room-gen.ts - room-gen retired with the stubs)
-// ---------------------------------------------------------------------------
-
-export function bossClockFires(roomsSinceLastBoss: number, rng: () => number): boolean {
-    const threshold = Math.min(roomsSinceLastBoss * BOSS_CLOCK_SLOPE, 1.0);
-    return rng() < threshold;
-}
 
 // ---------------------------------------------------------------------------
 // First-visit tracking (keyed by room pathKey; persisted as the "visited"
@@ -149,16 +141,17 @@ export function markPopulated(areaId: string, roomId: string): void {
 // Returns the arrival LINES (per-disposition dressing; the caller capitalizes
 // and sends). Order, with every rng draw in fixed code position so per-room
 // streams stay traversal-independent:
-//   1. miniboss - landmark rooms spawn their frozen identity (exactly one per
-//      landmark, skipped when the landmark is entry-adjacent: the
-//      structurally-safe start wins over exactly-K, documented).
+//   1. landmark - the landmark FURTHEST from entry is the boss lair (spec 5.2):
+//      it spawns the sealed boss (req_seal, immune until the run's other
+//      minibosses are dead - seal.ts). Every OTHER landmark keeps its frozen
+//      miniboss identity (exactly one per landmark, skipped when the landmark
+//      is entry-adjacent: the structurally-safe start wins over exactly-K).
 //   2. elite - charged-band rooms convert their first density slot into a
 //      swell-capable epithet-named elite (never at entry/entry-adjacent).
 //   3. trash - the 0.3.x ambient loop (same stream keys, mint-vs-reuse, loot
 //      draw), now with a dice-owned band-weighted DISPOSITION per spawn that
 //      picks the template (aggro/neutral/timid).
-//   4. boss clock - advances every first visit, but FIRES at most once per
-//      run, and never in landmark or entry-adjacent rooms (no double-boss).
+// The boss clock pity timer is GONE (spec 5.2) - the boss has an address now.
 // ---------------------------------------------------------------------------
 
 export function populateRoom(roomId: string, areaId: string): string[] {
@@ -198,10 +191,17 @@ export function populateRoom(roomId: string, areaId: string): string[] {
 
     const safeStart = path === "0,0,0" || isEntryAdjacent(path);
 
-    // 1. Landmark miniboss (structural fight with an address). placeLandmarks is
-    // pure f(seed) - cheap to recompute; no landmark list is persisted in state.
+    // 1. Landmarks. placeLandmarks is pure f(seed) - cheap to recompute; no
+    // landmark list is persisted in state. The landmark FURTHEST from entry is the
+    // boss lair (spec 5.2): the road to it already exists (roadEdges forces a
+    // Bresenham line to every landmark), its room already draws landmark-band prose
+    // because its degree band is the hub band, and it is the longest walk from
+    // entry, so it reads as the end without being a corridor. The remaining K-1
+    // keep their minibosses, and those minibosses are what the lair's seal counts.
     let isLandmarkRoom = false;
     const landmarkCells = placeLandmarks(areaSeed, areaState.targetRooms);
+    const lairIndex = furthestLandmarkIndex(landmarkCells);
+    const tierLevels = mobTierLevels(level);
     let landmarkIndex = -1;
     for (let i = 0; i < landmarkCells.length; i++) {
         if (landmarkPath(landmarkCells[i]) === path) {
@@ -210,12 +210,57 @@ export function populateRoom(roomId: string, areaId: string): string[] {
             break;
         }
     }
-    if (landmarkIndex >= 0 && !safeStart) {
-        const mb = mintMinibossInstance(areaId, landmarkIndex, level, rngFor(areaSeed, coordKey + ":miniboss"));
+
+    if (landmarkIndex >= 0 && landmarkIndex === lairIndex && !safeStart) {
+        // The lair. One boss, sealed until every miniboss is dead.
+        //
+        // NO LOOT IS PRE-LOADED HERE (spec 6.2 as amended; review F1). Every other
+        // tier pushes its drop into the spawn override's `items`, which lands in the
+        // corpse container core's death.ts builds - fine for trash and keepers,
+        // because the player is standing there and can loot it. It is WRONG for the
+        // lair boss: the clear sequence tears the whole area down about seven
+        // seconds after this boss dies, so anything in its corpse is destroyed
+        // before the player is ever given back input. The boss's payout is rolled
+        // and GRANTED in the clear cutscene instead (Task 7's clear-payout module).
+        // Leave a drop here as well and the run pays twice, once into a corpse
+        // nobody can reach.
+        const bossOverride = mintBossInstance(areaId, tierLevels.boss, rngFor(areaSeed, coordKey + ":boss"));
+        if (bossOverride) {
+            const spawned = tapestry.mobs.spawnMob({
+                template: TIER_TEMPLATES.boss,
+                roomId,
+                override: bossOverride,
+            });
+            // Keep the S2-13 fix: a fleeing low-HP trash mob and the `wander`
+            // behavior both refuse to route another mob into the boss room, so
+            // first contact is never a 2v1.
+            (tapestry as any).world.addRoomTag(roomId, "no_wander");
+            const bossId = spawned && spawned.id ? spawned.id : null;
+            if (bossId) {
+                sealBoss(bossId, areaId);
+            } else {
+                // R3-F4: if spawnMob returns void, bossId is null, sealBoss is
+                // skipped, nothing throws, and the lair boss stands UNSEALED - the
+                // centrepiece gate of this whole design silently absent while the run
+                // looks fine. The return shape is still a read-and-decide (see the
+                // note below), but a wrong guess must not be silent.
+                (tapestry as any).system?.warn(
+                    "[oracle] lair boss in " + areaId + " could not be sealed: spawnMob returned no instance id. "
+                    + "The seal gate is NOT active for this run. Use the room-scan fallback instead."
+                );
+            }
+            lines.push(stirLine("boss", String(bossOverride.name || "something vast")));
+            if (!sealBroken(areaId)) {
+                lines.push("A seal holds this place shut. Steel will not reach what it protects until the keepers fall.");
+            }
+        }
+    } else if (landmarkIndex >= 0 && !safeStart) {
+        // Every other landmark keeps its miniboss.
+        const mb = mintMinibossInstance(areaId, landmarkIndex, tierLevels.miniboss, rngFor(areaSeed, coordKey + ":miniboss"));
         if (mb) {
             const mbLootRng = rngFor(areaSeed, coordKey + ":miniboss-loot");
             if (rollItemDrop(item6, "miniboss", mbLootRng)) {
-                const loot = mintItemInstance(areaId, level, mbLootRng, coordKey, 0, item1, item6, { killerTier: "miniboss", roomBand: band });
+                const loot = mintItemInstance(areaId, tierLevels.miniboss, mbLootRng, coordKey, 0, item1, item6, { killerTier: "miniboss", roomBand: band });
                 if (loot) {
                     if (!mb.items) { mb.items = []; }
                     mb.items.push(loot.id);
@@ -236,10 +281,10 @@ export function populateRoom(roomId: string, areaId: string): string[] {
     // swell-capable mob" since 3.6 - the first density slot delivers it.
     let trashCount = density;
     if (band === "charged" && !safeStart && density > 0) {
-        const elite = mintEliteInstance(areaId, level, spawnRng, mob1);
+        const elite = mintEliteInstance(areaId, tierLevels.trash, spawnRng, mob1);
         if (elite) {
             if (rollItemDrop(item6, "elite", spawnRng)) {
-                const loot = mintItemInstance(areaId, level, spawnRng, coordKey, 0, item1, item6, { killerTier: "elite", roomBand: band });
+                const loot = mintItemInstance(areaId, tierLevels.trash, spawnRng, coordKey, 0, item1, item6, { killerTier: "elite", roomBand: band });
                 if (loot) {
                     if (!elite.items) { elite.items = []; }
                     elite.items.push(loot.id);
@@ -263,9 +308,9 @@ export function populateRoom(roomId: string, areaId: string): string[] {
             const mintedArr: string[] = [];
             mintedMobTypes.forEach(function (t: string): void { mintedArr.push(t); });
             const reuseIdx = Math.floor(spawnRng() * mintedArr.length);
-            override = mintMobInstanceByTypeId(areaId, mintedArr[reuseIdx], level, spawnRng);
+            override = mintMobInstanceByTypeId(areaId, mintedArr[reuseIdx], tierLevels.trash, spawnRng);
         } else {
-            override = mintMobInstance(areaId, level, spawnRng, mob1, Object.prototype.hasOwnProperty.call(CONTEXT_BUMP, band) ? CONTEXT_BUMP[band] : 0);
+            override = mintMobInstance(areaId, tierLevels.trash, spawnRng, mob1, Object.prototype.hasOwnProperty.call(CONTEXT_BUMP, band) ? CONTEXT_BUMP[band] : 0);
             if (override && mintedMobTypes) {
                 mintedMobTypes.add(override.fromType);
             }
@@ -276,7 +321,7 @@ export function populateRoom(roomId: string, areaId: string): string[] {
         // context stays exactly 0.35. spawnMob consumes no rng.
         const lootRoll = spawnRng();
         if (override && lootRoll < dropChanceFor(item6, "trash")) {
-            const loot = mintItemInstance(areaId, level, spawnRng, coordKey, i, item1, item6, { killerTier: "trash", roomBand: band });
+            const loot = mintItemInstance(areaId, tierLevels.trash, spawnRng, coordKey, i, item1, item6, { killerTier: "trash", roomBand: band });
             if (loot) {
                 if (!override.items) { override.items = []; }
                 override.items.push(loot.id);
@@ -293,41 +338,6 @@ export function populateRoom(roomId: string, areaId: string): string[] {
             });
             lines.push(stirLine(disposition, String(override.name || "something")));
         }
-    }
-
-    // 4. Boss clock: the ONE wandering big-boss pity timer. Counter advances on
-    // every first visit; the FIRE is gated - at most once per run, never in a
-    // landmark room (miniboss owns it) or the safe start.
-    const bossRng = splitmix64(roomSeed + 1);
-    const clockRoll = bossClockFires(runState.roomsSinceLastBoss, bossRng);
-    if (clockRoll && !runState.bossFired && !isLandmarkRoom && !safeStart) {
-        const bossOverride = mintBossInstance(areaId, level, rngFor(areaSeed, coordKey + ":boss"));
-        if (bossOverride) {
-            const bossLootRng = rngFor(areaSeed, coordKey + ":boss-loot");
-            if (rollItemDrop(item6, "boss", bossLootRng)) {
-                const loot = mintItemInstance(areaId, level, bossLootRng, coordKey, 0, item1, item6, { killerTier: "boss", roomBand: band });
-                if (loot) {
-                    if (!bossOverride.items) { bossOverride.items = []; }
-                    bossOverride.items.push(loot.id);
-                }
-            }
-            tapestry.mobs.spawnMob({
-                template: TIER_TEMPLATES.boss,
-                roomId,
-                override: bossOverride,
-            });
-            // Engine Part A Task 2: tag the boss's room no_wander so a fleeing
-            // low-HP trash mob (CombatManager.AttemptFlee) and the existing
-            // `wander` behavior both refuse to route another mob in here,
-            // closing S2-13 (trash mob flees into the boss room, turning
-            // first contact into a 2v1).
-            (tapestry as any).world.addRoomTag(roomId, "no_wander");
-            lines.push(stirLine("boss", String(bossOverride.name || "something vast")));
-        }
-        runState.bossFired = true;
-        runState.roomsSinceLastBoss = 0;
-    } else {
-        runState.roomsSinceLastBoss += 1;
     }
 
     return lines;
@@ -396,6 +406,30 @@ export function registerPopulationHooks(): void {
 }
 
 registerPopulationHooks();
+
+// ---------------------------------------------------------------------------
+// Miniboss deaths advance the lair seal (spec 5.3). mob.death publishes AFTER
+// the mob is removed, with evt.data = { templateId, mobName, roomId, corpseId,
+// killerId }; templateId is the SPAWN template, so swell-miniboss is readable
+// straight off it. noteMinibossSlain (Task 4) owns the player-facing
+// messaging - it reports the remaining keeper count on every kill and the
+// direction of the lair on the break - so this listener can discard the
+// returned SealState without losing the readout: one caller, one place it
+// speaks.
+// ---------------------------------------------------------------------------
+(tapestry as any).events.on("mob.death", function (evt: any): void {
+    try {
+        const data = (evt && evt.data) ? evt.data : {};
+        const roomId = data.roomId;
+        if (!roomId) { return; }
+        if (String(data.templateId || "").indexOf("swell-miniboss") === -1) { return; }
+        const areaId = getRoomArea(roomId);
+        if (!areaId) { return; }
+        noteMinibossSlain(areaId, roomId);
+    } catch (_err) {
+        // graceful: never throw into the engine loop.
+    }
+});
 
 // ---------------------------------------------------------------------------
 // "run.grind_repop" listener (Task 12's grind-death repop seam)

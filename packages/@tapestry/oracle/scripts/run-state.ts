@@ -13,11 +13,11 @@
 // Keeping the store here avoids a circular import between area-gen and prefetch.
 
 export interface RunState {
-    roomsSinceLastBoss: number;
-    /** Stage-B: the wandering big-boss pity timer fires at most ONCE per run.
-     *  Run-state is session-scoped (resets on reboot - the accepted 0.3.x
-     *  posture), so a reboot re-arms the timer. */
-    bossFired: boolean;
+    /** The run's own area id. The cell exists to prove the run is live and to key
+     *  teardown; the boss pity timer that used to live here (roomsSinceLastBoss /
+     *  bossFired) is deleted - the boss has an address now (lair.ts), so there is
+     *  nothing path-dependent left to count. */
+    runAreaId: string;
 }
 
 // In-memory keyed store. Not persisted (slice-1 scope).

@@ -31,13 +31,15 @@ import { runKey, setRunState } from "./run-state.js";
 import { setAreaState, getAreaState } from "./area-state.js";
 import { buildAreaSixAxis } from "./six-axis.js";
 import { fillTables, bakedTables, normalizeTables, BAKED_SET_IDS, type OracleTableData } from "./oracle-tables.js";
-import { rollTargetRooms, landmarkCount } from "./structure.js";
+import { rollTargetRooms, landmarkCount, placeLandmarks } from "./structure.js";
 import { mintAreaGeometry } from "./geometry-mint.js";
 import { populateEntry } from "./population.js";
 import { EMPTY_ROSTER } from "./area-context.js";
 import { getTemplate, registerTemplate, type ThreadTemplate } from "./template-registry.js";
 import { clearAreaCaches } from "./area-teardown.js";
 import { runEntryRoomId, RUN_NAMESPACE } from "./run-entry.js";
+import { furthestLandmarkIndex } from "./lair.js";
+import { initSeal } from "./seal.js";
 
 // Re-exported so area-gen.ts remains the documented module-scope home for the shared
 // entry-room derivation (Task 5, D6 / validate-plan R2 LOW); the implementation itself
@@ -336,9 +338,10 @@ function buildArea(
 ): void {
     const entryRoomId = targetNamespace + ":" + areaSlug + "-entry";
 
-    // Run state before population so the boss clock reads correct state.
+    // Run state before population: the cell proves the run is live (populateRoom
+    // bails without one) and keys teardown.
     const stateKey = runKey(actor.entityId, areaSlug);
-    setRunState(stateKey, { roomsSinceLastBoss: 0, bossFired: false });
+    setRunState(stateKey, { runAreaId: areaSlug });
 
     // Every area is six-axis: authored theme keeps its set; any other area
     // assembles ROOM-2 from its frozen prose + scars tables (frozen above).
@@ -752,7 +755,7 @@ function instantiateRunArea(
     const biomePalette = soloAreaBiomePalette(tpl.seed);
 
     const stateKey = runKey(playerId, runSlug);
-    setRunState(stateKey, { roomsSinceLastBoss: 0, bossFired: false });
+    setRunState(stateKey, { runAreaId: runSlug });
 
     const themeDir = theme.toLowerCase().indexOf("underdeep") !== -1 ? "endless-underdeep" : "";
     const proseTable = (tapestry as any).oracle.table(runSlug + ":prose");
@@ -772,6 +775,13 @@ function instantiateRunArea(
         roster: EMPTY_ROSTER,
         sixAxis: buildAreaSixAxis(themeDir, proseTable ? proseTable.entries : [], scarsTable ? scarsTable.entries : []),
     });
+
+    // The seal counts the landmarks that are NOT the lair (spec 5.3). Same pure
+    // f(seed) placement population.ts recomputes per room, so the two can never
+    // disagree about how many keepers there are.
+    const runLandmarks = placeLandmarks(tpl.seed, targetRooms);
+    const lairIdx = furthestLandmarkIndex(runLandmarks);
+    initSeal(runSlug, lairIdx >= 0 ? runLandmarks.length - 1 : 0);
 
     const state = getAreaState(runSlug);
     if (!state) { return; }
