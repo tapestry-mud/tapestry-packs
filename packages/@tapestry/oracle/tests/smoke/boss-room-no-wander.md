@@ -1,33 +1,47 @@
 # Boss Room No Wander
 
 Task 7: proves the wandering boss's room is tagged `no_wander` the moment it spawns
-(population.ts:314-324), consuming the engine's Part A Task 2 write binding
-(`tapestry.world.addRoomTag`). Closes S2-13 (a fleeing low-HP trash mob could pick the
-boss's room as its escape route, turning first contact into an unplanned 2v1) - the engine
-side (`CombatManager.AttemptFlee` filtering exits against `EngineTags.NoWander`) is proven
-by that repo's own `CombatManagerTests`; this scenario proves the PACK side actually applies
-the tag, end to end, against a live boot.
+(population.ts:237, inside the lair branch added by Task 5), consuming the engine's
+Part A Task 2 write binding (`tapestry.world.addRoomTag`). Closes S2-13 (a fleeing
+low-HP trash mob could pick the boss's room as its escape route, turning first contact
+into an unplanned 2v1) - the engine side (`CombatManager.AttemptFlee` filtering exits
+against `EngineTags.NoWander`) is proven by that repo's own `CombatManagerTests`; this
+scenario proves the PACK side actually applies the tag, end to end, against a live boot.
 
 Forcing a genuinely random flee outcome deterministically through the telnet runner is
 impractical (flee only fires off the engine's wimpy-HP threshold mid-combat, with no
 JS-exposed way to force it), so this follows the brief's documented fallback: walk a real
-player into the room the wandering boss spawns in, then read the room's flags back with
-core's admin `inspect room` (`admin-inspect.ts`, roles admin-only) and assert `no_wander`
-is present.
+player into the room the boss spawns in, then read the room's flags back with core's
+admin `inspect room` (`admin-inspect.ts`, roles admin-only) and assert `no_wander` is
+present.
 
-The boss clock (`bossClockFires`, population.ts) is probabilistic - `threshold =
-min(roomsSinceLastBoss * 0.07, 1.0)`, rolled per room off a per-coordinate rng stream keyed
-by `hashCoord(areaSeed, path) + 1` - but every input is a pure, deterministic function of
-the template's forced seed and the exact rooms visited in order. The forced seed/walk below
-(`999` -> template `oracle-week-3e7`, school-sized, walk `north, north, east`) was found by
-replaying the SAME functions this pack ships (`structure.js`'s `computeStructure`/
-`edgeExists` for the room graph, `population.ts`'s own `bossClockFires`/`hashCoord`/
-`splitmix64` for the clock) against the built `dist/` in a throwaway offline Node script -
-not guessed or hand-tuned. That simulation found the wandering boss fires in the THIRD
-room visited (path `1,2,0`, not a landmark, not entry-adjacent) after exactly `north,
-north, east` from entry - a short, deterministic, three-move walk instead of needing to
-explore most of the map to hit the clock's guaranteed-fire tail (threshold clamps to 1.0
-only after ~15 rooms without a fire).
+Task 5 (`feat(oracle): boss owns the furthest landmark behind a miniboss seal; delete
+the boss clock`) deleted the old probabilistic boss clock entirely (`bossClockFires`,
+`BOSS_CLOCK_SLOPE`) and gave the boss a fixed address instead: the boss now spawns ONLY
+in the lair room, the landmark placed furthest from entry (spec 5.2,
+`lair.ts`'s `furthestLandmarkIndex` over `structure.ts`'s `placeLandmarks`), gated by
+`!safeStart` (never the entry cell or its six orthogonal neighbors, `tiers.ts`'s
+`isEntryAdjacent`). Every input to that placement - `areaSeed`, `targetRooms`, the
+K landmark cells, and the room graph's edges - is a pure, deterministic function of the
+template's forced seed and size band. The forced seed/walk below (`999` -> template
+`oracle-week-3e7`, school-sized, walk `south, south`) was found by replaying the SAME
+functions this pack ships and the real mint path actually calls
+(`structure.js`'s `computeStructure`/`placeLandmarks`/`edgeExists` for the room graph -
+identical to what `geometry-mint.ts`'s `mintAreaGeometry` calls to cut real two-way
+exits - and `lair.js`'s `furthestLandmarkIndex` for the lair pick) against the built
+`dist/` in a throwaway offline Node script - not guessed or hand-tuned.
+
+That replay, at seed `999` / band `school`, rolls `targetRooms = 20` (one rng draw off
+the forced seed, same as `bakeTemplate`'s own derivation) and `landmarkCount = 2`. The
+two landmarks land at cells `(1,1,0)` and `(0,-2,0)`; squared distance from entry is `2`
+for the first and `4` for the second, so `furthestLandmarkIndex` picks index `1`, path
+`0,-2,0`, as the lair - not entry-adjacent (`isEntryAdjacent` is false there), so the
+`!safeStart` gate does not refuse it. Re-running the same BFS `computeStructure` runs
+internally, with parent pointers kept, shows entry -> `0,-2,0` walks the forced road
+(`roadEdges` lines a straight Bresenham path from entry to every landmark) in exactly two
+moves, `south, south` - a short, deterministic two-move walk instead of needing to search
+for a clock-fire room. Seed `999` remains a valid, non-degenerate pick for this template
+size (2 landmarks, lair reachable and not entry-adjacent), so no reseed was needed.
 
 Uses `oracle-admin` (still in the tree per Task 5/6/7's own scenarios) to bake/start as the
 single seeded admin actor (`oracle-admin start` is admin/builder-gated, same one-actor
@@ -53,8 +67,7 @@ simulation and the others' stay independently legible.
 3. Assert Gamemaster sees: `oracle-week-3e7`
 4. Gamemaster: `oracle-admin start oracle-week-3e7 1`
 5. Assert Gamemaster sees: `pulls taut`
-6. Gamemaster: `north`
-7. Gamemaster: `north`
-8. Gamemaster: `east`
-9. Gamemaster: `inspect room`
-10. Assert Gamemaster sees: `no_wander`
+6. Gamemaster: `south`
+7. Gamemaster: `south`
+8. Gamemaster: `inspect room`
+9. Assert Gamemaster sees: `no_wander`
