@@ -234,14 +234,22 @@ export function noteMinibossSlain(areaId: string, roomId: string): SealState {
         }
         return opened;
     }
-    if (!roomId) {
+    if (after.broken) {
+        // unsealBossesIn must run whenever the seal breaks, regardless of whether
+        // there is a room to message. A falsy roomId only means nowhere to send
+        // player-facing text; it must never skip clearing an already-spawned boss's
+        // cap_cleared_seal property, or that instance stays immune forever (the same
+        // soft-lock class 5.3 exists to prevent). See failOpen just above, which
+        // already calls this unconditionally - this matches that pattern.
+        unsealBossesIn(areaId);
+        if (roomId) {
+            const dir = lairDirectionFrom(areaId, roomId);
+            const where = dir !== "" ? " Far to the " + dir + ", something comes unbound." : " Something far off comes unbound.";
+            (tapestry as any).world.sendToRoom(roomId, "The last of the keepers falls." + where + "\r\n");
+        }
         return after;
     }
-    if (after.broken) {
-        unsealBossesIn(areaId);
-        const dir = lairDirectionFrom(areaId, roomId);
-        const where = dir !== "" ? " Far to the " + dir + ", something comes unbound." : " Something far off comes unbound.";
-        (tapestry as any).world.sendToRoom(roomId, "The last of the keepers falls." + where + "\r\n");
+    if (!roomId) {
         return after;
     }
     const left = after.total - after.slain;
