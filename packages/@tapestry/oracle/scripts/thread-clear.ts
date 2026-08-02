@@ -121,6 +121,16 @@ function activeRun(entityId: string): { runAreaId: string; mode: string } | null
                     if (granted) {
                         (tapestry as any).world.send(killerId, "You are carrying the thread of " + templateName + ".\r\n");
                         recordThreadEarned(String(killerId), templateId);
+                        // threadwalker's frontier.js listens for this to re-point recall_room_id
+                        // at the player's new frontier the moment threads_earned changes. There
+                        // is no generic property-change event in the engine (SetProperty only
+                        // notifies IPropertyObserver in-process; EntityStatusBroadcaster turns
+                        // that into entity.<topic>.changed, and only for keys explicitly
+                        // registered observable via PropertyRegistry.RegisterObservable, which
+                        // threads_earned is not), so this explicit publish is the seam instead
+                        // of a listener for an event that would never fire. events.publish sets
+                        // no sourceEntityId, so the player id travels in data.entityId.
+                        (tapestry as any).events.publish("thread.earned", { entityId: String(killerId), templateId: templateId });
                     }
                 }
                 // STEP 3: home, then teardown. The payout is already an instanced
