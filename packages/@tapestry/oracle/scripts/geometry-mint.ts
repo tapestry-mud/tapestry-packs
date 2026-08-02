@@ -49,26 +49,9 @@ const EMPTY_POOLS: SectorPools = {
     qualifiers: [], openers: [], details: [], sensory: [], hooks: [], landmarkLines: [],
 };
 
-/** Rooms minted (pass 1) or exit-wired (pass 2) per engine tick.
- *
- *  There are TWO ceilings here and only the looser one was ever honoured. The 5s
- *  Jint entry cap is the correctness ceiling: exceed it and the constraint
- *  interrupt surfaces as bogus ReferenceErrors mid-function. The 50ms slow-tick
- *  budget on a 100ms tick is the liveness one, and it binds roughly a hundred
- *  times sooner. At 12 this handler was measured on a 2-core CI runner at
- *  59-86ms wall, ALL of it cpu (`cpu-bound`, not preempted), driving whole ticks
- *  to 96-187ms against a 100ms rate. Overrunning the tick starves the command
- *  FIFO, which is what made the telnet scenario suite fail a different scenario
- *  almost every run -- a `quit` echoed but never processed, a mob wandering off
- *  between the look that found it and the kill that could not.
- *
- *  Sized against the tick budget instead: ~5-7ms per room measured, so 4 rooms
- *  lands near 20-28ms with headroom on a slow runner, and stays far under the
- *  Jint cap it was originally sized for. The cost is wall-clock -- a 40-room
- *  area mints in ~20 ticks (~2s) rather than ~8 -- which the flavor-wait loop
- *  at creation already covers. Do not raise this to "mint faster": the tick it
- *  runs on is shared with every player's input. */
-const CHUNK_ROOMS = 4;
+/** Rooms minted (pass 1) or exit-wired (pass 2) per engine tick. Sized so each
+ *  chunk's synchronous side-car writes stay far under the 5s Jint entry cap. */
+const CHUNK_ROOMS = 12;
 
 /**
  * Room id for a grid path: the entry cell keeps the historical "-entry" suffix.

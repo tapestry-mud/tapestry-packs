@@ -769,14 +769,7 @@ default to strict validation (see Rejected: room-property visited marker).
 - Single-call whole-area mint -- minting 70+ rooms inside one Jint entry exceeded the engine's
   5s TimeoutInterval (side-car writes are synchronous); the constraint interrupt surfaced as
   nonsense ReferenceErrors ("MASK is not defined") at whatever code was executing. Replaced by
-  the chunked mint. (packages/@tapestry/oracle/scripts/geometry-mint.ts)
-
-- 12 rooms per tick -- sized against the 5s Jint cap alone, which is the correctness ceiling;
-  the 50ms slow-tick budget on a 100ms tick binds about a hundred times sooner. Measured
-  59-86ms wall and cpu-bound on a 2-core runner, driving ticks to 96-187ms and starving the
-  command FIFO, which surfaced as the engine's scenario suite failing a different scenario
-  almost every run. Now 4 rooms per tick, sized against the tick budget.
-  (packages/@tapestry/oracle/scripts/geometry-mint.ts:44-63)
+  the 12-rooms-per-tick chunked mint. (packages/@tapestry/oracle/scripts/geometry-mint.ts)
 
 - Stub exits + per-room lazy materialization -- v2's stub resolver minted neighbors on first
   traversal; stubs looked like real exits to every engine system (mobs fled into them and popped
@@ -812,7 +805,6 @@ default to strict validation (see Rejected: room-property visited marker).
 
 ## Change Log
 
-- 2026-08-02 [mint-chunk-fits-tick-budget](changes/2026-08-02-mint-chunk-fits-tick-budget.md) - `CHUNK_ROOMS` 12 -> 4, sized against the 50ms tick budget rather than the 5s Jint entry cap; at 12 the mint handler ran 59-86ms cpu-bound and starved the command FIFO
 - 2026-08-02 [onboarding-legibility-sweep](changes/2026-08-02-onboarding-legibility-sweep.md) - each starter ability prints a `use` line naming its syntax alongside its flavour, and the guide answers an ask it cannot yet fulfil ("The pattern is still settling") instead of returning in silence
 - 2026-08-01 [armor-ac-sign-hotfix](changes/2026-08-01-armor-ac-sign-hotfix.md) - corrects a sign inversion in the just-shipped 0.9.0 `armor.ac` master-balance anchor row (`[-1,-3,-5,-9,-14]` -> `[1,3,5,9,14]`); the engine's additive AC formula meant every minted and starter-kit armor piece was lowering the wearer's effective AC instead of raising it
 - 2026-07-27 [oracle-cleared-thread-exit-hint](changes/2026-07-27-oracle-cleared-thread-exit-hint.md) - when the last non-boss mob in a room dies, print the exit hint "Nothing more stirs here. If the thread feels done, LEAVE returns you to the hub."
