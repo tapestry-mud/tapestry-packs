@@ -1,6 +1,7 @@
 id: "tags"
 title: "Tags"
 category: "admin"
+role: "admin"
 brief: "Inspect the tags applied to an entity."
 body: |
   Tags displays all tag values currently set on the target entity.

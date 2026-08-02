@@ -31,10 +31,23 @@ export const GUIDE_TEMPLATE = "tapestry-oracle:guide";
 const STARTER_PROFICIENCY = 25;
 
 /** Class-agnostic core skills: a damage spender and a stun - two real combat
- *  decisions for any level-1 character. */
-const STARTER_ABILITIES: Array<{ id: string; line: string }> = [
-    { id: "kick", line: "The guide walks you through a short, brutal kick. You will not forget it." },
-    { id: "bash", line: "The guide shows you how to drive your shoulder into a staggering bash." },
+ *  decisions for any level-1 character.
+ *
+ *  Each carries a `use` line as well as its flavour. The flavour alone said a skill
+ *  had been learned without ever saying how to spend it, and a granted skill nobody
+ *  knows the syntax for is the same as no skill: measured over a full playtest run,
+ *  a player handed both of these went on to use neither. */
+const STARTER_ABILITIES: Array<{ id: string; line: string; use: string }> = [
+    {
+        id: "kick",
+        line: "The guide walks you through a short, brutal kick. You will not forget it.",
+        use: "  (type KICK <target> during a fight)",
+    },
+    {
+        id: "bash",
+        line: "The guide shows you how to drive your shoulder into a staggering bash.",
+        use: "  (type BASH <target> during a fight)",
+    },
 ];
 
 /**
@@ -56,11 +69,28 @@ export function ensureGuideAt(areaId: string, roomId: string): void {
     }
 }
 
+/** The guide heard the ask but cannot act on it yet. Never leave the ask unanswered. */
+function askAgain(mob: any): void {
+    try {
+        (tapestry as any).mobs.command(
+            mob.entityId,
+            "say The pattern is still settling. Say HELLO again in a moment.");
+    } catch (_err) {
+        // graceful: a failed line never blocks the retry itself.
+    }
+}
+
 function deliverProvisions(mob: any, player: any): void {
+    // Both of these bail when the area context is not resolvable yet. They used to
+    // return in total silence, so a player who asked at the wrong moment got no echo
+    // from the guide at all and no reason to ask again - measured in a playtest run
+    // as a HELLO six seconds after arrival doing nothing, and the identical HELLO
+    // twelve seconds later outfitting normally. Say something either way: the ask is
+    // cheap to repeat, but only if the player knows it was heard.
     const areaId = ensureAreaContext(mob.roomId);
-    if (!areaId) { return; }
+    if (!areaId) { askAgain(mob); return; }
     const st = getAreaState(areaId);
-    if (!st) { return; }
+    if (!st) { askAgain(mob); return; }
     const playerId = String(player.entityId);
 
     // Kit: gate lives in grantStarterKit (grants table) - returns [] when
@@ -85,6 +115,7 @@ function deliverProvisions(mob: any, player: any): void {
             if (prof !== null && prof !== undefined) { continue; }
             (tapestry as any).abilities.learn(playerId, ab.id, { proficiency: STARTER_PROFICIENCY });
             (tapestry as any).world.send(playerId, ab.line + "\r\n");
+            (tapestry as any).world.send(playerId, ab.use + "\r\n");
             gaveAbility = true;
         } catch (_err) {
             // graceful: a missing ability definition never blocks the rest.

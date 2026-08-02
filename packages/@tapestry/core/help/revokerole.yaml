@@ -1,6 +1,7 @@
 id: "revokerole"
 title: "Revoke Role"
 category: "admin"
+role: "admin"
 brief: "Revoke a role from a player account."
 body: |
   Revokerole removes the named role from the specified player. This

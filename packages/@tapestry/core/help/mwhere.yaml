@@ -1,6 +1,7 @@
 id: "mwhere"
 title: "Mwhere"
 category: "admin"
+role: "admin"
 brief: "Find all live mob instances matching a keyword."
 body: |
   Mwhere searches the world for mob instances whose name contains

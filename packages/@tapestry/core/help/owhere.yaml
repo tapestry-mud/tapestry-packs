@@ -1,6 +1,7 @@
 id: "owhere"
 title: "Owhere"
 category: "admin"
+role: "admin"
 brief: "Find all live object instances matching a keyword."
 body: |
   Owhere searches the world for item instances whose name contains

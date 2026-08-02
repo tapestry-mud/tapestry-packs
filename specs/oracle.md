@@ -1,6 +1,6 @@
 ---
 capability: oracle
-last-updated: 2026-08-01
+last-updated: 2026-08-02
 ---
 
 # oracle
@@ -606,6 +606,15 @@ delivers two things:
   uses. Gated by ABSENCE (`abilities.getProficiency === null`), so re-asking never clobbers
   trained progress. A level-1 character gets two real combat decisions (damage spender +
   stun).
+  Each ability prints a `use` line naming its syntax immediately after its flavour line, so
+  a granted skill states how to spend it rather than only that it was learned.
+  (packages/@tapestry/oracle/scripts/guide.ts:35-53, 95-96)
+
+The guide always answers an ask it received. When the area context is not yet resolvable,
+`deliverProvisions` routes both of its early returns through `askAgain` rather than
+returning silently, so the player is told to repeat the greeting instead of reading no
+response as "this NPC does not know that word".
+(packages/@tapestry/oracle/scripts/guide.ts:70-93)
 
 A hint keyword answers with the roads-lead-to-landmarks line; anything else prompts for
 HELLO/HINT. The creation teleport sends a one-line pointer at the guide instead of granting.
@@ -796,6 +805,7 @@ default to strict validation (see Rejected: room-property visited marker).
 
 ## Change Log
 
+- 2026-08-02 [onboarding-legibility-sweep](changes/2026-08-02-onboarding-legibility-sweep.md) - each starter ability prints a `use` line naming its syntax alongside its flavour, and the guide answers an ask it cannot yet fulfil ("The pattern is still settling") instead of returning in silence
 - 2026-08-01 [armor-ac-sign-hotfix](changes/2026-08-01-armor-ac-sign-hotfix.md) - corrects a sign inversion in the just-shipped 0.9.0 `armor.ac` master-balance anchor row (`[-1,-3,-5,-9,-14]` -> `[1,3,5,9,14]`); the engine's additive AC formula meant every minted and starter-kit armor piece was lowering the wearer's effective AC instead of raising it
 - 2026-07-27 [oracle-cleared-thread-exit-hint](changes/2026-07-27-oracle-cleared-thread-exit-hint.md) - when the last non-boss mob in a room dies, print the exit hint "Nothing more stirs here. If the thread feels done, LEAVE returns you to the hub."
 - 2026-07-27 [gear-carries-hp](changes/2026-07-27-gear-carries-hp.md) - minted loot and starter-kit gear now push a real `maxHp` stat modifier (read off the master balance table's already-rolled `max_hp` figure) into `writeItemTemplate`'s `modifiers` array at all four loot tiers and the starter kit's weapon/armor pieces, closing A1 (gear previously rolled `max_hp` on paper but granted zero live HP); Option 2 (flat per-level HP, AC-only gear) considered and rejected in favor of wiring the existing roll through

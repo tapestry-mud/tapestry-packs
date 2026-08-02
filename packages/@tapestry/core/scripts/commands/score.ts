@@ -213,7 +213,10 @@ tapestry.commands.register({
         if (proficiencySection) { sections.push(proficiencySection); }
         sections.push(vitalsSection);
         sections.push(attribSection);
-        sections.push(susSection);
+        // Sustenance is @tapestry/survival's; a world that does not load it has no
+        // `sustenance` property at all, and rendering the row anyway printed the literal
+        // "Hunger: null (0%)" on every score sheet.
+        if (susValue2 !== null) { sections.push(susSection); }
         sections.push(goldSection);
 
         var output = tapestry.ui.panel({ forEntity: actor.entityId, sections: sections });

@@ -1,6 +1,7 @@
 id: "badinput"
 title: "Badinput"
 category: "admin"
+role: "admin"
 hidden: true
 brief: "Trigger the bad-input error handler for testing."
 body: |

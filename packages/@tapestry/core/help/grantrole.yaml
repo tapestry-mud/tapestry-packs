@@ -1,6 +1,7 @@
 id: "grantrole"
 title: "Grant Role"
 category: "admin"
+role: "admin"
 brief: "Grant a role to a player account."
 body: |
   Grantrole assigns the named role to the specified player. This

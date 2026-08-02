@@ -1,12 +1,19 @@
 ---
 capability: core-admin
-last-updated: 2026-06-19
+last-updated: 2026-08-02
 ---
 
 # core-admin
 
 Privileged administration commands in @tapestry/core. All commands require the `admin`
 role; the engine rejects them silently for non-admin actors.
+
+Help visibility is a separate, per-topic gate: `HelpService` compares each topic's own
+`role` against the actor's tier, so an admin command's help topic must declare
+`role: "admin"` itself. Sitting in the `admin` category is not sufficient and does not
+hide anything -- a role-less topic there is visible to every player and keeps the whole
+category in the help index.
+(packages/@tapestry/core/help/snoop.yaml:1-5)
 
 ## Overview
 
@@ -241,4 +248,5 @@ setclass, settrainable), access control (grantrole, revokerole, wizlock), and ob
 
 ## Change Log
 
+- 2026-08-02 [onboarding-legibility-sweep](changes/2026-08-02-onboarding-legibility-sweep.md) - the seven `admin`-category help topics that never declared `role` (grantrole, mwhere, owhere, resetpassword, revokerole, snoop, tags, plus hidden badinput) now do, so the `admin` category stops appearing in a plain player's help index
 - 2026-06-19 [registry-introspection](changes/2026-06-19-registry-introspection.md) - new `registry` provenance browser; retired `tags registry`; padRight name-truncation fix

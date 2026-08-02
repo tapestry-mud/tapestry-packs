@@ -1,6 +1,7 @@
 id: "snoop"
 title: "Snoop"
 category: "admin"
+role: "admin"
 brief: "Monitor a player's output stream."
 body: |
   Snoop attaches your session to the named player's output so you
