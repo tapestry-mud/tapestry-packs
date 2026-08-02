@@ -1,6 +1,6 @@
 ---
 capability: core-mobs
-last-updated: 2026-07-03
+last-updated: 2026-08-02
 ---
 
 # core-mobs
@@ -27,8 +27,16 @@ movement behavior and still be hostile.
 ### Registered behaviors
 
 - Three behaviors are registered at startup: `stationary`, `wander`, and `patrol`.
-  The `stationary` handler is an intentional no-op reserved for future flavor work.
-  (packages/@tapestry/core/scripts/mobs/behaviors.ts:2-4)
+  The `stationary` handler is an intentional no-op reserved for future flavor work; it is
+  also how a mob that must hold ground declares that, rather than any tag.
+  (packages/@tapestry/core/scripts/mobs/behaviors.ts:9-12)
+
+- The two behaviors that RELOCATE a mob -- `wander` and `patrol` -- both return early when
+  the host reports movement disabled (`tapestry.mobs.movementEnabled()`, i.e.
+  `mob_ai.movement_enabled`). A local helper treats a missing seam as enabled, so this pack
+  still loads against an engine that predates it. This is what lets the engine's end-to-end
+  telnet scenarios act on a named mob across several commands without it walking away
+  mid-scenario. (packages/@tapestry/core/scripts/mobs/behaviors.ts:3-8, 20-26, 78-83)
 
 - `wander` moves the mob to a random adjacent exit each tick cycle, subject to
   three gates: the mob must not be in combat, enough ticks must have elapsed since
@@ -190,5 +198,6 @@ movement behavior and still be hostile.
 
 ## Change Log
 
+- 2026-08-02 [movement-behaviors-honor-host-switch](changes/2026-08-02-movement-behaviors-honor-host-switch.md) - `wander` and `patrol` return early when `tapestry.mobs.movementEnabled()` is false, so the end-to-end scenario suite can hold mobs still; `stationary` remains the way to pin a single mob
 - 2026-07-03 [vocabulary-consolidation](changes/2026-07-03-vocabulary-consolidation.md) - mob strength read from level.combat; mob_level survives as authoring key and corpse metadata; flee on wimpy_pct
 - None on record.

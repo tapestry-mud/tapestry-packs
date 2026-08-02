@@ -1,4 +1,11 @@
 import * as tapestry from "@tapestry/engine";
+
+/** Whether the host permits mobs to relocate. Tolerates an older engine that does not
+ *  expose the seam (treated as enabled) so this pack still loads against one. */
+function movementEnabled(): boolean {
+    if (!tapestry.mobs.movementEnabled) { return true; }
+    return tapestry.mobs.movementEnabled();
+}
 // Stationary - does nothing. Hook exists for future flavor (emotes, idle text).
 tapestry.mobs.registerBehavior("stationary", function(mob) {
     // intentionally empty
@@ -7,6 +14,14 @@ tapestry.mobs.registerBehavior("stationary", function(mob) {
 // Wander - move to a random adjacent room within boundary.
 tapestry.mobs.registerBehavior("wander", function(mob) {
     if (tapestry.combat.isInCombat(mob.entityId)) {
+        return;
+    }
+
+    // Off entirely when the host disables mob movement (the telnet scenario harness does).
+    // Wander relocates a mob on an unseeded roll, so any end-to-end assertion about which
+    // mob is in which room races it; there is no seed to pin and no assertion that can be
+    // made safe while it runs.
+    if (!movementEnabled()) {
         return;
     }
 
@@ -57,6 +72,13 @@ tapestry.mobs.registerBehavior("wander", function(mob) {
 // Patrol - follow a defined waypoint route.
 tapestry.mobs.registerBehavior("patrol", function(mob) {
     if (tapestry.combat.isInCombat(mob.entityId)) {
+        return;
+    }
+
+    // Same gate as wander. A patrol route is fixed, but its PHASE relative to a scenario is
+    // not, so a patroller still arrives and leaves in the middle of output a scenario is
+    // reading. Deterministic route, non-deterministic timing -- both have to be off.
+    if (!movementEnabled()) {
         return;
     }
 

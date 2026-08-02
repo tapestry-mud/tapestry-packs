@@ -26,7 +26,7 @@ agent or contributor answers "how does X behave?" from the relevant file alone.
 | core-abilities | [core-abilities.md](core-abilities.md) | 2026-06-13 |
 | core-inventory | [core-inventory.md](core-inventory.md) | 2026-07-03 |
 | core-economy | [core-economy.md](core-economy.md) | 2026-07-03 |
-| core-mobs | [core-mobs.md](core-mobs.md) | 2026-07-03 |
+| core-mobs | [core-mobs.md](core-mobs.md) | 2026-08-02 |
 | core-groups | [core-groups.md](core-groups.md) | 2026-06-20 |
 | core-progression | [core-progression.md](core-progression.md) | 2026-08-02 |
 | Validation Ledger | [validation-ledger.md](validation-ledger.md) | 2026-06-13 |
