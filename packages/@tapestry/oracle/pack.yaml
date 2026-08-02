@@ -16,6 +16,7 @@ dependencies:
   "@tapestry/core": "^0.1.22"
 active: true
 load_order: 20
+tags: "tags.yml"
 content:
   mobs: "templates/mobs/**/*.yaml"
   items: "templates/items/**/*.yaml"

@@ -13,12 +13,12 @@ import { removeAreaState } from "./area-state.js";
 import { removeRunStatesForArea } from "./run-state.js";
 import { removeMintedSet } from "./area-context.js";
 import { removeVisited } from "./population.js";
-import { removeGranted } from "./starter-kit.js";
+import { removeSeal } from "./seal.js";
 
 export function clearAreaCaches(areaId: string): void {
     removeAreaState(areaId);
     removeRunStatesForArea(areaId);
     removeMintedSet(areaId);
     removeVisited(areaId);
-    removeGranted(areaId);
+    removeSeal(areaId);
 }

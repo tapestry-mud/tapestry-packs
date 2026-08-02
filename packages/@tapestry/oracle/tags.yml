@@ -1,0 +1,5 @@
+# Tag declarations for @tapestry/oracle.
+tags:
+  req_seal:
+    description: "Marks the lair boss immune until the run's landmark minibosses are dead; cleared per-instance via cap_cleared_seal, never a room flag, so an Unraveling repop re-seals a fresh boss"
+    applies_to: [npc]
