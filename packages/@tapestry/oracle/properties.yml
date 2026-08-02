@@ -32,3 +32,11 @@ properties:
       back to on a clear or a leave.
     type: string
     applies_to: [player]
+  thread_template:
+    description: >
+      The templateId a thread item is keyed to (spec 7.4). Read by heldThreadFor to
+      match a carried thread against the area a player is entering, and by the portal
+      to refuse a thread that is not its own. Never set on anything but the thread
+      item itself.
+    type: string
+    applies_to: [item]

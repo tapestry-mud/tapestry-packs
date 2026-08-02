@@ -18,7 +18,7 @@ import { splitmix64, hashCoord, weightedPick } from "./prng.js";
 import { statsFor, rarityModifier, clampLevel } from "./balance-table.js";
 import { selectMobEntry, pickEpithet, defaultMinibossFor } from "./tiers.js";
 import {
-    selectItemEntry, itemContextBump, pickSignatureName, isSignatureBand,
+    selectItemEntry, selectItemEntryFloored, itemContextBump, pickSignatureName, isSignatureBand,
     type ItemDropContext,
 } from "./item-tiers.js";
 import { parseLandmarksTable } from "./sector-compose.js";
@@ -242,7 +242,11 @@ export function mintItemInstance(
     const entries = table(areaId, "items");
     if (entries.length === 0) { return null; }
     const bump = ctx ? itemContextBump(item6, ctx) : 0;
-    const type = selectItemEntry(item1, entries, bump, rng);
+    const floor = ctx && ctx.rarityFloor ? ctx.rarityFloor : "";
+    const floorMin = ctx && ctx.rarityMin ? ctx.rarityMin : "";
+    const type = floor !== ""
+        ? selectItemEntryFloored(item1, entries, bump, floor, floorMin, rng)
+        : selectItemEntry(item1, entries, bump, rng);
     if (!type) { return null; }
     const rarity = type.rarity || "common";
     const effectiveLevel = effectiveItemLevel(level, rarity);

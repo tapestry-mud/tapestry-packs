@@ -3,3 +3,6 @@ tags:
   req_seal:
     description: "Marks the lair boss immune until the run's landmark minibosses are dead; cleared per-instance via cap_cleared_seal, never a room flag, so an Unraveling repop re-seals a fresh boss"
     applies_to: [npc]
+  soulbound:
+    description: "Item is bound to the player who received it (spec 7.4); applied to the thread after spawn since writeItemTemplate's tags option is not read by the engine binding - see thread-item.ts"
+    applies_to: [item]

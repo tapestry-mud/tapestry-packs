@@ -29,6 +29,12 @@ export type KillerTier = "trash" | "elite" | "miniboss" | "boss";
 export interface ItemDropContext {
     killerTier: KillerTier;
     roomBand: string;
+    /** Clear-payout only: the band selection is lifted TO. Absent for every ordinary
+     *  drop, which is why the un-floored path is untouched. */
+    rarityFloor?: string;
+    /** Clear-payout only: the band selection may never fall BELOW when the table
+     *  cannot satisfy rarityFloor. Absent means no descent at all (R3-F1). */
+    rarityMin?: string;
 }
 
 /** Fallback drop chances when ITEM-6 is unavailable (defensive - ITEM-6 is
@@ -101,6 +107,99 @@ export function selectItemEntry(
     }
     if (slice.length === 0) { return flat(); }
     return weightedPick(slice.map(function (e) { return { w: e.w, value: e }; }), rng);
+}
+
+/** Rank a band by its degree window. ITEM-1's bands are ordered windows over the
+ *  degree roll, so `min` IS the ladder position - more robust than array index and
+ *  it cannot be broken by a table that lists its bands out of order. Unknown band
+ *  names rank -1, which makes every comparison against them a no-op. */
+function bandRank(item1: SixAxisTable | undefined, band: string): number {
+    if (!item1) { return -1; }
+    for (let i = 0; i < item1.bands.length; i++) {
+        if (item1.bands[i].band === band) { return item1.bands[i].min; }
+    }
+    return -1;
+}
+
+/**
+ * Select an item entry within a band WINDOW: no richer than the roll or the floor
+ * (whichever is higher), and never poorer than minBand.
+ *
+ * Deliberately a SEPARATE function rather than a new optional parameter on
+ * selectItemEntry: the un-floored path is what every trash, elite, and miniboss drop
+ * in the game goes through, and its behavior here must stay byte-identical. Nothing
+ * about ordinary loot changes.
+ *
+ * THE DESCENT IS BOUNDED, and that bound is review R3-F1. selectItemEntry's own
+ * fallback for an empty band slice is a FLAT pick over every entry, which for a
+ * floored selection is strictly worse than no floor - ask for epic, get a common. An
+ * unbounded descent is barely better: the real shared ITEM-1 ladder is
+ * junk 1-2 / common 3-7 / uncommon 8-10 / rare 11 / epic 12, so descending from epic
+ * walks epic, rare, uncommon, common, JUNK, and an area with a thin items table
+ * would hand the player vendor trash for killing the boss. That contradicts both
+ * 6.4's "guaranteed max-band piece" and the reason the tier exists.
+ *
+ * So the window has a floor AND a bottom. If nothing in [minBand, target] exists,
+ * this returns NULL rather than reaching below it. Null is the loud failure: the
+ * caller warns and the clear pays no gear, which surfaces a thin items table as the
+ * authoring bug it is instead of quietly paying junk forever. Paying nothing is
+ * recoverable by fixing the table; teaching a player that boss rewards are trash is
+ * not.
+ *
+ * minBand empty or unknown means "no descent at all" - the window collapses to the
+ * target band, which is the safe default rather than an unbounded one.
+ */
+export function selectItemEntryFloored(
+    item1: SixAxisTable | undefined,
+    entries: OracleEntry[],
+    bump: number,
+    floorBand: string,
+    minBand: string,
+    rng: () => number
+): OracleEntry | null {
+    if (!entries || entries.length === 0) { return null; }
+    // No ITEM-1 table means no band ladder to honor the floor against, so REFUSE
+    // rather than pay below it (review R4-F1). An earlier revision delegated to
+    // selectItemEntry here, which flat-picks over EVERY entry including junk - so
+    // the one branch that could not check the floor was also the one that ignored
+    // the bottom, and a clear payout came out as vendor trash through the single
+    // door this function exists to close.
+    //
+    // Reachability is low: ITEM-1 is eager-loaded from the shared `_default` set at
+    // module init. But that loader is a try/catch that SILENTLY SKIPS a missing or
+    // malformed file (six-axis.ts:226-241), so a broken `_default/ITEM-1.yaml`
+    // produces no table, no error, and a game that quietly pays junk for boss kills.
+    // That is exactly the silent-degrade shape this whole payout path was rewritten
+    // to eliminate. Null instead: the caller warns and the thread pays no gear,
+    // which is loud, and which is what spec 6.2 as amended requires.
+    if (!item1) { return null; }
+
+    const rolled = resolveBands(item1, rollDegree(item1, rng) + bump).band;
+    const floorR = bandRank(item1, floorBand);
+    const rolledR = bandRank(item1, rolled);
+    const targetR = floorR > rolledR ? floorR : rolledR;
+    const minR = minBand !== "" ? bandRank(item1, minBand) : targetR;
+    const bottomR = (minR < 0 || minR > targetR) ? targetR : minR;
+
+    // Every band inside [bottom, target], richest first.
+    const ladder: Array<{ band: string; rank: number }> = [];
+    for (let i = 0; i < item1.bands.length; i++) {
+        const b = item1.bands[i];
+        if (b.min <= targetR && b.min >= bottomR) { ladder.push({ band: b.band, rank: b.min }); }
+    }
+    ladder.sort(function (a, b) { return b.rank - a.rank; });
+
+    for (let i = 0; i < ladder.length; i++) {
+        const slice: OracleEntry[] = [];
+        for (let j = 0; j < entries.length; j++) {
+            if ((entries[j].rarity || "common") === ladder[i].band) { slice.push(entries[j]); }
+        }
+        if (slice.length > 0) {
+            return weightedPick(slice.map(function (e) { return { w: e.w, value: e }; }), rng);
+        }
+    }
+    // Nothing in the window. Deliberately NOT a flat pick - see the header.
+    return null;
 }
 
 /** SIGNATURE axis: a frozen proper name for the epic band, rolled once at

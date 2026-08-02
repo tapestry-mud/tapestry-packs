@@ -1,0 +1,12 @@
+# Behavior-only misc-item base: no slot, no combat properties.
+# For keepsakes and quest items that are carried but never worn or wielded
+# (e.g. the thread, thread-item.ts) - oracle override blob supplies the rest.
+id: "tapestry-oracle:misc"
+name: "an item"
+type: "item"
+tags: []
+keywords: [misc]
+properties:
+  weight: 1
+  rarity: common
+  value: 0

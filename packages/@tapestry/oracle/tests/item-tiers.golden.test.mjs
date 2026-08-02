@@ -1,9 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  dropChanceFor, rollItemDrop, itemContextBump, selectItemEntry,
+  dropChanceFor, rollItemDrop, itemContextBump, selectItemEntry, selectItemEntryFloored,
   pickSignatureName, isSignatureBand, ITEM_SIGNATURE_NAMES,
 } from "../dist/scripts/item-tiers.js";
+import { rarityForTier } from "../dist/scripts/payout-tier.js";
 import { splitmix64 } from "../dist/scripts/prng.js";
 import { parseSixAxisTable } from "../dist/scripts/six-axis.js";
 
@@ -17,6 +18,18 @@ const ITEM1 = parseSixAxisTable({
     { min: 12, max: 12, band: "epic", effect: "x", fires: "signature" },
   ],
 });
+
+// Rng fixtures for the floor tests below. The file has no existing rng helper
+// beyond calling splitmix64(seed) directly, so these are thin wrappers added for
+// the floor cases: seededRng is just a named alias, maxRollRng pins the draw near
+// 1 so rollDegree's 1d12 always resolves to 12 (ITEM-1's epic floor).
+function seededRng(seed) {
+  return splitmix64(seed);
+}
+
+function maxRollRng() {
+  return function () { return 0.999999; };
+}
 
 const ITEM6 = parseSixAxisTable({
   table: "ITEM-6", axis: "CONTEXT",
@@ -97,4 +110,91 @@ test("isSignatureBand: true only for the band whose fires is signature", () => {
   assert.equal(isSignatureBand(ITEM1, "epic"), true);
   assert.equal(isSignatureBand(ITEM1, "rare"), false);
   assert.equal(isSignatureBand(undefined, "epic"), false);
+});
+
+// --- clear-payout rarity floor (spec 6.2 as amended; review R2-F1) ---
+
+test("a floor above the rolled band lifts selection to the floor", () => {
+  // Entries in several bands; floor at epic must return the epic entry every time,
+  // whatever the degree roll comes up with.
+  const entries = [
+    { w: 10, id: "c", name: "a common thing", desc: "", rarity: "common" },
+    { w: 10, id: "e", name: "an epic thing", desc: "", rarity: "epic" },
+  ];
+  for (let i = 0; i < 25; i++) {
+    const picked = selectItemEntryFloored(ITEM1, entries, 0, "epic", "uncommon", seededRng(i));
+    assert.equal(picked.rarity, "epic");
+  }
+});
+
+test("a floor BELOW the rolled band never drags a lucky roll down", () => {
+  // The fixture carries a MIDDLE band, so "did not drag down" is a claim that can
+  // actually be false: a broken implementation that clamped TO the floor would
+  // return common here and fail. (An earlier draft used a two-band fixture and
+  // asserted the result was one of those two bands, which no implementation could
+  // fail - review R3-F2.)
+  const entries = [
+    { w: 10, id: "c", name: "a common thing", desc: "", rarity: "common" },
+    { w: 10, id: "u", name: "an uncommon thing", desc: "", rarity: "uncommon" },
+    { w: 10, id: "e", name: "an epic thing", desc: "", rarity: "epic" },
+  ];
+  // rollDegree of 12 on ITEM-1's 1d12 lands in the epic band (min 12).
+  const picked = selectItemEntryFloored(ITEM1, entries, 0, "common", "common", maxRollRng());
+  assert.equal(picked.rarity, "epic", "a floor must be a minimum, never a target");
+});
+
+test("a floor no entry satisfies walks DOWN to the best band present", () => {
+  // The failure this guards: asking for epic and getting a common because the
+  // empty-slice fallback flat-picked over everything.
+  const entries = [
+    { w: 10, id: "c", name: "a common thing", desc: "", rarity: "common" },
+    { w: 10, id: "u", name: "an uncommon thing", desc: "", rarity: "uncommon" },
+  ];
+  for (let i = 0; i < 25; i++) {
+    const picked = selectItemEntryFloored(ITEM1, entries, 0, "epic", "uncommon", seededRng(i));
+    assert.equal(picked.rarity, "uncommon", "must take the best band present, not fall to common");
+  }
+});
+
+test("the descent STOPS at rarityMin and returns null rather than paying junk", () => {
+  // R3-F1. The real ITEM-1 ladder bottoms out at junk, so an unbounded descent
+  // would hand vendor trash to the player who just killed the boss.
+  const entries = [
+    { w: 10, id: "j", name: "a junk thing", desc: "", rarity: "junk" },
+    { w: 10, id: "c", name: "a common thing", desc: "", rarity: "common" },
+  ];
+  for (let i = 0; i < 25; i++) {
+    const picked = selectItemEntryFloored(ITEM1, entries, 0, "epic", "uncommon", seededRng(i));
+    assert.equal(picked, null, "nothing at or above uncommon means no payout, never junk");
+  }
+});
+
+test("no ITEM-1 ladder refuses outright, it does not fall back to a flat pick", () => {
+  // R4-F1. The shared _default/ITEM-1.yaml loader silently skips a missing or
+  // malformed file, so this branch is reachable without any error being raised.
+  // Delegating to selectItemEntry here would flat-pick over every entry INCLUDING
+  // junk, ignoring both the floor and the bottom. This case fails loudly if anyone
+  // restores that delegation.
+  const entries = [
+    { w: 10, id: "j", name: "a junk thing", desc: "", rarity: "junk" },
+    { w: 10, id: "e", name: "an epic thing", desc: "", rarity: "epic" },
+  ];
+  assert.equal(selectItemEntryFloored(undefined, entries, 0, "epic", "uncommon", seededRng(1)), null);
+});
+
+test("an absent rarityMin collapses the window to the target band, never an open descent", () => {
+  const entries = [
+    { w: 10, id: "c", name: "a common thing", desc: "", rarity: "common" },
+  ];
+  const picked = selectItemEntryFloored(ITEM1, entries, 0, "epic", "", seededRng(1));
+  assert.equal(picked, null);
+});
+
+test("each payout tier floors at a distinct band, so the three tiers are distinguishable", () => {
+  const s = rarityForTier("standard");
+  const p = rarityForTier("pinnacle");
+  const r = rarityForTier("rare");
+  assert.notEqual(s, p);
+  assert.notEqual(p, r);
+  assert.notEqual(s, r);
 });
