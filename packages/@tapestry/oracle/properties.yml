@@ -40,3 +40,11 @@ properties:
       item itself.
     type: string
     applies_to: [item]
+  threads_earned:
+    description: >
+      JSON array of the templateIds whose normal run this player has cleared, in
+      the order they were earned. The permanent progression readout (spec 7.5) and
+      the input to the corridor's frontier lookup. Separate from the carried thread
+      item: dropping the key does not un-earn the week.
+    type: string
+    applies_to: [player]
